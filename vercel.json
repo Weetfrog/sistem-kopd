@@ -1,8 +1,6 @@
 {
-  "buildCommand": "",
-  "outputDirectory": ".",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/$1" }
+    { "source": "/", "destination": "/login.html" }
   ],
   "headers": [
     {
