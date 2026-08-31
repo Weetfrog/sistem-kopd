@@ -123,5 +123,11 @@ const dbVariabel = [
             "Tingkat IV: Sudah ada program internalisasi budaya organisasi yang berkelanjutan berdasarkan dokumen resmi. [cite: 38]",
             "Tingkat V: Budaya organisasi sudah tercermin dalam sikap dan perilaku pegawai pada perangkat daerah yang bersangkutan berdasarkan hasil evaluasi secara rutin dan berkelanjutan. [cite: 38, 39]"
         ]
+    },
+    {
+        id: 12,
+        judul: "XII. Tautan (Link) Google Drive Bukti Fisik & Dokumen Pendukung",
+        isDriveLink: true,
+        deskripsiPanduan: "Masukkan tautan (URL) folder Google Drive yang memuat seluruh dokumen bukti dukung fisik KOPD. Pastikan izin akses link telah diatur ke 'Siapa saja yang memiliki link dapat melihat' (Viewer)."
     }
 ];

@@ -73,7 +73,7 @@
             align-items: flex-start;
             transition: 0.2s;
             position: relative;
-            overflow: hidden;
+            cursor: pointer;
         }
 
         .level-card input[type="radio"] {
@@ -85,108 +85,25 @@
         .level-card.selected {
             border-color: var(--primary-green);
             background-color: #f0fdf4;
+            box-shadow: 0 0 0 1px var(--primary-green);
         }
 
-        .level-card.locked {
-            background: #f3f4f6;
-            border-color: #d1d5db;
-            opacity: 0.7;
-        }
-
-        .level-card.locked input[type="radio"] {
-            cursor: not-allowed;
-        }
-
-        .locked-overlay {
-            position: absolute;
-            top: 0;
-            right: 0;
-            background: #e5e7eb;
-            color: #6b7280;
-            padding: 4px 12px;
-            border-bottom-left-radius: 8px;
-            font-size: 0.8rem;
-            font-weight: bold;
+        .level-card:hover {
+            border-color: var(--primary-green);
         }
 
         .level-title {
             font-weight: 700;
             color: var(--primary-green);
             min-width: 90px;
+            font-size: 1.05rem;
+            margin-bottom: 4px;
         }
 
         .level-desc {
             font-size: 0.95rem;
             color: #4b5563;
             line-height: 1.5;
-            margin-bottom: 12px;
-        }
-
-        .btn-upload-sm {
-            background: #e5e7eb;
-            color: #4b5563;
-            border: 1px dashed #9ca3af;
-            padding: 8px 16px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            font-weight: 600;
-            transition: 0.2s;
-        }
-
-        .btn-upload-sm:hover:not(:disabled) {
-            background: var(--sage-bg);
-            color: var(--primary-green);
-            border-color: var(--primary-green);
-        }
-
-        /* Styling List File Jamak & Tombol Hapus */
-        .file-list-container {
-            margin-top: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
-
-        .file-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: #f8fafc;
-            border: 1px solid #cbd5e1;
-            padding: 8px 12px;
-            border-radius: 6px;
-            font-size: 0.85rem;
-        }
-
-        .file-item-name {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            color: #1f2937;
-            font-weight: 500;
-        }
-
-        .btn-del-file {
-            background: #fee2e2;
-            color: #991b1b;
-            border: none;
-            width: 24px;
-            height: 24px;
-            border-radius: 4px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: 0.2s;
-        }
-
-        .btn-del-file:hover {
-            background: #fca5a5;
-            color: white;
         }
 
         textarea.form-control {
@@ -198,6 +115,80 @@
             resize: vertical;
             min-height: 150px;
             margin-bottom: 30px;
+            box-sizing: border-box;
+            font-family: inherit;
+        }
+
+        textarea.form-control:focus {
+            border-color: var(--primary-green);
+            outline: none;
+        }
+
+        /* Styling Form Google Drive (Variabel 12) */
+        .drive-box {
+            background: white;
+            border: 2px solid #3b82f6;
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .drive-input-group {
+            margin-bottom: 20px;
+        }
+
+        .drive-input-group label {
+            display: block;
+            font-weight: bold;
+            color: #1e3a8a;
+            margin-bottom: 8px;
+            font-size: 1rem;
+        }
+
+        .drive-input-group input[type="url"] {
+            width: 100%;
+            padding: 14px 16px;
+            border: 2px solid #cbd5e1;
+            border-radius: 8px;
+            font-size: 1rem;
+            box-sizing: border-box;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .drive-input-group input[type="url"]:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+        }
+
+        .drive-guide {
+            background: #eff6ff;
+            border: 1px solid #bfdbfe;
+            padding: 16px;
+            border-radius: 8px;
+            color: #1e40af;
+            font-size: 0.9rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .btn-test-drive {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: #2563eb;
+            color: white;
+            padding: 10px 18px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            transition: 0.2s;
+        }
+
+        .btn-test-drive:hover {
+            background: #1d4ed8;
         }
 
         .btn-submit {
@@ -211,6 +202,10 @@
             font-size: 1rem;
             transition: 0.2s;
             width: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
         .btn-submit:hover {
@@ -238,24 +233,52 @@
                     <h4 style="color: var(--status-revisi); margin-bottom: 4px;"><i
                             class="fa-solid fa-comment-dots"></i> Catatan Revisi Admin:</h4>
                     <p id="pesan-revisi" style="color: #4b5563; font-size: 0.95rem; margin-bottom: 8px;"></p>
-                    <p style="font-size: 0.8rem; color: #991b1b; font-weight: bold;">*Silakan hapus berkas yang salah
-                        menggunakan tombol (X) merah, lalu unggah berkas yang benar.</p>
+                    <p style="font-size: 0.8rem; color: #991b1b; font-weight: bold;">*Silakan perbaiki isian data sesuai instruksi di atas lalu kirim ulang ke Admin.</p>
                 </div>
 
+                <!-- Form untuk Variabel 1 s/d 11 (Indikator Kematangan) -->
                 <form id="form-kematangan">
-                    <label class="form-label">1. Pilih Tingkat Kematangan & Unggah Bukti Fisik</label>
+                    <label class="form-label">1. Pilih Tingkat Kematangan</label>
                     <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;"><i
-                            class="fa-solid fa-circle-info"></i> Anda dapat mengunggah lebih dari 1 berkas per level.
-                        Level berikutnya akan otomatis terbuka jika bukti level sebelumnya telah terisi.</p>
+                            class="fa-solid fa-circle-info"></i> Silakan pilih tingkat kematangan yang paling sesuai dengan kondisi faktual di OPD Anda (Bebas memilih tingkat).</p>
 
                     <div class="level-options" id="level-container"></div>
 
                     <label class="form-label">2. Deskripsi / Penjelasan Fakta</label>
                     <textarea id="input-penjelasan" class="form-control"
-                        placeholder="Ketik deskripsi jawaban sesuai kondisi aktual Perangkat Daerah Anda..."
+                        placeholder="Ketik deskripsi penjelasan kondisi faktual yang mendasari pemilihan tingkat kematangan..."
                         required></textarea>
 
                     <button type="submit" class="btn-submit" id="btn-simpan">Simpan & Kirim ke Admin <i
+                            class="fa-solid fa-paper-plane"></i></button>
+                </form>
+
+                <!-- Form Khusus Variabel 12 (Tautan Google Drive Bukti Fisik) -->
+                <form id="form-drive" style="display: none;">
+                    <div class="drive-box">
+                        <div class="drive-guide">
+                            <h4 style="margin: 0 0 8px 0;"><i class="fa-brands fa-google-drive"></i> Panduan Pengunggahan Bukti Fisik</h4>
+                            <p style="margin: 0 0 6px 0;">Untuk menghemat kuota pangkalan data, seluruh dokumen bukti fisik (PDF/Word/Excel) 11 Variabel diletakkan dalam <strong>1 Folder Google Drive OPD</strong>.</p>
+                            <p style="margin: 0;"><strong>Penting:</strong> Pastikan pengaturan akses folder Google Drive disetel ke: <u>"Siapa saja yang memiliki link dapat melihat" (Anyone with the link can view)</u> agar Tim Evaluator Bagian Organisasi dapat membuka berkas Anda.</p>
+                        </div>
+
+                        <div class="drive-input-group">
+                            <label for="input-drive-link"><i class="fa-solid fa-link"></i> Masukkan Tautan (URL) Folder Google Drive:</label>
+                            <input type="url" id="input-drive-link" placeholder="Contoh: https://drive.google.com/drive/folders/1aBcDeFgHiJkLm..." required autocomplete="off">
+                        </div>
+
+                        <div id="box-preview-drive" style="display: none; margin-bottom: 16px;">
+                            <a href="#" id="link-test-drive" target="_blank" class="btn-test-drive">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Uji Buka Tautan Drive di Tab Baru
+                            </a>
+                        </div>
+
+                        <label class="form-label" style="font-size: 0.95rem; margin-top: 15px;">Catatan / Keterangan Tambahan untuk Evaluator (Opsional)</label>
+                        <textarea id="input-drive-catatan" class="form-control" style="min-height: 100px; margin-bottom: 15px;"
+                            placeholder="Ketik keterangan tambahan mengenai isi folder berkas Google Drive jika ada..."></textarea>
+                    </div>
+
+                    <button type="submit" class="btn-submit" id="btn-simpan-drive">Simpan & Kirim Tautan Drive ke Admin <i
                             class="fa-solid fa-paper-plane"></i></button>
                 </form>
             </div>
@@ -272,82 +295,108 @@
 
             const urlParams = new URLSearchParams(window.location.search);
             const varId = parseInt(urlParams.get('v'));
-            if (!varId || varId < 1 || varId > 11) { window.location.href = "matriks.html"; return; }
+            if (!varId || varId < 1 || varId > 12) { window.location.href = "matriks.html"; return; }
 
-            const dataVariabel = dbVariabel.find(v => v.id === varId) || { judul: `Variabel ${varId}`, levels: Array(5).fill("Tingkat: Deskripsi belum tersedia.") };
+            const dataVariabel = dbVariabel.find(v => v.id === varId) || { 
+                id: varId, 
+                judul: `Variabel ${varId}`, 
+                levels: Array(5).fill("Tingkat: Deskripsi belum tersedia.") 
+            };
             document.getElementById('var-title').innerText = dataVariabel.judul;
 
             const opdData = getCurrentOpdData();
+            if (!opdData.variabelStatus[`v${varId}`]) {
+                opdData.variabelStatus[`v${varId}`] = {
+                    status: 0,
+                    levelPilihan: varId === 12 ? 1 : null,
+                    levelDisetujui: 0,
+                    deskripsi: "",
+                    driveLink: "",
+                    catatanAdmin: ""
+                };
+            }
             let currentState = opdData.variabelStatus[`v${varId}`];
 
-            // Migrasi darurat jika data lama masih nyangkut berupa string/null (ubah paksa jadi array)
-            if (!currentState.uploads || !Array.isArray(currentState.uploads[1])) {
-                currentState.uploads = { 1: [], 2: [], 3: [], 4: [], 5: [] };
-            }
+            const formKematangan = document.getElementById('form-kematangan');
+            const formDrive = document.getElementById('form-drive');
 
-            const levelContainer = document.getElementById('level-container');
+            // JIKA VARIABEL 12 (GOOGLE DRIVE LINK)
+            if (varId === 12) {
+                formKematangan.style.display = 'none';
+                formDrive.style.display = 'block';
 
-            // FUNGSI RENDER LEVEL & LIST FILE
-            window.renderLevels = function () {
+                const inputDrive = document.getElementById('input-drive-link');
+                const inputCatatan = document.getElementById('input-drive-catatan');
+                const boxPreview = document.getElementById('box-preview-drive');
+                const linkTest = document.getElementById('link-test-drive');
+
+                inputDrive.value = currentState.driveLink || '';
+                inputCatatan.value = currentState.deskripsi || '';
+
+                if (currentState.driveLink) {
+                    boxPreview.style.display = 'block';
+                    linkTest.href = currentState.driveLink;
+                }
+
+                inputDrive.addEventListener('input', function () {
+                    const url = this.value.trim();
+                    if (url.startsWith('http')) {
+                        boxPreview.style.display = 'block';
+                        linkTest.href = url;
+                    } else {
+                        boxPreview.style.display = 'none';
+                    }
+                });
+
+                formDrive.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const linkUrl = inputDrive.value.trim();
+                    if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
+                        alert("Mohon masukkan tautan URL yang valid (dimulai dengan https://)");
+                        return;
+                    }
+
+                    currentState.driveLink = linkUrl;
+                    currentState.deskripsi = inputCatatan.value.trim();
+                    currentState.levelPilihan = 1; // Default 1
+                    currentState.status = currentState.status === 2 ? 3 : 1;
+
+                    simpanStateSementara();
+                    alert("Tautan Google Drive berhasil disimpan dan dikirim ke Admin!");
+                    window.location.href = "matriks.html";
+                });
+
+            } else {
+                // VARIABEL 1 S/D 11 (INDIKATOR KEMATANGAN - BEBAS PILIH)
+                formKematangan.style.display = 'block';
+                formDrive.style.display = 'none';
+
+                const levelContainer = document.getElementById('level-container');
                 levelContainer.innerHTML = '';
 
                 dataVariabel.levels.forEach((teks, index) => {
                     const levelNum = index + 1;
-                    const arrFiles = currentState.uploads[levelNum] || [];
-
-                    // Gembok Level: Terkunci JIKA level > 1 DAN level sebelumnya kosong file-nya
-                    const isLocked = levelNum > 1 && (!currentState.uploads[levelNum - 1] || currentState.uploads[levelNum - 1].length === 0);
-
                     const splitTeks = teks.split(':');
                     const lvlTitle = splitTeks[0];
                     const lvlDesc = splitTeks[1] ? splitTeks[1].trim() : teks;
 
-                    const lockOverlay = isLocked ? `<div class="locked-overlay"><i class="fa-solid fa-lock"></i> Terkunci</div>` : '';
-
-                    // Render List File Terunggah
-                    let fileListHTML = '';
-                    if (arrFiles.length > 0) {
-                        fileListHTML = '<div class="file-list-container">';
-                        arrFiles.forEach((fname, idx) => {
-                            // Sembunyikan tombol hapus jika status selesai (4)
-                            const delBtn = currentState.status !== 4 ? `<button type="button" class="btn-del-file" title="Hapus Berkas" onclick="hapusFile(${levelNum}, ${idx})"><i class="fa-solid fa-xmark"></i></button>` : '';
-                            fileListHTML += `
-                                <div class="file-item">
-                                    <span class="file-item-name"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> ${fname}</span>
-                                    ${delBtn}
-                                </div>`;
-                        });
-                        fileListHTML += '</div>';
-                    }
-
-                    // Tombol Upload (multiple active)
-                    const uploadBtnHTML = isLocked || currentState.status === 4 ? '' : `
-                        <div style="margin-top: 10px;">
-                            <input type="file" id="file-lvl-${levelNum}" style="display: none;" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(${levelNum}, this)">
-                            <button type="button" class="btn-upload-sm" onclick="document.getElementById('file-lvl-${levelNum}').click()">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Tambah Berkas Pendukung (Bisa Lebih dari 1)
-                            </button>
-                        </div>
-                    `;
-
                     levelContainer.innerHTML += `
-                        <label class="level-card ${isLocked ? 'locked' : ''}" id="card-lvl-${levelNum}">
-                            ${lockOverlay}
-                            <input type="radio" name="level" value="${levelNum}" ${isLocked ? 'disabled' : ''} required>
+                        <label class="level-card" id="card-lvl-${levelNum}">
+                            <input type="radio" name="level" value="${levelNum}" required>
                             <div style="flex: 1;">
                                 <div class="level-title">${lvlTitle}</div>
                                 <div class="level-desc">${lvlDesc}</div>
-                                ${uploadBtnHTML}
-                                ${fileListHTML}
                             </div>
                         </label>
                     `;
                 });
 
-                if (currentState.levelPilihan && !document.querySelector(`input[name="level"][value="${currentState.levelPilihan}"]`).disabled) {
+                if (currentState.levelPilihan) {
                     const radio = document.querySelector(`input[name="level"][value="${currentState.levelPilihan}"]`);
-                    radio.checked = true;
-                    document.getElementById(`card-lvl-${currentState.levelPilihan}`).classList.add('selected');
+                    if (radio) {
+                        radio.checked = true;
+                        document.getElementById(`card-lvl-${currentState.levelPilihan}`).classList.add('selected');
+                    }
                 }
 
                 document.querySelectorAll('input[name="level"]').forEach(r => {
@@ -356,27 +405,51 @@
                         if (this.checked) document.getElementById(`card-lvl-${this.value}`).classList.add('selected');
                     });
                 });
+
+                document.getElementById('input-penjelasan').value = currentState.deskripsi || '';
+
+                formKematangan.addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    const radioSelected = document.querySelector('input[name="level"]:checked');
+                    if (!radioSelected) {
+                        alert("Silakan pilih salah satu Tingkat Kematangan terlebih dahulu!");
+                        return;
+                    }
+                    const selectedLevel = parseInt(radioSelected.value);
+                    const penjelasan = document.getElementById('input-penjelasan').value;
+
+                    currentState.status = currentState.status === 2 ? 3 : 1;
+                    currentState.levelPilihan = selectedLevel;
+                    currentState.deskripsi = penjelasan;
+
+                    simpanStateSementara();
+                    alert("Data berhasil dikirim ke Admin!");
+                    window.location.href = "matriks.html";
+                });
             }
 
-            // Fungsi Unggah Banyak File
-            window.handleFileUpload = function (levelNum, inputElement) {
-                if (inputElement.files.length > 0) {
-                    Array.from(inputElement.files).forEach(file => {
-                        currentState.uploads[levelNum].push(file.name);
-                    });
-                    simpanStateSementara();
-                    renderLevels();
-                }
-            };
+            // Tampilkan Notifikasi Revisi dari Admin
+            if (currentState.status === 2) {
+                document.getElementById('admin-feedback').style.display = 'block';
+                document.getElementById('pesan-revisi').innerText = currentState.catatanAdmin || 'Mohon perbaiki data.';
+            }
 
-            // Fungsi Hapus 1 File Spesifik
-            window.hapusFile = function (levelNum, fileIndex) {
-                if (confirm(`Yakin ingin menghapus berkas "${currentState.uploads[levelNum][fileIndex]}"?`)) {
-                    currentState.uploads[levelNum].splice(fileIndex, 1);
-                    simpanStateSementara();
-                    renderLevels();
-                }
-            };
+            // Tampilkan Status Disetujui (Kunci Form)
+            if (currentState.status === 4) {
+                const btnSimpan = document.getElementById('btn-simpan');
+                const btnSimpanDrive = document.getElementById('btn-simpan-drive');
+                if (btnSimpan) btnSimpan.style.display = 'none';
+                if (btnSimpanDrive) btnSimpanDrive.style.display = 'none';
+
+                document.querySelectorAll('input, textarea').forEach(r => r.disabled = true);
+
+                document.getElementById('admin-feedback').style.display = 'block';
+                document.getElementById('admin-feedback').style.borderLeftColor = 'var(--status-selesai)';
+                document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-selesai)';
+                document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-circle-check"></i> Variabel Telah Disetujui';
+                document.getElementById('pesan-revisi').innerText = "Data Anda telah diverifikasi dan disetujui secara permanen.";
+                document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
+            }
 
             // Simpan Data Sementara ke DB
             function simpanStateSementara() {
@@ -385,46 +458,6 @@
                 db.opds[opdIndex].variabelStatus[`v${varId}`] = currentState;
                 localStorage.setItem('kopd_db', JSON.stringify(db));
             }
-
-            renderLevels();
-            document.getElementById('input-penjelasan').value = currentState.deskripsi;
-
-            if (currentState.status === 2) {
-                document.getElementById('admin-feedback').style.display = 'block';
-                document.getElementById('pesan-revisi').innerText = currentState.catatanAdmin;
-            }
-
-            if (currentState.status === 4) {
-                document.getElementById('btn-simpan').style.display = 'none';
-                document.getElementById('input-penjelasan').disabled = true;
-                document.querySelectorAll('input').forEach(r => r.disabled = true);
-
-                document.getElementById('admin-feedback').style.display = 'block';
-                document.getElementById('admin-feedback').style.borderLeftColor = 'var(--status-selesai)';
-                document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-selesai)';
-                document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-circle-check"></i> Variabel Telah Disetujui';
-                document.getElementById('pesan-revisi').innerText = "Data Anda telah diverifikasi dan dikunci secara permanen.";
-                document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
-            }
-
-            document.getElementById('form-kematangan').addEventListener('submit', function (e) {
-                e.preventDefault();
-                const selectedLevel = parseInt(document.querySelector('input[name="level"]:checked').value);
-                const penjelasan = document.getElementById('input-penjelasan').value;
-
-                if (currentState.uploads[selectedLevel].length === 0) {
-                    alert(`Anda memilih Tingkat ${selectedLevel}, tetapi belum mengunggah Bukti Fisik apa pun di level tersebut!`);
-                    return;
-                }
-
-                currentState.status = currentState.status === 2 ? 3 : 1;
-                currentState.levelPilihan = selectedLevel;
-                currentState.deskripsi = penjelasan;
-
-                simpanStateSementara();
-                alert("Data berhasil dikirim ke Admin!");
-                window.location.href = "matriks.html";
-            });
         });
     </script>
 </body>

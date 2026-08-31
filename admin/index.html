@@ -144,9 +144,10 @@
 
             // 3. Mesin Penyapu (Scan seluruh OPD dan Variabelnya)
             db.opds.forEach(opd => {
-                // Loop ke 11 Variabel dalam setiap OPD
-                for (let i = 1; i <= 11; i++) {
+                // Loop ke 12 Variabel dalam setiap OPD
+                for (let i = 1; i <= 12; i++) {
                     let state = opd.variabelStatus[`v${i}`];
+                    const labelVar = i === 12 ? 'Tautan Google Drive' : `Variabel ${i}`;
 
                     // Jika Status 1 (Menunggu Verifikasi Baru)
                     if (state && state.status === 1) {
@@ -154,9 +155,9 @@
                         tabelTugasHTML += `
                             <tr>
                                 <td style="font-weight: 600; color:#334155;">${opd.name}</td>
-                                <td>Variabel ${i}</td>
+                                <td>${labelVar}</td>
                                 <td><span class="badge-tabel" style="background: var(--status-menunggu);">Usulan Baru</span></td>
-                                <td><a href="verifikasi.html" class="btn-aksi">Tinjau Bukti ➔</a></td>
+                                <td><a href="verifikasi.html" class="btn-aksi">Tinjau ➔</a></td>
                             </tr>
                         `;
                     }
@@ -166,9 +167,9 @@
                         tabelTugasHTML += `
                             <tr>
                                 <td style="font-weight: 600; color:#334155;">${opd.name}</td>
-                                <td>Variabel ${i}</td>
+                                <td>${labelVar}</td>
                                 <td><span class="badge-tabel" style="background: #3b82f6;">Verifikasi Ulang</span></td>
-                                <td><a href="verifikasi.html" class="btn-aksi">Tinjau Bukti ➔</a></td>
+                                <td><a href="verifikasi.html" class="btn-aksi">Tinjau ➔</a></td>
                             </tr>
                         `;
                     }

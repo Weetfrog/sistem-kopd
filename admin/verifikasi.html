@@ -637,7 +637,7 @@
                 db.opds.forEach(opd => {
                     if (opd.name.toLowerCase().includes(searchFilter.toLowerCase())) {
                         let usulanBaruCount = 0;
-                        for (let i = 1; i <= 11; i++) {
+                        for (let i = 1; i <= 12; i++) {
                             const s = opd.variabelStatus[`v${i}`]?.status || 0;
                             if (s === 1 || s === 3) usulanBaruCount++;
                         }
@@ -666,6 +666,7 @@
                 resetPanelKananPreview();
                 if (window.innerWidth <= 992) document.body.classList.add('mobile-view-variables');
                 renderDaftarVariabelTengah();
+                tampilkanInfoDriveDiPanelKanan();
             };
 
             function renderDaftarVariabelTengah() {
@@ -674,28 +675,42 @@
                 const opdData = db.opds.find(o => o.id === activeOpdId);
                 const statusLabels = { 0: "Belum Diisi", 1: "Menunggu Verifikasi", 2: "Butuh Revisi", 3: "Verifikasi Ulang", 4: "Selesai (Disetujui)" };
 
-                for (let i = 1; i <= 11; i++) {
+                for (let i = 1; i <= 12; i++) {
                     const state = opdData.variabelStatus[`v${i}`];
                     if (state && state.status > 0) {
                         const pedoman = dbVariabel.find(v => v.id === i);
                         const isActive = activeVarId === i ? 'active-var' : '';
+                        const isDriveVar = i === 12;
+
+                        let detailIsianHtml = '';
+                        if (isDriveVar) {
+                            detailIsianHtml = `
+                                <div style="margin: 8px 0; background:#eff6ff; border:1px solid #bfdbfe; padding:10px; border-radius:6px;">
+                                    <div style="font-size:0.8rem; font-weight:bold; color:#1e40af; margin-bottom:4px;"><i class="fa-brands fa-google-drive"></i> Tautan Google Drive:</div>
+                                    <a href="${state.driveLink || '#'}" target="_blank" style="color:#2563eb; font-weight:bold; font-size:0.85rem; word-break:break-all; text-decoration:none;">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> ${state.driveLink || 'Belum ada link'}
+                                    </a>
+                                </div>
+                            `;
+                        }
 
                         boxVariabel.innerHTML += `
                             <div class="var-row-card border-status-${state.status} ${isActive}" id="card-var-${i}" onclick="seleksiVariabelSpesifik(${i})">
                                 <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#6b7280; font-weight:bold; margin-bottom:6px;">
-                                    <span>VARIABEL ${i}</span>
+                                    <span>${isDriveVar ? 'MATRIKS 12 (BUKTI FISIK)' : `VARIABEL ${i}`}</span>
                                     <span class="badge status-${state.status}" style="padding:2px 6px; border-radius:4px; color:white;">${statusLabels[state.status].toUpperCase()}</span>
                                 </div>
                                 <div style="font-weight:700; color:#1e293b; font-size:0.9rem; line-height:1.4;">${pedoman ? pedoman.judul : '-'}</div>
-                                <div style="font-size:0.8rem; color:#475569; margin-top:6px;">Level Diajukan: <strong>${state.levelPilihan || '-'}</strong></div>
+                                ${isDriveVar ? '' : `<div style="font-size:0.8rem; color:#475569; margin-top:6px;">Level Diajukan: <strong>Tingkat ${state.levelPilihan || '-'}</strong></div>`}
+                                ${detailIsianHtml}
                                 
                                 <div class="execution-box" id="exec-box-${i}" onclick="event.stopPropagation()">
                                     <h4 style="margin:0; font-size:0.8rem; color:#6b7280;">DESKRIPSI FAKTA OPD:</h4>
                                     <div class="fakta-box">${state.deskripsi || '-'}</div>
                                     <h4 style="margin:0 0 6px 0; font-size:0.8rem; color:#6b7280;">CATATAN EVALUATOR:</h4>
-                                    <textarea id="catatan-admin-${i}" class="admin-catatan" placeholder="Ketik instruksi revisi di sini...">${state.status === 2 ? (state.catatanAdmin || '') : ''}</textarea>
+                                    <textarea id="catatan-admin-${i}" class="admin-catatan" placeholder="Ketik instruksi perbaikan / catatan di sini...">${state.status === 2 ? (state.catatanAdmin || '') : ''}</textarea>
                                     <div class="action-btn-group">
-                                        <button class="action-btn btn-reject" onclick="eksekusiKeputusanAkhir(${i}, 2)"><i class="fa-solid fa-rotate-left"></i> Tolak (Revisi)</button>
+                                        <button class="action-btn btn-reject" onclick="eksekusiKeputusanAkhir(${i}, 2)"><i class="fa-solid fa-rotate-left"></i> Kembalikan (Revisi)</button>
                                         <button class="action-btn btn-approve" onclick="eksekusiKeputusanAkhir(${i}, 4)"><i class="fa-solid fa-check-double"></i> Setujui</button>
                                     </div>
                                 </div>
@@ -709,77 +724,59 @@
                 }
             }
 
+            function tampilkanInfoDriveDiPanelKanan() {
+                const opdData = db.opds.find(o => o.id === activeOpdId);
+                if (!opdData) return;
+                const stateDrive = opdData.variabelStatus['v12'];
+                const previewEmpty = document.getElementById('preview-empty-state');
+                const pdfViewer = document.getElementById('dom-pdf-viewer');
+
+                if (stateDrive && stateDrive.driveLink) {
+                    previewEmpty.style.display = 'none';
+                    pdfViewer.style.display = 'block';
+                    pdfViewer.innerHTML = `
+                        <div style="text-align:center; border-bottom:2px solid #1e293b; padding-bottom:12px; margin-bottom:20px;">
+                            <h3 style="margin:0; color:#1b4332;"><i class="fa-brands fa-google-drive" style="color:#2563eb;"></i> FOLDER BUKTI FISIK OPD</h3>
+                            <p style="font-size:0.75rem; color:#6b7280; margin:4px 0 0 0;">KOPD KAB. MANGGARAI BARAT 2025</p>
+                        </div>
+                        <div style="font-size: 0.85rem; line-height: 1.6;">
+                            <p><strong>Instansi:</strong> <span style="color:#1b4332; font-weight:bold;">${opdData.name}</span></p>
+                            <p><strong>Tautan Google Drive:</strong></p>
+                            <div style="margin: 12px 0; background:#eff6ff; border:1px solid #bfdbfe; padding:12px; border-radius:8px;">
+                                <a href="${stateDrive.driveLink}" target="_blank" style="color:#1d4ed8; font-weight:bold; font-size:0.9rem; text-decoration:none; word-break:break-all;">
+                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> ${stateDrive.driveLink}
+                                </a>
+                            </div>
+                            <a href="${stateDrive.driveLink}" target="_blank" style="display:block; text-align:center; background:#2563eb; color:white; padding:12px; border-radius:6px; font-weight:bold; text-decoration:none; margin:16px 0; transition:0.2s;">
+                                <i class="fa-solid fa-folder-open"></i> Buka Google Drive di Tab Baru
+                            </a>
+                            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:16px 0;">
+                            <h4 style="color:var(--primary-green); margin-bottom:6px;"><i class="fa-solid fa-circle-info"></i> Petunjuk Verifikasi:</h4>
+                            <p style="color:#4b5563; font-size:0.8rem; line-height:1.5;">
+                                Klik tombol di atas untuk membuka folder Google Drive instansi terkait. Seluruh dokumen bukti dukung 11 variabel disimpan dalam folder tersebut.
+                            </p>
+                        </div>
+                    `;
+                } else {
+                    pdfViewer.style.display = 'none';
+                    previewEmpty.style.display = 'flex';
+                    previewEmpty.innerHTML = `
+                        <i class="fa-brands fa-google-drive" style="font-size: 3.5rem; margin-bottom: 12px; color:#64748b;"></i>
+                        <p>OPD ini belum memasukkan tautan Google Drive Bukti Fisik di Matriks 12.</p>
+                    `;
+                }
+            }
+
             window.seleksiVariabelSpesifik = function (vId) {
                 activeVarId = vId;
                 document.querySelectorAll('.execution-box').forEach(box => box.style.display = 'none');
                 document.querySelectorAll('.var-row-card').forEach(card => card.classList.remove('active-var'));
-                document.getElementById(`exec-box-${vId}`).style.display = 'block';
-                document.getElementById(`card-var-${vId}`).classList.add('active-var');
+                const targetExec = document.getElementById(`exec-box-${vId}`);
+                if (targetExec) targetExec.style.display = 'block';
+                const targetCard = document.getElementById(`card-var-${vId}`);
+                if (targetCard) targetCard.classList.add('active-var');
 
-                const opdData = db.opds.find(o => o.id === activeOpdId);
-                const state = opdData.variabelStatus[`v${vId}`];
-                const pedoman = dbVariabel.find(v => v.id === vId);
-                const containerFiles = document.getElementById('dom-container-files');
-
-                containerFiles.innerHTML = '';
-                let totalFilesCount = 0;
-
-                const levelMax = state.levelPilihan ? parseInt(state.levelPilihan) : 0;
-
-                for (let L = 1; L <= levelMax; L++) {
-                    let filesInLevel = state.uploads[L] || [];
-                    if (filesInLevel.length > 0) {
-                        containerFiles.innerHTML += `<div style="font-size:0.7rem; font-weight:bold; color:#94a3b8; margin: 10px 0 4px 0;">LEVEL ${L}</div>`;
-                        filesInLevel.forEach((fileName, fileIndex) => {
-                            totalFilesCount++;
-                            containerFiles.innerHTML += `
-                                <div class="admin-file-row">
-                                    <button class="btn-file-select" onclick="bukaKertasPratinjauPdf('${fileName}', '${pedoman ? pedoman.levels[L - 1] : ''}', this)">
-                                        <i class="fa-solid fa-file-pdf" style="color:#f87171;"></i> ${fileName}
-                                    </button>
-                                    <button class="btn-admin-delete" title="Hapus File" onclick="hapusFileOlehAdminOpsional(${L}, ${fileIndex}, '${fileName}')">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </div>
-                            `;
-                        });
-                    }
-                }
-
-                document.getElementById('mobile-file-count').innerText = totalFilesCount;
-
-                if (totalFilesCount > 0) {
-                    document.getElementById('dom-wrapper-files').style.display = 'block';
-                    setTimeout(() => {
-                        const firstFileBtn = containerFiles.querySelector('.btn-file-select');
-                        if (firstFileBtn) firstFileBtn.click();
-                    }, 50);
-                } else {
-                    resetPanelKananPreview();
-                }
-            };
-
-            window.bukaKertasPratinjauPdf = function (fileName, kriteriaTeks, btnEl) {
-                document.querySelectorAll('.btn-file-select').forEach(b => b.classList.remove('active-file'));
-                if (btnEl) btnEl.classList.add('active-file');
-                document.getElementById('preview-empty-state').style.display = 'none';
-                document.getElementById('dom-pdf-viewer').style.display = 'block';
-                document.getElementById('pdf-mock-filename').innerText = fileName;
-                document.getElementById('pdf-mock-kriteria').innerText = kriteriaTeks ? kriteriaTeks.split(':')[0] : '-';
-            };
-
-            window.hapusFileOlehAdminOpsional = function (levelNum, fileIndex, fileName) {
-                if (confirm(`Yakin hapus file "${fileName}" secara paksa?`)) {
-                    const opdIndex = db.opds.findIndex(o => o.id === activeOpdId);
-                    db.opds[opdIndex].variabelStatus[`v${activeVarId}`].uploads[levelNum].splice(fileIndex, 1);
-
-                    const textarea = document.getElementById(`catatan-admin-${activeVarId}`);
-                    const logSistem = `[Sistem] File "${fileName}" di Level ${levelNum} dihapus oleh Evaluator. Mohon unggah ulang jika diperlukan.\n`;
-                    if (!textarea.value.includes(logSistem)) textarea.value = logSistem + textarea.value;
-
-                    localStorage.setItem('kopd_db', JSON.stringify(db));
-                    seleksiVariabelSpesifik(activeVarId);
-                }
+                tampilkanInfoDriveDiPanelKanan();
             };
 
             window.eksekusiKeputusanAkhir = function (vId, statusBaru) {
@@ -789,9 +786,10 @@
                 const opdIndex = db.opds.findIndex(o => o.id === activeOpdId);
                 db.opds[opdIndex].variabelStatus[`v${vId}`].status = statusBaru;
                 db.opds[opdIndex].variabelStatus[`v${vId}`].catatanAdmin = catatanValue || "Disetujui.";
-                // TAMBAHAN BARU: Jika disetujui (status 4), kunci level usulan menjadi level disetujui
+                
+                // Jika disetujui (status 4), simpan level usulan sebagai level disetujui
                 if (statusBaru === 4) {
-                    let levelUsulan = parseInt(db.opds[opdIndex].variabelStatus[`v${vId}`].levelPilihan);
+                    let levelUsulan = parseInt(db.opds[opdIndex].variabelStatus[`v${vId}`].levelPilihan || 1);
                     db.opds[opdIndex].variabelStatus[`v${vId}`].levelDisetujui = levelUsulan;
                 }
 

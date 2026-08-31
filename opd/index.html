@@ -163,13 +163,17 @@
             const feedContainer = document.getElementById('notification-feed');
             let feedHTML = '';
 
-            for (let i = 1; i <= 11; i++) {
+            for (let i = 1; i <= 12; i++) {
                 const state = opdData.variabelStatus[`v${i}`];
+                if (!state) continue;
+
                 // Jika sudah ada status pengajuan ATAU sudah ada memori yang disahkan
                 if (state.status > 0 || state.levelDisetujui > 0) terisi++;
                 
-                // Dihitung sebagai "Variabel Disetujui" jika minimal sudah sah di Level 1
-                if (state.levelDisetujui > 0) disetujui++;
+                // Dihitung sebagai "Variabel Disetujui" jika status 4
+                if (state.status === 4 || state.levelDisetujui > 0) disetujui++;
+
+                const varName = i === 12 ? 'XII. Tautan Google Drive Bukti Fisik' : `Variabel ${i}`;
 
                 // RENDER STRUKTUR HTML NOTIFIKASI BARU (KOMPAK & PADAT)
                 if (state.status === 2) {
@@ -178,9 +182,9 @@
                         <div class="notif-item">
                             <div class="notif-icon"><i class="fa-solid fa-triangle-exclamation" style="color: var(--status-revisi);"></i></div>
                             <div style="flex: 1;">
-                                <strong style="color: var(--status-revisi);">Variabel ${i}: Butuh Perbaikan</strong>
+                                <strong style="color: var(--status-revisi);">${varName}: Butuh Perbaikan</strong>
                                 <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
-                                    <strong>Catatan Admin:</strong> <i>"${state.catatanAdmin || 'Mohon unggah dokumen perbaikan.'}"</i>
+                                    <strong>Catatan Admin:</strong> <i>"${state.catatanAdmin || 'Mohon perbaiki data.'}"</i>
                                 </div>
                                 <a href="detail.html?v=${i}" style="display:inline-block; margin-top:8px; font-size:0.75rem; color:var(--status-revisi); text-decoration:none; font-weight:bold; background:#fee2e2; padding:4px 10px; border-radius:4px; transition:0.2s;">Perbaiki Sekarang <i class="fa-solid fa-arrow-right"></i></a>
                                 <span class="notif-time">Menunggu tindak lanjut Anda</span>
@@ -192,9 +196,9 @@
                         <div class="notif-item">
                             <div class="notif-icon"><i class="fa-solid fa-circle-check" style="color: var(--status-selesai);"></i></div>
                             <div style="flex: 1;">
-                                <strong style="color: var(--status-selesai);">Variabel ${i}: Disetujui & Dikunci</strong>
+                                <strong style="color: var(--status-selesai);">${varName}: Disetujui</strong>
                                 <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
-                                    Tingkat Kematangan Usulan: <strong>Level ${state.levelPilihan}</strong> memenuhi kriteria.
+                                    ${i === 12 ? 'Tautan berkas Google Drive telah diverifikasi oleh Evaluator.' : `Tingkat Kematangan Usulan: <strong>Level ${state.levelPilihan}</strong> disetujui.`}
                                 </div>
                                 <span class="notif-time">Selesai diverifikasi</span>
                             </div>
@@ -221,12 +225,12 @@
             const tube = document.getElementById('progress-tube');
             const progressText = document.getElementById('progress-text');
             setTimeout(() => {
-                let percentage = Math.min((terisi / 11) * 100, 100);
+                let percentage = Math.min((terisi / 12) * 100, 100);
                 tube.style.setProperty('--water-height', `${percentage}%`);
-                progressText.innerText = `${terisi} / 11 Variabel`;
+                progressText.innerText = `${terisi} / 12 Variabel Terisi`;
             }, 300);
 
-            document.getElementById('approved-text').innerText = `${disetujui} Variabel`;
+            document.getElementById('approved-text').innerText = `${disetujui} / 12 Disetujui`;
         });
     </script>
 </body>

@@ -232,7 +232,9 @@
                     else kategori = "Sangat Tinggi";
                 }
 
-                dataRekap.push({ name: opd.name, varSelesai, skor, kategori, laporan: opd.laporanAkhirUrl });
+                const stateDrive = opd.variabelStatus ? opd.variabelStatus['v12'] : null;
+                const driveLink = stateDrive ? stateDrive.driveLink : '';
+                dataRekap.push({ name: opd.name, varSelesai, skor, kategori, laporan: opd.laporanAkhirUrl, driveLink: driveLink });
             });
 
             // Urutkan berdasarkan skor tertinggi (Peringkat)
@@ -240,9 +242,14 @@
 
             // Render Tabel
             dataRekap.forEach((data, index) => {
-                const btnLaporan = data.laporan
-                    ? `<a href="#" class="btn-download" onclick="alert('Mengunduh dokumen: ${data.laporan}')"><i class="fa-solid fa-download"></i> Unduh PDF</a>`
-                    : `<span class="btn-download disabled"><i class="fa-solid fa-clock"></i> Belum Diunggah</span>`;
+                let btnLaporan = '';
+                if (data.driveLink) {
+                    btnLaporan = `<a href="${data.driveLink}" target="_blank" class="btn-download" style="background:#2563eb; text-decoration:none;"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>`;
+                } else if (data.laporan) {
+                    btnLaporan = `<a href="#" class="btn-download" onclick="alert('Dokumen: ${data.laporan}')"><i class="fa-solid fa-file-pdf"></i> Dokumen</a>`;
+                } else {
+                    btnLaporan = `<span class="btn-download disabled"><i class="fa-solid fa-clock"></i> Belum Diunggah</span>`;
+                }
 
                 tbody.innerHTML += `
                     <tr>
@@ -251,7 +258,8 @@
                         <td>${data.varSelesai} / 11</td>
                         <td style="font-weight:bold; color:var(--primary-green); font-size:1.1rem;">${data.skor}</td>
                         <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:600; color:#475569;">${data.kategori}</span></td>
-                        <td data-html2canvas-ignore="true">${btnLaporan}</td> </tr>
+                        <td data-html2canvas-ignore="true">${btnLaporan}</td>
+                    </tr>
                 `;
             });
 

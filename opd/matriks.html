@@ -86,29 +86,37 @@
                 4: { class: 'selesai', label: '<i class="fa-solid fa-check-double"></i> Selesai (Disetujui)', btnText: 'Lihat Isian Akhir', btnIcon: 'fa-lock' }
             };
 
-            // 4. Looping 11 Variabel
-            for (let i = 1; i <= 11; i++) {
+            // 4. Looping 12 Variabel
+            for (let i = 1; i <= 12; i++) {
                 // Tarik data judul dari dbVariabel
                 const dataVar = dbVariabel.find(v => v.id === i) || { id: i, judul: `Variabel ${i}` };
 
                 // Tarik status dari database lokal
-                const vState = opdData.variabelStatus[`v${i}`];
-                const currentStatus = statusConfig[vState.status];
+                const vState = opdData.variabelStatus[`v${i}`] || { status: 0 };
+                const currentStatus = statusConfig[vState.status] || statusConfig[0];
 
                 // Tambahkan efek glow merah khusus jika status = 2 (Revisi)
-                const extraStyle = vState.status === 2 ? 'box-shadow: 0 0 15px rgba(153, 27, 27, 0.2);' : '';
+                let extraStyle = vState.status === 2 ? 'box-shadow: 0 0 15px rgba(153, 27, 27, 0.2);' : '';
+                
+                // Variabel 12 Khusus Google Drive
+                const isDriveCard = i === 12;
+                const cardBorder = isDriveCard ? 'border: 2px solid #3b82f6;' : '';
 
                 // Render Card HTML
                 const cardHTML = `
-                    <div class="var-card status-${vState.status}" style="${extraStyle}">
+                    <div class="var-card status-${vState.status}" style="${extraStyle} ${cardBorder}">
                         <div>
-                            <span class="badge ${currentStatus.class}">${currentStatus.label}</span>
-                            <h3 class="var-title">${dataVar.judul}</h3>
+                            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                                <span class="badge ${currentStatus.class}">${currentStatus.label}</span>
+                                ${isDriveCard ? '<span style="background:#eff6ff; color:#2563eb; font-size:0.75rem; font-weight:bold; padding:2px 8px; border-radius:4px;"><i class="fa-brands fa-google-drive"></i> Bukti Fisik</span>' : ''}
+                            </div>
+                            <h3 class="var-title" style="${isDriveCard ? 'color:#1e3a8a;' : ''}">${dataVar.judul}</h3>
                             
-                            ${vState.status === 2 ? `<p style="font-size: 0.8rem; color: var(--status-revisi); margin-top: -15px; margin-bottom: 15px; font-weight: 600;">" ${vState.catatanAdmin} "</p>` : ''}
+                            ${vState.status === 2 ? `<p style="font-size: 0.8rem; color: var(--status-revisi); margin-top: -10px; margin-bottom: 15px; font-weight: 600;">" ${vState.catatanAdmin} "</p>` : ''}
+                            ${isDriveCard && vState.driveLink ? `<p style="font-size:0.8rem; color:#2563eb; margin-top:-5px; margin-bottom:12px; word-break:break-all;"><i class="fa-solid fa-link"></i> ${vState.driveLink}</p>` : ''}
                         </div>
-                        <a href="detail.html?v=${i}" class="btn-kerja">
-                            <i class="fa-solid ${currentStatus.btnIcon}"></i> ${currentStatus.btnText}
+                        <a href="detail.html?v=${i}" class="btn-kerja" style="${isDriveCard ? 'background:#2563eb;' : ''}">
+                            <i class="fa-solid ${isDriveCard && vState.status === 0 ? 'fa-cloud-arrow-up' : currentStatus.btnIcon}"></i> ${isDriveCard && vState.status === 0 ? 'Input Tautan Drive' : currentStatus.btnText}
                         </a>
                     </div>
                 `;

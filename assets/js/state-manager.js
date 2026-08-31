@@ -3,16 +3,17 @@
  * Mengelola Autentikasi, Multi-OPD, dan Keamanan Sesi
  */
 
-// 1. Fungsi untuk membuat 11 variabel kosong (Struktur Baru)
+// 1. Fungsi untuk membuat 12 variabel kosong (1-11 Indikator Kematangan, 12 Link Google Drive)
 function generateInitialVariabel() {
     let vars = {};
-    for (let i = 1; i <= 11; i++) {
+    for (let i = 1; i <= 12; i++) {
         vars[`v${i}`] = {
             status: 0,
-            levelPilihan: null,
-            levelDisetujui: 0, // <--- TAMBAHAN BARU: Menyimpan skor permanen
+            levelPilihan: i === 12 ? 1 : null,
+            levelDisetujui: 0,
             deskripsi: "",
-            uploads: { 1: [], 2: [], 3: [], 4: [], 5: [], 6: [], 7: [] }, // Array untuk multi-file
+            driveLink: "", // Khusus tautan Google Drive
+            uploads: {}, // Deprecated, tetap ada untuk kompatibilitas data lama
             catatanAdmin: ""
         };
     }
@@ -30,6 +31,34 @@ function initLocalDB() {
             // CEK STRUKTUR: Jika tidak ada array 'opds' atau objek 'admin', reset!
             if (!db || typeof db !== 'object' || !Array.isArray(db.opds) || !db.admin) {
                 shouldReset = true;
+            } else {
+                // Auto-healing & migrasi data: pastikan seluruh OPD memiliki variabel v1 sampai v12
+                let updated = false;
+                db.opds.forEach(opd => {
+                    if (!opd.variabelStatus) {
+                        opd.variabelStatus = generateInitialVariabel();
+                        updated = true;
+                    } else {
+                        for (let i = 1; i <= 12; i++) {
+                            if (!opd.variabelStatus[`v${i}`]) {
+                                opd.variabelStatus[`v${i}`] = {
+                                    status: 0,
+                                    levelPilihan: i === 12 ? 1 : null,
+                                    levelDisetujui: 0,
+                                    deskripsi: "",
+                                    driveLink: "",
+                                    uploads: {},
+                                    catatanAdmin: ""
+                                };
+                                updated = true;
+                            }
+                        }
+                    }
+                });
+                if (updated) {
+                    localStorage.setItem('kopd_db', JSON.stringify(db));
+                    console.log("Sistem: Database lokal berhasil dimigrasikan ke 12 variabel.");
+                }
             }
         } catch (e) {
             // Jika JSON korup/bukan JSON, reset!

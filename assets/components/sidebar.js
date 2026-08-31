@@ -9,16 +9,16 @@ function renderSidebar(basePath = '../', role = 'opd') {
 
     // 1. Ambil data untuk deteksi Notifikasi Titik Merah (Khusus OPD)
     let globalHasAlert = false;
-    let varAlerts = Array(12).fill(false); // Index 1-11 untuk mencatat variabel mana yang revisi
+    let varAlerts = Array(13).fill(false); // Index 1-12 untuk mencatat variabel mana yang revisi
 
     if (role === 'opd') {
         const db = JSON.parse(localStorage.getItem('kopd_db'));
         if (db && db.session && db.session.role === 'opd') {
             const currentOpd = db.opds.find(o => o.id === db.session.id);
             if (currentOpd) {
-                for (let i = 1; i <= 11; i++) {
+                for (let i = 1; i <= 12; i++) {
                     // Jika status = 2 (Butuh Revisi/Merah), nyalakan alert titik merah
-                    if (currentOpd.variabelStatus[`v${i}`].status === 2) {
+                    if (currentOpd.variabelStatus[`v${i}`] && currentOpd.variabelStatus[`v${i}`].status === 2) {
                         varAlerts[i] = true;
                         globalHasAlert = true; // Trigger titik merah di menu utama Papan Matriks
                     }
@@ -30,23 +30,24 @@ function renderSidebar(basePath = '../', role = 'opd') {
     // 2. Generate Item Menu sesuai Role
     let menuHTML = '';
     if (role === 'opd') {
-        // Generate list pintasan 11 variabel untuk dropdown
+        // Generate list pintasan 12 variabel untuk dropdown
         let dropdownItems = '';
         const daftarNamaVar = [
             "Perencanaan Pembangunan", "Monitoring & Pengendalian", "Penjaminan Mutu Layanan",
             "SOP Pelayanan", "Diklat Aparatur", "Analisis Kebijakan",
             "Manajemen Sumber Daya", "Manajemen Resiko", "Pengukuran Kinerja",
-            "Pengembangan Inovasi", "Budaya Organisasi"
+            "Pengembangan Inovasi", "Budaya Organisasi", "📁 Tautan Google Drive"
         ];
 
         daftarNamaVar.forEach((nama, index) => {
             const vId = index + 1;
             // Cek apakah variabel ini punya alert revisi
             const redDot = varAlerts[vId] ? '<span class="nav-red-dot"></span>' : '';
+            const customIcon = vId === 12 ? '<i class="fa-brands fa-google-drive" style="color:var(--water-yellow); margin-right:4px;"></i>' : '';
             dropdownItems += `
                 <li>
                     <a href="${basePath}opd/detail.html?v=${vId}">
-                        <span class="var-num">${vId}</span> ${nama} ${redDot}
+                        <span class="var-num">${vId}</span> ${customIcon}${nama} ${redDot}
                     </a>
                 </li>
             `;

@@ -361,6 +361,37 @@
                 `;
             }
 
+            // Tampilkan Baris Khusus Variabel 12 (Tautan Google Drive)
+            const stateDrive = opdData.variabelStatus['v12'];
+            let teksStatusDrive = "Belum Diunggah";
+            let warnaDrive = "#6b7280";
+            let linkTeks = "-";
+
+            if (stateDrive && stateDrive.driveLink) {
+                if (stateDrive.status === 4) {
+                    teksStatusDrive = "Terverifikasi";
+                    warnaDrive = "var(--primary-green)";
+                } else if (stateDrive.status === 2) {
+                    teksStatusDrive = "Butuh Perbaikan";
+                    warnaDrive = "var(--status-revisi)";
+                } else {
+                    teksStatusDrive = "Proses Evaluasi";
+                    warnaDrive = "var(--status-menunggu)";
+                }
+                linkTeks = `<a href="${stateDrive.driveLink}" target="_blank" style="color:#2563eb; font-size:0.85rem; font-weight:bold; text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Google Drive</a>`;
+            } else {
+                isianLengkap = false;
+            }
+
+            tbody.innerHTML += `
+                <tr style="background-color:#eff6ff;">
+                    <td style="text-align: center; font-weight: bold; color:#1e40af;">12</td>
+                    <td style="font-weight: 600; color: #1e40af;"><i class="fa-brands fa-google-drive"></i> Tautan Folder Google Drive Bukti Fisik</td>
+                    <td style="color: ${warnaDrive}; font-weight: 600;">${teksStatusDrive}</td>
+                    <td>${linkTeks}</td>
+                </tr>
+            `;
+
             // TAMPILKAN HASIL LOGIKA INDEKS OTOMATIS
             document.getElementById('text-indeks-akhir').innerText = totalSkorKematangan.toFixed(2);
 
