@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor OPD - KOPD Mabar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+
+    <style>
+        /* Mengakomodasi layout baru dengan sidebar dinamis */
+        .layout-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px 40px 40px 80px;
+            transition: all 0.3s ease;
+            background: var(--sage-bg);
+        }
+
+        body.sidebar-collapsed .main-content {
+            padding-left: 60px;
+        }
+
+        .header {
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            color: var(--primary-green);
+            font-size: 1.8rem;
+            margin: 0 0 8px 0;
+        }
+
+        /* Grid Statistik */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        /* Alert Broadcast dari Admin */
+        .alert-broadcast {
+            background-color: #eff6ff;
+            border-left: 4px solid #3b82f6;
+            color: #1e3a8a;
+            padding: 16px 20px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        /* Pembungkus Kotak Panel (Putih Polos) */
+        .panel-putih {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .panel-putih-header {
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 12px;
+            margin-bottom: 16px;
+            color: var(--primary-green);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout-wrapper">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <div class="header">
+                <h1>Selamat Datang, <span id="nama-opd">Memuat...</span></h1>
+                <p style="color: #4b5563; margin:0;">Sistem Kematangan Organisasi Perangkat Daerah Kabupaten Manggarai
+                    Barat 2025</p>
+            </div>
+
+            <div id="broadcast-container" class="alert-broadcast">
+                <h4 style="margin: 0 0 8px 0;"><i class="fa-solid fa-bullhorn"></i> Pengumuman dari Bagian Organisasi
+                </h4>
+                <p id="broadcast-msg" style="margin: 0; font-size: 0.95rem;"></p>
+            </div>
+
+            <div class="stats-grid">
+                <div class="card" style="display: flex; align-items: center; gap: 24px;">
+                    <div class="water-tube" id="progress-tube" style="--water-height: 0%;">
+                        <div class="water"></div>
+                    </div>
+                    <div>
+                        <span style="color: #6b7280; font-size: 0.9rem;">Total Variabel Terisi</span>
+                        <h2 style="color: var(--primary-green); margin-top: 4px; margin-bottom:0;" id="progress-text">0
+                            / 11 Variabel</h2>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div>
+                            <span style="color: #6b7280; font-size: 0.9rem;">Variabel Disetujui (Selesai)</span>
+                            <h2 style="color: var(--status-selesai); margin-top: 4px; margin-bottom:0;"
+                                id="approved-text">0 Variabel</h2>
+                        </div>
+                        <div style="background: #dcfce7; padding: 12px; border-radius: 50%;">
+                            <i class="fa-solid fa-check-double"
+                                style="color: var(--status-selesai); font-size: 1.5rem;"></i>
+                        </div>
+                    </div>
+                    <p style="margin: 12px 0 0 0; font-size: 0.8rem; color: #9ca3af;">Data yang telah dikunci oleh
+                        Evaluator</p>
+                </div>
+            </div>
+
+            <div class="panel-putih">
+                <div class="panel-putih-header">
+                    <h3 style="font-size: 1.1rem; margin:0;"><i class="fa-solid fa-bell"></i> Riwayat & Hasil Verifikasi
+                    </h3>
+                    <span id="badge-notif"
+                        style="background: var(--status-revisi); color: white; padding: 2px 10px; border-radius: 12px; font-size: 0.8rem; font-weight: bold; display: none;">0
+                        Revisi</span>
+                </div>
+
+                <div class="scrollable-notif-box" id="notification-feed">
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="../assets/js/state-manager.js"></script>
+    <script src="../assets/components/sidebar.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!checkSession('opd', '../')) return;
+            renderSidebar('../', 'opd');
+
+            const db = JSON.parse(localStorage.getItem('kopd_db'));
+            const opdData = getCurrentOpdData();
+            document.getElementById('nama-opd').innerText = opdData.name;
+
+            if (db.broadcastMessage && db.broadcastMessage.trim() !== "") {
+                document.getElementById('broadcast-container').style.display = 'block';
+                document.getElementById('broadcast-msg').innerText = db.broadcastMessage;
+            }
+
+            let terisi = 0;
+            let disetujui = 0;
+            let totalRevisi = 0;
+            const feedContainer = document.getElementById('notification-feed');
+            let feedHTML = '';
+
+            for (let i = 1; i <= 11; i++) {
+                const state = opdData.variabelStatus[`v${i}`];
+                // Jika sudah ada status pengajuan ATAU sudah ada memori yang disahkan
+                if (state.status > 0 || state.levelDisetujui > 0) terisi++;
+                
+                // Dihitung sebagai "Variabel Disetujui" jika minimal sudah sah di Level 1
+                if (state.levelDisetujui > 0) disetujui++;
+
+                // RENDER STRUKTUR HTML NOTIFIKASI BARU (KOMPAK & PADAT)
+                if (state.status === 2) {
+                    totalRevisi++;
+                    feedHTML += `
+                        <div class="notif-item">
+                            <div class="notif-icon"><i class="fa-solid fa-triangle-exclamation" style="color: var(--status-revisi);"></i></div>
+                            <div style="flex: 1;">
+                                <strong style="color: var(--status-revisi);">Variabel ${i}: Butuh Perbaikan</strong>
+                                <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
+                                    <strong>Catatan Admin:</strong> <i>"${state.catatanAdmin || 'Mohon unggah dokumen perbaikan.'}"</i>
+                                </div>
+                                <a href="detail.html?v=${i}" style="display:inline-block; margin-top:8px; font-size:0.75rem; color:var(--status-revisi); text-decoration:none; font-weight:bold; background:#fee2e2; padding:4px 10px; border-radius:4px; transition:0.2s;">Perbaiki Sekarang <i class="fa-solid fa-arrow-right"></i></a>
+                                <span class="notif-time">Menunggu tindak lanjut Anda</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (state.status === 4) {
+                    feedHTML += `
+                        <div class="notif-item">
+                            <div class="notif-icon"><i class="fa-solid fa-circle-check" style="color: var(--status-selesai);"></i></div>
+                            <div style="flex: 1;">
+                                <strong style="color: var(--status-selesai);">Variabel ${i}: Disetujui & Dikunci</strong>
+                                <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
+                                    Tingkat Kematangan Usulan: <strong>Level ${state.levelPilihan}</strong> memenuhi kriteria.
+                                </div>
+                                <span class="notif-time">Selesai diverifikasi</span>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            // Tampilkan feed atau empty state
+            if (feedHTML === '') {
+                feedContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px;"></i><br>Belum ada riwayat verifikasi dokumen.</div>`;
+            } else {
+                feedContainer.innerHTML = feedHTML;
+            }
+
+            // Update Badge Revisi
+            if (totalRevisi > 0) {
+                const badge = document.getElementById('badge-notif');
+                badge.style.display = 'inline-block';
+                badge.innerText = `${totalRevisi} Perbaikan`;
+            }
+
+            // Animasi Tabung Air
+            const tube = document.getElementById('progress-tube');
+            const progressText = document.getElementById('progress-text');
+            setTimeout(() => {
+                let percentage = Math.min((terisi / 11) * 100, 100);
+                tube.style.setProperty('--water-height', `${percentage}%`);
+                progressText.innerText = `${terisi} / 11 Variabel`;
+            }, 300);
+
+            document.getElementById('approved-text').innerText = `${disetujui} Variabel`;
+        });
+    </script>
+</body>
+
+</html>

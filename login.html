@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - KOPD Mabar</title>
+    <link rel="stylesheet" href="assets/css/global.css">
+    <style>
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #2e4942;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+        }
+
+        .login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 380px;
+            text-align: center;
+        }
+
+        .login-box h2 {
+            color: #1b4332;
+            margin-top: 0;
+            margin-bottom: 8px;
+        }
+
+        .login-box p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #475569;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            box-sizing: border-box;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #1b4332;
+        }
+
+        button.btn-login {
+            width: 100%;
+            padding: 14px;
+            background: #1b4332;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: 0.2s;
+            font-size: 1rem;
+            margin-top: 10px;
+        }
+
+        button.btn-login:hover {
+            background: #14532d;
+        }
+
+        .error-msg {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 10px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            margin-bottom: 20px;
+            display: none;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="login-box">
+        <h2>KOPD Mabar</h2>
+        <p>Silakan masuk ke akun Anda</p>
+
+        <div id="error-msg" class="error-msg">Username atau Password salah!</div>
+
+        <form id="login-form">
+            <div class="input-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" id="username" placeholder="Masukkan username..." required autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" id="pasword" placeholder="Masukkan password..." required>
+            </div>
+            <button type="submit" class="btn-login">Masuk</button>
+        </form>
+    </div>
+
+    <script src="assets/js/state-manager.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. CEK: Jika user sudah dalam keadaan Login, otomatis pindahkan ke halaman yang benar
+            const rawData = localStorage.getItem('kopd_db');
+            if (rawData) {
+                try {
+                    const db = JSON.parse(rawData);
+                    if (db.session) {
+                        if (db.session.role === 'admin') window.location.href = 'admin/index.html'; // Arahkan ke dasbor admin
+                        else if (db.session.role === 'opd') window.location.href = 'opd/index.html';
+                    }
+                } catch (e) { }
+            }
+
+            // 2. PROSES: Saat tombol Masuk diklik
+            document.getElementById('login-form').addEventListener('submit', (e) => {
+                e.preventDefault(); // Mencegah halaman refresh
+
+                const user = document.getElementById('username').value;
+                const pass = document.getElementById('password').value;
+
+                // Gunakan fungsi login dari state-manager.js
+                const res = loginUser(user, pass);
+
+                if (res.success) {
+                    // Jika sukses, pindah halaman sesuai role
+                    window.location.href = res.redirect;
+                } else {
+                    // Jika gagal, tampilkan pesan error
+                    const errMsg = document.getElementById('error-msg');
+                    errMsg.innerText = res.message;
+                    errMsg.style.display = 'block';
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

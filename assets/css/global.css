@@ -1,0 +1,198 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Identitas Warna KOPD Mabar */
+    --primary-green: #1b4332;
+    --secondary-green: #2d6a4f;
+    --sage-bg: #94b7a4;
+    --water-yellow: #dee347;
+    --white: #ffffff;
+
+    /* Warna Status Kematangan */
+    --status-proses: #9ca3af;
+    /* Abu-abu */
+    --status-menunggu: #854d0e;
+    /* Kuning Gelap */
+    --status-revisi: #991b1b;
+    /* Merah */
+    --status-verifikasi: #1d4ed8;
+    /* Biru */
+    --status-selesai: #166534;
+    /* Hijau */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Inter', sans-serif;
+}
+
+body {
+    background-color: var(--sage-bg);
+    color: #333;
+    display: flex;
+    min-height: 100vh;
+}
+
+/* Base Card UI */
+.card {
+    background: var(--white);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+}
+
+/* Badge Status Global */
+.badge {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--white);
+}
+
+.badge.proses {
+    background-color: var(--status-proses);
+}
+
+.badge.menunggu {
+    background-color: var(--status-menunggu);
+}
+
+.badge.revisi {
+    background-color: var(--status-revisi);
+}
+
+.badge.verifikasi-ulang {
+    background-color: var(--status-verifikasi);
+}
+
+.badge.selesai {
+    background-color: var(--status-selesai);
+}
+
+/* Animasi Air (Dashboard) */
+.water-tube {
+    position: relative;
+    width: 40px;
+    height: 60px;
+    border: 2px solid var(--primary-green);
+    border-radius: 6px 6px 16px 16px;
+    overflow: hidden;
+    background-color: #f9fafb;
+}
+
+.water-tube .water {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: var(--water-height, 0%);
+    background: linear-gradient(180deg, var(--water-yellow) 0%, #b8c42f 100%);
+    transition: height 1.5s ease-in-out;
+    z-index: 1;
+}
+
+.water-tube .water::before,
+.water-tube .water::after {
+    content: "";
+    position: absolute;
+    width: 120px;
+    height: 120px;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #f9fafb;
+    border-radius: 40%;
+    z-index: 2;
+    animation: wave-spin 3s linear infinite;
+}
+
+.water-tube .water::after {
+    border-radius: 45%;
+    background: rgba(249, 250, 251, 0.5);
+    animation: wave-spin 4s linear infinite;
+}
+
+@keyframes wave-spin {
+    0% {
+        transform: translateX(-50%) rotate(0deg);
+    }
+
+    100% {
+        transform: translateX(-50%) rotate(360deg);
+    }
+}
+
+/* Penyesuaian Transisi Layout Utama terhadap Kinerja Sidebar */
+.layout-wrapper {
+    display: flex;
+    width: 100%;
+    min-height: 100vh;
+    transition: all 0.3s ease;
+}
+
+.main-content {
+    flex: 1;
+    padding: 40px 40px 40px 80px;
+    /* Jarak kiri dilebihkan sedikit untuk space tombol hamburger */
+    transition: all 0.3s ease;
+    background-color: var(--sage-bg);
+}
+
+/* Jika sidebar ditutup, hilangkan padding penggeser jika diperlukan */
+body.sidebar-collapsed .main-content {
+    padding-left: 60px;
+}
+
+/* CLASS UNTUK KOTAK NOTIFIKASI / PEMBERITAHUAN */
+.scrollable-notif-box {
+    max-height: 280px;
+    /* Mengunci tinggi maksimal */
+    overflow-y: auto;
+    /* Memunculkan scrollbar jika isi melebihi batas */
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 10px;
+}
+
+/* Kustomisasi Scrollbar agar terlihat elegan */
+.scrollable-notif-box::-webkit-scrollbar {
+    width: 6px;
+}
+
+.scrollable-notif-box::-webkit-scrollbar-thumb {
+    background: #cbd5e1;
+    border-radius: 4px;
+}
+
+/* Item List Notifikasi (Lebih padat) */
+.notif-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px;
+    border-bottom: 1px solid #f1f5f9;
+    font-size: 0.85rem;
+    /* Font diperkecil sedikit */
+    line-height: 1.4;
+    color: #334155;
+}
+
+.notif-item:last-child {
+    border-bottom: none;
+}
+
+.notif-icon {
+    flex-shrink: 0;
+    font-size: 1.1rem;
+}
+
+.notif-time {
+    display: block;
+    font-size: 0.7rem;
+    color: #94a3b8;
+    margin-top: 4px;
+}

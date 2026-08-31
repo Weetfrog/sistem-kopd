@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Papan Matriks - KOPD Mabar 2025</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <link rel="stylesheet" href="../assets/css/matriks.css">
+    <style>
+        /* Penyesuaian Layout Sidebar Dinamis (Hamburger) */
+        .layout-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px 40px 40px 80px;
+            transition: all 0.3s ease;
+            background: var(--sage-bg);
+        }
+
+        body.sidebar-collapsed .main-content {
+            padding-left: 60px;
+        }
+
+        .header-matriks {
+            margin-bottom: 24px;
+        }
+
+        .header-matriks h1 {
+            color: var(--primary-green);
+            margin-bottom: 8px;
+            font-size: 1.8rem;
+        }
+
+        .header-matriks p {
+            color: #4b5563;
+            font-size: 0.95rem;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout-wrapper">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <div class="header-matriks">
+                <h1>Papan Pantau Variabel</h1>
+                <p>Pilih variabel di bawah ini untuk mengisi tingkat kematangan dan mengunggah data dukung.</p>
+            </div>
+
+            <div id="matriks-container" class="matriks-grid">
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/data-variabel.js"></script>
+    <script src="../assets/js/state-manager.js"></script>
+    <script src="../assets/components/sidebar.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Cek Sesi (Wajib Login OPD)
+            checkSession('opd', '../');
+
+            // 2. Render Sidebar
+            renderSidebar('../', 'opd');
+
+            const container = document.getElementById('matriks-container');
+
+            // 3. Ambil data spesifik akun OPD yang sedang login (Fungsi Baru State Manager V2)
+            const opdData = getCurrentOpdData();
+
+            // Konfigurasi Label, Ikon, dan Warna untuk 5 Status
+            const statusConfig = {
+                0: { class: 'proses', label: '<i class="fa-solid fa-hourglass-start"></i> Belum Diisi', btnText: 'Buka Ruang Kerja', btnIcon: 'fa-pen-to-square' },
+                1: { class: 'menunggu', label: '<i class="fa-solid fa-clock-rotate-left"></i> Menunggu Verifikasi', btnText: 'Lihat Isian', btnIcon: 'fa-eye' },
+                2: { class: 'revisi', label: '<i class="fa-solid fa-triangle-exclamation"></i> Butuh Perbaikan', btnText: 'Perbaiki Data', btnIcon: 'fa-wrench' },
+                3: { class: 'verifikasi-ulang', label: '<i class="fa-solid fa-rotate"></i> Verifikasi Ulang', btnText: 'Lihat Isian', btnIcon: 'fa-eye' },
+                4: { class: 'selesai', label: '<i class="fa-solid fa-check-double"></i> Selesai (Disetujui)', btnText: 'Lihat Isian Akhir', btnIcon: 'fa-lock' }
+            };
+
+            // 4. Looping 11 Variabel
+            for (let i = 1; i <= 11; i++) {
+                // Tarik data judul dari dbVariabel
+                const dataVar = dbVariabel.find(v => v.id === i) || { id: i, judul: `Variabel ${i}` };
+
+                // Tarik status dari database lokal
+                const vState = opdData.variabelStatus[`v${i}`];
+                const currentStatus = statusConfig[vState.status];
+
+                // Tambahkan efek glow merah khusus jika status = 2 (Revisi)
+                const extraStyle = vState.status === 2 ? 'box-shadow: 0 0 15px rgba(153, 27, 27, 0.2);' : '';
+
+                // Render Card HTML
+                const cardHTML = `
+                    <div class="var-card status-${vState.status}" style="${extraStyle}">
+                        <div>
+                            <span class="badge ${currentStatus.class}">${currentStatus.label}</span>
+                            <h3 class="var-title">${dataVar.judul}</h3>
+                            
+                            ${vState.status === 2 ? `<p style="font-size: 0.8rem; color: var(--status-revisi); margin-top: -15px; margin-bottom: 15px; font-weight: 600;">" ${vState.catatanAdmin} "</p>` : ''}
+                        </div>
+                        <a href="detail.html?v=${i}" class="btn-kerja">
+                            <i class="fa-solid ${currentStatus.btnIcon}"></i> ${currentStatus.btnText}
+                        </a>
+                    </div>
+                `;
+                container.innerHTML += cardHTML;
+            }
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Admin - KOPD Mabar 2025</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .layout-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            background: #f1f5f9;
+        }
+
+        /* Tabel Pemantauan OPD */
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-top: 24px;
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 16px;
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background: #f8fafc;
+            color: var(--primary-green);
+            font-weight: 700;
+        }
+
+        tr:hover {
+            background-color: #f8fafc;
+        }
+
+        .btn-aksi {
+            background: var(--primary-green);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.8rem;
+            font-weight: bold;
+            transition: 0.2s;
+            display: inline-block;
+        }
+
+        .btn-aksi:hover {
+            background: #14532d;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Lencana/Badge Pintar untuk Tabel */
+        .badge-tabel {
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout-wrapper">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <h1 style="color: var(--primary-green); margin-top:0; margin-bottom: 8px;">Dasbor Super Admin</h1>
+            <p style="color: #6b7280; margin-top:0;">Pantau dan verifikasi pengajuan instrumen kematangan seluruh
+                Perangkat Daerah.</p>
+
+            <div
+                style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-top: 24px;">
+                <div class="card" style="border-left: 4px solid var(--status-menunggu);">
+                    <h3 style="color: var(--status-menunggu); margin-top:0; margin-bottom: 8px;"><i
+                            class="fa-solid fa-hourglass-half"></i> Antrean Verifikasi Baru</h3>
+                    <p id="stat-antrean" style="font-size: 1.8rem; font-weight: bold; margin:0; color:#1e293b;">0
+                        Dokumen</p>
+                </div>
+                <div class="card" style="border-left: 4px solid #3b82f6;">
+                    <h3 style="color: #3b82f6; margin-top:0; margin-bottom: 8px;"><i class="fa-solid fa-rotate"></i>
+                        Perbaikan (Verifikasi Ulang)</h3>
+                    <p id="stat-ulang" style="font-size: 1.8rem; font-weight: bold; margin:0; color:#1e293b;">0 Dokumen
+                    </p>
+                </div>
+            </div>
+
+            <div class="table-container">
+                <h3 style="margin-top:0; margin-bottom: 16px; color: #1f2937;"><i class="fa-solid fa-list-check"
+                        style="color:var(--primary-green);"></i> Daftar Prioritas Tugas (Shortcut)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Instansi (OPD)</th>
+                            <th>Indikator Variabel</th>
+                            <th>Status Pengajuan</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabel-opd">
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/state-manager.js"></script>
+    <script src="../assets/components/sidebar.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Rem Darurat Keamanan
+            if (!checkSession('admin', '../')) return;
+            renderSidebar('../', 'admin');
+
+            // 2. Ambil Pangkalan Data
+            const db = JSON.parse(localStorage.getItem('kopd_db'));
+            if (!db || !db.opds) return;
+
+            let totalAntreanBaru = 0;
+            let totalRevisiUlang = 0;
+            let tabelTugasHTML = '';
+
+            // 3. Mesin Penyapu (Scan seluruh OPD dan Variabelnya)
+            db.opds.forEach(opd => {
+                // Loop ke 11 Variabel dalam setiap OPD
+                for (let i = 1; i <= 11; i++) {
+                    let state = opd.variabelStatus[`v${i}`];
+
+                    // Jika Status 1 (Menunggu Verifikasi Baru)
+                    if (state && state.status === 1) {
+                        totalAntreanBaru++;
+                        tabelTugasHTML += `
+                            <tr>
+                                <td style="font-weight: 600; color:#334155;">${opd.name}</td>
+                                <td>Variabel ${i}</td>
+                                <td><span class="badge-tabel" style="background: var(--status-menunggu);">Usulan Baru</span></td>
+                                <td><a href="verifikasi.html" class="btn-aksi">Tinjau Bukti ➔</a></td>
+                            </tr>
+                        `;
+                    }
+                    // Jika Status 3 (Verifikasi Ulang dari Revisi)
+                    else if (state && state.status === 3) {
+                        totalRevisiUlang++;
+                        tabelTugasHTML += `
+                            <tr>
+                                <td style="font-weight: 600; color:#334155;">${opd.name}</td>
+                                <td>Variabel ${i}</td>
+                                <td><span class="badge-tabel" style="background: #3b82f6;">Verifikasi Ulang</span></td>
+                                <td><a href="verifikasi.html" class="btn-aksi">Tinjau Bukti ➔</a></td>
+                            </tr>
+                        `;
+                    }
+                }
+            });
+
+            // 4. Suntikkan Angka ke Kartu Statistik Atas
+            document.getElementById('stat-antrean').innerText = `${totalAntreanBaru} Dokumen`;
+            document.getElementById('stat-ulang').innerText = `${totalRevisiUlang} Dokumen`;
+
+            // 5. Suntikkan Baris ke Tabel
+            const tbody = document.getElementById('tabel-opd');
+            if (tabelTugasHTML === '') {
+                // Tampilan jika pekerjaan Admin sudah selesai semua
+                tbody.innerHTML = `
+                    <tr>
+                        <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
+                            <i class="fa-solid fa-mug-hot" style="font-size: 2rem; margin-bottom:10px;"></i><br>
+                            Kerja bagus! Tidak ada dokumen dalam antrean saat ini.
+                        </td>
+                    </tr>
+                `;
+            } else {
+                tbody.innerHTML = tabelTugasHTML;
+            }
+        });
+
+    </script>
+
+<!-- HANYA DIGUNAKAN SELAMA MASA PERCOBAAN -->
+    <div style="position: fixed; bottom: 10px; right: 10px; z-index: 9999;">
+        <button onclick="resetSistemUjiCoba()"
+            style="background: #ef4444; color: white; border: none; padding: 8px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: bold; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+            <i class="fa-solid fa-trash-arrow-up"></i> Reset Data Aplikasi
+        </button>
+    </div>
+
+    <script>
+        function resetSistemUjiCoba() {
+            if (confirm("⚠️ PERHATIAN: Apakah Anda yakin ingin menghapus seluruh data OPD, riwayat, dan mengembalikan sistem ke kondisi awal?")) {
+                localStorage.removeItem('kopd_db');
+                alert("Sistem berhasil di-reset ke Pengaturan Pabrik!");
+                window.location.reload(); // Memuat ulang halaman otomatis
+            }
+        }
+// HAPUS SAAT DILAUNCE
+
+    </script>
+</body>
+
+</html>

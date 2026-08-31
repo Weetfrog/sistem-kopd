@@ -1,0 +1,95 @@
+/* =========================================
+   PAPAN MATRIKS (GRID & KARTU VARIABEL)
+   ========================================= */
+
+.matriks-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 24px;
+    margin-top: 24px;
+}
+
+/* Desain Kartu Variabel Dasar */
+.var-card {
+    background: white;
+    border-radius: 12px;
+    padding: 24px;
+    border: 1px solid #e5e7eb;
+    transition: all 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+}
+
+.var-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 20px -5px rgba(0, 0, 0, 0.1);
+}
+
+/* Identifikasi Garis Warna Berdasarkan Status */
+.var-card.status-0 {
+    border-top: 5px solid var(--status-proses);
+}
+
+.var-card.status-1 {
+    border-top: 5px solid var(--status-menunggu);
+}
+
+.var-card.status-2 {
+    border-top: 5px solid var(--status-revisi);
+}
+
+.var-card.status-3 {
+    border-top: 5px solid var(--status-verifikasi);
+}
+
+.var-card.status-4 {
+    border-top: 5px solid var(--status-selesai);
+}
+
+.var-card .badge {
+    display: inline-block;
+    margin-bottom: 12px;
+}
+
+.var-card .var-title {
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: #1f2937;
+    margin: 8px 0 24px 0;
+    line-height: 1.5;
+}
+
+/* Tombol Masuk ke Ruang Kerja */
+.var-card .btn-kerja {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    width: 100%;
+    padding: 12px;
+    background: var(--sage-bg);
+    color: var(--primary-green);
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: background-color 0.2s, color 0.2s;
+}
+
+.var-card .btn-kerja:hover {
+    background: var(--secondary-green);
+    color: white;
+}
+
+/* Ubah gaya tombol jika status selesai/hijau */
+.var-card.status-4 .btn-kerja {
+    background: #f0fdf4;
+    color: var(--status-selesai);
+    border: 1px solid #bbf7d0;
+}
+
+.var-card.status-4 .btn-kerja:hover {
+    background: var(--status-selesai);
+    color: white;
+}

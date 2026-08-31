@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelola Akun OPD - Super Admin KOPD</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .layout-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+            transition: all 0.3s ease;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px 40px 40px 80px;
+            transition: all 0.3s ease;
+        }
+
+        body.sidebar-collapsed .main-content {
+            padding-left: 60px;
+        }
+
+        .panel-form {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            display: none;
+            border-top: 4px solid var(--primary-green);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .form-group-input label {
+            display: block;
+            font-weight: 600;
+            font-size: 0.9rem;
+            margin-bottom: 6px;
+            color: #374151;
+        }
+
+        .form-group-input input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            border-radius: 6px;
+            font-size: 0.95rem;
+            outline: none;
+        }
+
+        .form-group-input input:focus {
+            border-color: var(--primary-green);
+        }
+
+        .panel-broadcast {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            margin-bottom: 30px;
+            border-left: 4px solid #3b82f6;
+        }
+
+        textarea.form-control {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            margin: 12px 0;
+            min-height: 100px;
+            resize: vertical;
+            font-family: 'Inter', sans-serif;
+        }
+
+        .table-container {
+            background: white;
+            border-radius: 12px;
+            padding: 24px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th,
+        td {
+            padding: 14px;
+            text-align: left;
+            border-bottom: 1px solid #e5e7eb;
+            font-size: 0.95rem;
+        }
+
+        th {
+            background: #f8fafc;
+            color: var(--primary-green);
+            font-weight: 600;
+        }
+
+        .btn-sm {
+            padding: 8px 14px;
+            border: none;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 0.8rem;
+            transition: 0.2s;
+            color: white;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-blue {
+            background: #3b82f6;
+        }
+
+        .btn-blue:hover {
+            background: #2563eb;
+        }
+
+        .btn-red {
+            background: var(--status-revisi);
+        }
+
+        .btn-red:hover {
+            background: #7f1d1d;
+        }
+
+        .btn-green {
+            background: var(--status-selesai);
+        }
+
+        .btn-green:hover {
+            background: #14532d;
+        }
+
+        .badge-locked {
+            background: #fee2e2;
+            color: #991b1b;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+
+        .badge-active {
+            background: #dcfce7;
+            color: #166534;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout-wrapper">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <h1 style="color: var(--primary-green); margin-bottom: 24px;">Kelola Akun & Informasi</h1>
+
+            <div class="panel-form" id="panel-tambah-opd">
+                <h3 style="color: var(--primary-green); margin-bottom: 16px;"><i class="fa-solid fa-user-plus"></i>
+                    Daftarkan Akun Instansi / OPD Baru</h3>
+                <form id="form-tambah-opd">
+                    <div class="form-row">
+                        <div class="form-group-input">
+                            <label>Nama Lengkap Instansi</label>
+                            <input type="text" id="add-name" placeholder="Contoh: Dinas Kesehatan" required
+                                autocomplete="off">
+                        </div>
+                        <div class="form-group-input">
+                            <label>Username Login</label>
+                            <input type="text" id="add-username" placeholder="Contoh: dinkes" required
+                                autocomplete="off">
+                        </div>
+                        <div class="form-group-input">
+                            <label>Kata Sandi (Password)</label>
+                            <input type="text" id="add-password" placeholder="Ketik sandi akun" required
+                                autocomplete="off">
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 10px; justify-content: flex-end;">
+                        <button type="button" class="btn-sm btn-red" onclick="toggleFormTambah(false)">Batal</button>
+                        <button type="submit" class="btn-sm btn-green"><i class="fa-solid fa-floppy-disk"></i> Simpan
+                            Akun</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="panel-broadcast">
+                <h3 style="color: #1e3a8a;"><i class="fa-solid fa-bullhorn"></i> Siarkan Pengumuman (Broadcast)</h3>
+                <form id="form-broadcast">
+                    <textarea id="input-broadcast" class="form-control"
+                        placeholder="Ketik pengumuman di sini... (Kosongkan untuk menghapus pengumuman)"></textarea>
+                    <button type="submit" class="btn-sm btn-blue"><i class="fa-solid fa-paper-plane"></i> Kirim
+                        Siaran</button>
+                </form>
+            </div>
+
+            <div class="table-container">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                    <h3 style="color: var(--primary-green);"><i class="fa-solid fa-users"></i> Daftar Akun Pengguna</h3>
+                    <button class="btn-sm btn-green" onclick="toggleFormTambah(true)"><i class="fa-solid fa-plus"></i>
+                        Buat Akun Baru</button>
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th width="5%">ID</th>
+                            <th width="35%">Nama Instansi / OPD</th>
+                            <th width="15%">Username</th>
+                            <th width="15%">Kata Sandi</th>
+                            <th width="12%">Status</th>
+                            <th width="18%">Aksi Manajemen</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabel-akun">
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/state-manager.js"></script>
+    <script src="../assets/components/sidebar.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession('admin', '../');
+            renderSidebar('../', 'admin');
+
+            let db = JSON.parse(localStorage.getItem('kopd_db'));
+            document.getElementById('input-broadcast').value = db.broadcastMessage || "";
+
+            // Fungsi Buka Tutup Form
+            window.toggleFormTambah = function (show) {
+                document.getElementById('panel-tambah-opd').style.display = show ? 'block' : 'none';
+                if (!show) document.getElementById('form-tambah-opd').reset();
+            }
+
+            // Fungsi Pembuatan Akun Baru
+            document.getElementById('form-tambah-opd').addEventListener('submit', function (e) {
+                e.preventDefault();
+                db = JSON.parse(localStorage.getItem('kopd_db'));
+
+                const name = document.getElementById('add-name').value;
+                const username = document.getElementById('add-username').value.trim().toLowerCase();
+                const password = document.getElementById('add-password').value;
+
+                // Validasi duplikasi username
+                if (db.opds.some(o => o.username === username)) {
+                    alert("Username sudah digunakan oleh instansi lain!");
+                    return;
+                }
+
+                // Kalkulasi ID otomatis berikutnya
+                const nextId = db.opds.length > 0 ? Math.max(...db.opds.map(o => o.id)) + 1 : 1;
+
+                // Push ke objek database lokal menggunakan fungsi bawaan dari state-manager
+                db.opds.push({
+                    id: nextId,
+                    username: username,
+                    password: password,
+                    name: name,
+                    isLocked: false,
+                    variabelStatus: generateInitialVariabel() // Menggunakan cetakan kosong 11 variabel
+                });
+
+                localStorage.setItem('kopd_db', JSON.stringify(db));
+                alert("Akun " + name + " berhasil dibuat!");
+                toggleFormTambah(false);
+                renderTabel();
+            });
+
+            // Fungsi Render Tabel Akun (Dengan Kolom Sandi Aktif)
+            function renderTabel() {
+                db = JSON.parse(localStorage.getItem('kopd_db'));
+                const tbody = document.getElementById('tabel-akun');
+                tbody.innerHTML = '';
+
+                db.opds.forEach(opd => {
+                    const statusBadge = opd.isLocked ? `<span class="badge-locked"><i class="fa-solid fa-lock"></i> Terkunci</span>` : `<span class="badge-active"><i class="fa-solid fa-check"></i> Aktif</span>`;
+
+                    const lockIcon = opd.isLocked ? 'fa-lock-open' : 'fa-lock';
+                    const lockTitle = opd.isLocked ? 'Buka Kunci' : 'Kunci Akun';
+
+                    tbody.innerHTML += `
+                        <tr>
+                            <td style="text-align:center; font-weight:bold;">${opd.id}</td>
+                            <td style="font-weight:500; color:#1f2937;">${opd.name}</td>
+                            <td><code>${opd.username}</code></td>
+                            <td><span style="font-family: monospace; background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:bold;">${opd.password}</span></td>
+                            <td>${statusBadge}</td>
+                            <td>
+                                <div style="display:flex; gap:6px;">
+                                    <button class="btn-sm btn-blue" title="${lockTitle}" onclick="toggleLock(${opd.id}, ${!opd.isLocked})">
+                                        <i class="fa-solid ${lockIcon}"></i>
+                                    </button>
+                                    <button class="btn-sm btn-red" title="Hapus Akun" onclick="hapusAkun(${opd.id}, '${opd.name}')">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                    `;
+                });
+            }
+
+            renderTabel();
+
+            // Fungsi Kirim Broadcast
+            document.getElementById('form-broadcast').addEventListener('submit', (e) => {
+                e.preventDefault();
+                db.broadcastMessage = document.getElementById('input-broadcast').value;
+                localStorage.setItem('kopd_db', JSON.stringify(db));
+                alert("Pengumuman berhasil disiarkan!");
+            });
+
+            // Fungsi Kunci/Buka Akun
+            window.toggleLock = function (id, lockStatus) {
+                const opdIndex = db.opds.findIndex(o => o.id === id);
+                if (opdIndex > -1) {
+                    db.opds[opdIndex].isLocked = lockStatus;
+                    localStorage.setItem('kopd_db', JSON.stringify(db));
+                    renderTabel();
+                }
+            };
+
+            // Fungsi Hapus Akun
+            window.hapusAkun = function (id, name) {
+                if (confirm("Apakah Anda yakin ingin menghapus akun '" + name + "' secara permanen? Seluruh riwayat pengisian data kematangannya akan ikut terhapus.")) {
+                    db.opds = db.opds.filter(o => o.id !== id);
+                    localStorage.setItem('kopd_db', JSON.stringify(db));
+                    renderTabel();
+                }
+            };
+        });
+    </script>
+</body>
+
+</html>

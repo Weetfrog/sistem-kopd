@@ -1,0 +1,831 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meja Verifikasi Lintas OPD - KOPD Mabar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+
+    <style>
+        /* Base Reset */
+        body {
+            overflow: hidden;
+            background-color: #f1f5f9;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', sans-serif;
+        }
+
+        /* Layout Utama Flexbox */
+        .layout-wrapper {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .workspace-3col {
+            flex: 1;
+            display: flex;
+            height: 100vh;
+            background: #e2e8f0;
+        }
+
+        /* =================================================
+           KOLOM 1: DAFTAR OPD (22%)
+           ================================================= */
+        .panel-opd {
+            width: 22%;
+            background: #ffffff;
+            border-right: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            position: relative;
+        }
+
+        .opd-header-title {
+            padding: 18px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #ffffff;
+            display: flex;
+            align-items: center;
+            min-height: 64px;
+            box-sizing: border-box;
+            transition: padding-left 0.3s ease;
+        }
+
+        .opd-header-title h2 {
+            color: var(--primary-green);
+            margin: 0;
+            font-size: 1.05rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        body.sidebar-collapsed .opd-header-title {
+            padding-left: 65px;
+        }
+
+        .search-area {
+            padding: 12px 16px;
+            border-bottom: 1px solid #e2e8f0;
+            background: #f8fafc;
+        }
+
+        .search-area input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            outline: none;
+            font-size: 0.85rem;
+            box-sizing: border-box;
+        }
+
+        .search-area input:focus {
+            border-color: var(--primary-green);
+            box-shadow: 0 0 0 2px rgba(27, 67, 50, 0.1);
+        }
+
+        .opd-scroll-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+            list-style: none;
+            margin: 0;
+        }
+
+        .opd-scroll-list::-webkit-scrollbar {
+            width: 5px;
+        }
+
+        .opd-scroll-list::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .opd-list-item {
+            padding: 12px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 4px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: #475569;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .opd-list-item:hover {
+            background: #f1f5f9;
+        }
+
+        .opd-list-item.active-opd {
+            background: var(--sage-bg);
+            color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+
+        .badge-count {
+            background: var(--status-menunggu);
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+        }
+
+        /* =================================================
+           KOLOM 2: PUSAT VARIABEL (43%)
+           ================================================= */
+        .panel-variabel {
+            width: 43%;
+            background: #f8fafc;
+            border-right: 1px solid #cbd5e1;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: width 0.3s ease;
+        }
+
+        .var-top-bar {
+            padding: 0 20px;
+            min-height: 64px;
+            background: #ffffff;
+            border-bottom: 1px solid #cbd5e1;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            box-sizing: border-box;
+        }
+
+        .var-scroll-grid {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+        }
+
+        .var-scroll-grid::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        .var-scroll-grid::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .var-row-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: 0.2s;
+            border-left: 4px solid #cbd5e1;
+        }
+
+        .var-row-card:hover {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+
+        .var-row-card.active-var {
+            border-color: var(--primary-green);
+            border-left-color: var(--primary-green);
+            background: #f0fdf4;
+        }
+
+        .border-status-1 {
+            border-left-color: var(--status-menunggu);
+        }
+
+        .border-status-2 {
+            border-left-color: var(--status-revisi);
+        }
+
+        .border-status-3 {
+            border-left-color: #3b82f6;
+        }
+
+        .border-status-4 {
+            border-left-color: var(--status-selesai);
+        }
+
+        .execution-box {
+            background: #ffffff;
+            border: 1px solid var(--primary-green);
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 14px;
+            display: none;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.02);
+        }
+
+        .fakta-box {
+            background: #f1f5f9;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            color: #1e293b;
+            margin: 8px 0 16px 0;
+            border: 1px solid #e2e8f0;
+        }
+
+        textarea.admin-catatan {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            font-family: inherit;
+            font-size: 0.85rem;
+            resize: vertical;
+            min-height: 80px;
+            box-sizing: border-box;
+            outline: none;
+        }
+
+        textarea.admin-catatan:focus {
+            border-color: var(--primary-green);
+        }
+
+        .action-btn-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .action-btn {
+            flex: 1;
+            padding: 10px;
+            border: none;
+            border-radius: 6px;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-reject {
+            background: var(--status-revisi);
+        }
+
+        .btn-reject:hover {
+            background: #7f1d1d;
+        }
+
+        .btn-approve {
+            background: var(--status-selesai);
+        }
+
+        .btn-approve:hover {
+            background: #14532d;
+        }
+
+        /* =================================================
+           KOLOM 3: PREVIEW DOKUMEN (35%)
+           ================================================= */
+        .panel-preview {
+            width: 35%;
+            background: #475569;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: width 0.3s ease;
+            overflow: hidden;
+        }
+
+        .preview-header {
+            background: #ffffff;
+            padding: 0 20px;
+            min-height: 64px;
+            border-bottom: 1px solid #cbd5e1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        .preview-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            position: relative;
+        }
+
+        .btn-minimize-panel {
+            background: none;
+            border: none;
+            font-size: 1.2rem;
+            color: #94a3b8;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+        }
+
+        .btn-minimize-panel:hover {
+            color: var(--primary-green);
+        }
+
+        .admin-file-wrapper {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .admin-file-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .btn-file-select {
+            flex: 1;
+            background: #334155;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            padding: 10px 12px;
+            text-align: left;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .btn-file-select:hover,
+        .btn-file-select.active-file {
+            background: var(--primary-green);
+            border-color: var(--water-yellow);
+            color: white;
+        }
+
+        .btn-admin-delete {
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-admin-delete:hover {
+            background: #fca5a5;
+            color: white;
+        }
+
+        .pdf-sheet-mockup {
+            background: white;
+            border-radius: 4px;
+            padding: 30px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            min-height: 450px;
+            display: none;
+            color: #334155;
+        }
+
+        .empty-state-view {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 70%;
+            color: #94a3b8;
+            text-align: center;
+            padding: 20px;
+        }
+
+        /* State Desktop Minimize Panel Kanan */
+        .panel-preview.minimized-state {
+            width: 0%;
+            padding: 0;
+            border: none;
+        }
+
+        .panel-variabel.expanded-state {
+            width: 78%;
+        }
+
+        /* =================================================
+           RESPONSIVE MOBILE / TABLET
+           ================================================= */
+        .btn-mobile-back {
+            display: none;
+            padding: 6px 12px;
+            background: #e2e8f0;
+            color: #334155;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+
+        .floating-mobile-doc-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 14px 20px;
+            border-radius: 30px;
+            font-weight: bold;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 1000;
+            cursor: pointer;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 992px) {
+            .workspace-3col {
+                position: relative;
+                width: 100%;
+                overflow: hidden;
+            }
+
+            .panel-opd {
+                width: 100%;
+                flex-shrink: 0;
+            }
+
+            .panel-variabel {
+                width: 100%;
+                flex-shrink: 0;
+                position: absolute;
+                left: 100%;
+                top: 0;
+                background: white;
+                z-index: 50;
+            }
+
+            body.mobile-view-variables .panel-variabel {
+                left: 0;
+            }
+
+            body.mobile-view-variables .panel-opd {
+                transform: translateX(-100%);
+                opacity: 0;
+            }
+
+            body.mobile-view-variables .btn-mobile-back {
+                display: inline-flex;
+            }
+
+            .panel-preview {
+                position: fixed;
+                top: 0;
+                left: 100%;
+                width: 100%;
+                height: 100vh;
+                z-index: 2000;
+            }
+
+            body.mobile-show-pdf-modal .panel-preview {
+                left: 0;
+                opacity: 1;
+            }
+
+            body.mobile-view-variables .floating-mobile-doc-btn {
+                display: inline-flex;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout-wrapper">
+        <div id="sidebar-container"></div>
+
+        <main class="workspace-3col">
+
+            <div class="panel-opd">
+                <div class="opd-header-title">
+                    <h2><i class="fa-solid fa-folder-tree"></i> Meja Kerja Verifikasi</h2>
+                </div>
+                <div class="search-area">
+                    <input type="text" id="search-opd-admin" placeholder="🔍 Cari Nama Instansi..." autocomplete="off">
+                </div>
+                <ul class="opd-scroll-list" id="dom-list-opd"></ul>
+            </div>
+
+            <div class="panel-variabel" id="col-2">
+                <div class="var-top-bar">
+                    <button class="btn-mobile-back" id="btn-back-mobile" onclick="kembaliKeDaftarOpd()"><i
+                            class="fa-solid fa-chevron-left"></i> Kembali</button>
+                    <span id="dom-nama-opd-aktif">Silakan Pilih Instansi di Panel Kiri</span>
+                </div>
+                <div class="var-scroll-grid" id="dom-box-variabel">
+                    <div class="empty-state-view">
+                        <i class="fa-solid fa-building-circle-check" style="font-size: 3rem; margin-bottom: 12px;"></i>
+                        <p>Belum ada Perangkat Daerah yang dipilih.<br>Klik instansi di panel kiri untuk memulai
+                            verifikasi.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="panel-preview" id="col-3">
+                <div class="preview-header">
+                    <span><i class="fa-solid fa-file-shield" style="color:var(--primary-green); margin-right:6px;"></i>
+                        Lembar Bukti Dokumen</span>
+                    <button class="btn-minimize-panel" onclick="toggleMinimizePreview()" title="Tutup/Buka Pratinjau">
+                        <i class="fa-solid fa-angles-right" id="minimize-icon"></i>
+                    </button>
+                </div>
+
+                <div id="dom-wrapper-files" class="file-list-admin"
+                    style="display: none; background:#1e293b; padding:16px;">
+                    <div id="dom-container-files"></div>
+                </div>
+
+                <div class="preview-scroll-area">
+                    <div class="empty-state-view" id="preview-empty-state" style="color:#cbd5e1;">
+                        <i class="fa-solid fa-file-lines"
+                            style="font-size: 3.5rem; margin-bottom: 12px; color:#64748b;"></i>
+                        <p>Pilih file bukti fisik di atas untuk memunculkan pratinjau lembar dokumen.</p>
+                    </div>
+
+                    <div class="pdf-sheet-mockup" id="dom-pdf-viewer">
+                        <div
+                            style="text-align:center; border-bottom:2px solid #1e293b; padding-bottom:12px; margin-bottom:20px;">
+                            <h3 style="margin:0; color:#1b4332;">DOKUMEN DATA DUKUNG</h3>
+                            <p style="font-size:0.75rem; color:#6b7280; margin:4px 0 0 0;">KOPD KAB. MANGGARAI BARAT
+                                2025</p>
+                        </div>
+                        <div style="font-size: 0.85rem; line-height: 1.6;">
+                            <p><strong>Nama Fail:</strong> <span id="pdf-mock-filename"
+                                    style="color:#b91c1c; font-weight:bold;">-</span></p>
+                            <p><strong>Kesesuaian Aturan:</strong> <span id="pdf-mock-kriteria">-</span></p>
+                            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:16px 0;">
+                            <h4 style="color:var(--primary-green); margin-bottom:6px;"><i
+                                    class="fa-solid fa-file-invoice"></i> Ringkasan Bukti Kebijakan:</h4>
+                            <p style="font-style:italic; color:#4b5563;">Dokumen ini dilampirkan oleh OPD sebagai
+                                pemenuhan indikator penilaian instrumen kematangan aparatur daerah.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <button class="floating-mobile-doc-btn" onclick="bukaModalPdfMobile()">
+        <i class="fa-solid fa-file-pdf"></i> <span>Lihat Berkas (<span id="mobile-file-count">0</span>)</span>
+    </button>
+
+    <script src="../assets/js/data-variabel.js"></script>
+    <script src="../assets/js/state-manager.js"></script>
+    <script src="../assets/components/sidebar.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // REM DARURAT: Jika sesi tidak valid, HENTIKAN seluruh script di bawahnya.
+            if (!checkSession('admin', '../')) return;
+
+            renderSidebar('../', 'admin');
+
+            // Ambil Data Aman
+            let db;
+            try {
+                db = JSON.parse(localStorage.getItem('kopd_db'));
+                if (!db || !db.opds) throw new Error("Format Invalid");
+            } catch (e) {
+                console.error("Data Gagal Dimuat", e);
+                return;
+            }
+
+            let activeOpdId = null;
+            let activeVarId = null;
+            let isPreviewMinimized = false;
+
+            function initMasterOpdList(searchFilter = '') {
+                const listContainer = document.getElementById('dom-list-opd');
+                listContainer.innerHTML = '';
+
+                db.opds.forEach(opd => {
+                    if (opd.name.toLowerCase().includes(searchFilter.toLowerCase())) {
+                        let usulanBaruCount = 0;
+                        for (let i = 1; i <= 11; i++) {
+                            const s = opd.variabelStatus[`v${i}`]?.status || 0;
+                            if (s === 1 || s === 3) usulanBaruCount++;
+                        }
+                        const badgeHtml = usulanBaruCount > 0 ? `<span class="badge-count">${usulanBaruCount}</span>` : '';
+                        const activeClass = activeOpdId === opd.id ? 'active-opd' : '';
+
+                        listContainer.innerHTML += `
+                            <li class="opd-list-item ${activeClass}" onclick="pilihOpdKeMejaKerja(${opd.id}, '${opd.name}')">
+                                <span>${opd.name}</span> ${badgeHtml}
+                            </li>
+                        `;
+                    }
+                });
+            }
+
+            document.getElementById('search-opd-admin').addEventListener('input', (e) => {
+                initMasterOpdList(e.target.value);
+            });
+            initMasterOpdList();
+
+            window.pilihOpdKeMejaKerja = function (opdId, opdName) {
+                activeOpdId = opdId;
+                activeVarId = null;
+                initMasterOpdList(document.getElementById('search-opd-admin').value);
+                document.getElementById('dom-nama-opd-aktif').innerText = `📂 ${opdName.toUpperCase()}`;
+                resetPanelKananPreview();
+                if (window.innerWidth <= 992) document.body.classList.add('mobile-view-variables');
+                renderDaftarVariabelTengah();
+            };
+
+            function renderDaftarVariabelTengah() {
+                const boxVariabel = document.getElementById('dom-box-variabel');
+                boxVariabel.innerHTML = '';
+                const opdData = db.opds.find(o => o.id === activeOpdId);
+                const statusLabels = { 0: "Belum Diisi", 1: "Menunggu Verifikasi", 2: "Butuh Revisi", 3: "Verifikasi Ulang", 4: "Selesai (Disetujui)" };
+
+                for (let i = 1; i <= 11; i++) {
+                    const state = opdData.variabelStatus[`v${i}`];
+                    if (state && state.status > 0) {
+                        const pedoman = dbVariabel.find(v => v.id === i);
+                        const isActive = activeVarId === i ? 'active-var' : '';
+
+                        boxVariabel.innerHTML += `
+                            <div class="var-row-card border-status-${state.status} ${isActive}" id="card-var-${i}" onclick="seleksiVariabelSpesifik(${i})">
+                                <div style="display:flex; justify-content:space-between; font-size:0.75rem; color:#6b7280; font-weight:bold; margin-bottom:6px;">
+                                    <span>VARIABEL ${i}</span>
+                                    <span class="badge status-${state.status}" style="padding:2px 6px; border-radius:4px; color:white;">${statusLabels[state.status].toUpperCase()}</span>
+                                </div>
+                                <div style="font-weight:700; color:#1e293b; font-size:0.9rem; line-height:1.4;">${pedoman ? pedoman.judul : '-'}</div>
+                                <div style="font-size:0.8rem; color:#475569; margin-top:6px;">Level Diajukan: <strong>${state.levelPilihan || '-'}</strong></div>
+                                
+                                <div class="execution-box" id="exec-box-${i}" onclick="event.stopPropagation()">
+                                    <h4 style="margin:0; font-size:0.8rem; color:#6b7280;">DESKRIPSI FAKTA OPD:</h4>
+                                    <div class="fakta-box">${state.deskripsi || '-'}</div>
+                                    <h4 style="margin:0 0 6px 0; font-size:0.8rem; color:#6b7280;">CATATAN EVALUATOR:</h4>
+                                    <textarea id="catatan-admin-${i}" class="admin-catatan" placeholder="Ketik instruksi revisi di sini...">${state.status === 2 ? (state.catatanAdmin || '') : ''}</textarea>
+                                    <div class="action-btn-group">
+                                        <button class="action-btn btn-reject" onclick="eksekusiKeputusanAkhir(${i}, 2)"><i class="fa-solid fa-rotate-left"></i> Tolak (Revisi)</button>
+                                        <button class="action-btn btn-approve" onclick="eksekusiKeputusanAkhir(${i}, 4)"><i class="fa-solid fa-check-double"></i> Setujui</button>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                }
+
+                if (boxVariabel.innerHTML === '') {
+                    boxVariabel.innerHTML = `<div class="empty-state-view"><i class="fa-solid fa-circle-nodes" style="font-size:3rem; margin-bottom:12px;"></i><p>Belum ada data usulan instrumen.</p></div>`;
+                }
+            }
+
+            window.seleksiVariabelSpesifik = function (vId) {
+                activeVarId = vId;
+                document.querySelectorAll('.execution-box').forEach(box => box.style.display = 'none');
+                document.querySelectorAll('.var-row-card').forEach(card => card.classList.remove('active-var'));
+                document.getElementById(`exec-box-${vId}`).style.display = 'block';
+                document.getElementById(`card-var-${vId}`).classList.add('active-var');
+
+                const opdData = db.opds.find(o => o.id === activeOpdId);
+                const state = opdData.variabelStatus[`v${vId}`];
+                const pedoman = dbVariabel.find(v => v.id === vId);
+                const containerFiles = document.getElementById('dom-container-files');
+
+                containerFiles.innerHTML = '';
+                let totalFilesCount = 0;
+
+                const levelMax = state.levelPilihan ? parseInt(state.levelPilihan) : 0;
+
+                for (let L = 1; L <= levelMax; L++) {
+                    let filesInLevel = state.uploads[L] || [];
+                    if (filesInLevel.length > 0) {
+                        containerFiles.innerHTML += `<div style="font-size:0.7rem; font-weight:bold; color:#94a3b8; margin: 10px 0 4px 0;">LEVEL ${L}</div>`;
+                        filesInLevel.forEach((fileName, fileIndex) => {
+                            totalFilesCount++;
+                            containerFiles.innerHTML += `
+                                <div class="admin-file-row">
+                                    <button class="btn-file-select" onclick="bukaKertasPratinjauPdf('${fileName}', '${pedoman ? pedoman.levels[L - 1] : ''}', this)">
+                                        <i class="fa-solid fa-file-pdf" style="color:#f87171;"></i> ${fileName}
+                                    </button>
+                                    <button class="btn-admin-delete" title="Hapus File" onclick="hapusFileOlehAdminOpsional(${L}, ${fileIndex}, '${fileName}')">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </div>
+                            `;
+                        });
+                    }
+                }
+
+                document.getElementById('mobile-file-count').innerText = totalFilesCount;
+
+                if (totalFilesCount > 0) {
+                    document.getElementById('dom-wrapper-files').style.display = 'block';
+                    setTimeout(() => {
+                        const firstFileBtn = containerFiles.querySelector('.btn-file-select');
+                        if (firstFileBtn) firstFileBtn.click();
+                    }, 50);
+                } else {
+                    resetPanelKananPreview();
+                }
+            };
+
+            window.bukaKertasPratinjauPdf = function (fileName, kriteriaTeks, btnEl) {
+                document.querySelectorAll('.btn-file-select').forEach(b => b.classList.remove('active-file'));
+                if (btnEl) btnEl.classList.add('active-file');
+                document.getElementById('preview-empty-state').style.display = 'none';
+                document.getElementById('dom-pdf-viewer').style.display = 'block';
+                document.getElementById('pdf-mock-filename').innerText = fileName;
+                document.getElementById('pdf-mock-kriteria').innerText = kriteriaTeks ? kriteriaTeks.split(':')[0] : '-';
+            };
+
+            window.hapusFileOlehAdminOpsional = function (levelNum, fileIndex, fileName) {
+                if (confirm(`Yakin hapus file "${fileName}" secara paksa?`)) {
+                    const opdIndex = db.opds.findIndex(o => o.id === activeOpdId);
+                    db.opds[opdIndex].variabelStatus[`v${activeVarId}`].uploads[levelNum].splice(fileIndex, 1);
+
+                    const textarea = document.getElementById(`catatan-admin-${activeVarId}`);
+                    const logSistem = `[Sistem] File "${fileName}" di Level ${levelNum} dihapus oleh Evaluator. Mohon unggah ulang jika diperlukan.\n`;
+                    if (!textarea.value.includes(logSistem)) textarea.value = logSistem + textarea.value;
+
+                    localStorage.setItem('kopd_db', JSON.stringify(db));
+                    seleksiVariabelSpesifik(activeVarId);
+                }
+            };
+
+            window.eksekusiKeputusanAkhir = function (vId, statusBaru) {
+                const catatanValue = document.getElementById(`catatan-admin-${vId}`).value.trim();
+                if (statusBaru === 2 && !catatanValue) { alert("Alasan revisi wajib diisi!"); return; }
+
+                const opdIndex = db.opds.findIndex(o => o.id === activeOpdId);
+                db.opds[opdIndex].variabelStatus[`v${vId}`].status = statusBaru;
+                db.opds[opdIndex].variabelStatus[`v${vId}`].catatanAdmin = catatanValue || "Disetujui.";
+                // TAMBAHAN BARU: Jika disetujui (status 4), kunci level usulan menjadi level disetujui
+                if (statusBaru === 4) {
+                    let levelUsulan = parseInt(db.opds[opdIndex].variabelStatus[`v${vId}`].levelPilihan);
+                    db.opds[opdIndex].variabelStatus[`v${vId}`].levelDisetujui = levelUsulan;
+                }
+
+                localStorage.setItem('kopd_db', JSON.stringify(db));
+                alert(statusBaru === 4 ? "Disetujui!" : "Dikembalikan untuk Revisi.");
+                pilihOpdKeMejaKerja(activeOpdId, db.opds[opdIndex].name);
+            };
+
+            window.toggleMinimizePreview = function () {
+                if (window.innerWidth <= 992) { document.body.classList.remove('mobile-show-pdf-modal'); return; }
+                const panelKanan = document.getElementById('col-3');
+                const panelTengah = document.getElementById('col-2');
+                const icon = document.getElementById('minimize-icon');
+
+                if (!isPreviewMinimized) {
+                    panelKanan.classList.add('minimized-state'); panelTengah.classList.add('expanded-state');
+                    icon.className = "fa-solid fa-angles-left"; isPreviewMinimized = true;
+                } else {
+                    panelKanan.classList.remove('minimized-state'); panelTengah.classList.remove('expanded-state');
+                    icon.className = "fa-solid fa-angles-right"; isPreviewMinimized = false;
+                }
+            };
+
+            window.bukaModalPdfMobile = function () { document.body.classList.add('mobile-show-pdf-modal'); };
+            window.kembaliKeDaftarOpd = function () { document.body.classList.remove('mobile-view-variables'); activeOpdId = null; initMasterOpdList(document.getElementById('search-opd-admin').value); };
+
+            function resetPanelKananPreview() {
+                document.getElementById('dom-wrapper-files').style.display = 'none';
+                document.getElementById('dom-pdf-viewer').style.display = 'none';
+                document.getElementById('preview-empty-state').style.display = 'flex';
+                document.getElementById('mobile-file-count').innerText = "0";
+            }
+        });
+    </script>
+</body>
+
+</html>

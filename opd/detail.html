@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ruang Kerja Variabel - KOPD Mabar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .layout-wrapper {
+            display: flex;
+            width: 100%;
+            min-height: 100vh;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 40px;
+            max-width: 1000px;
+            transition: all 0.3s;
+            background: var(--sage-bg);
+        }
+
+        body.sidebar-collapsed .main-content {
+            padding-left: 60px;
+        }
+
+        .breadcrumb {
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+        }
+
+        .breadcrumb a {
+            color: var(--primary-green);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .alert-admin {
+            background-color: #fef2f2;
+            border-left: 4px solid var(--status-revisi);
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 24px;
+            display: none;
+        }
+
+        .form-label {
+            display: block;
+            font-weight: 700;
+            margin-bottom: 12px;
+            color: #1f2937;
+            font-size: 1.1rem;
+            border-bottom: 2px solid #e5e7eb;
+            padding-bottom: 8px;
+        }
+
+        .level-options {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            margin-bottom: 30px;
+        }
+
+        .level-card {
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            background: white;
+            display: flex;
+            gap: 16px;
+            align-items: flex-start;
+            transition: 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .level-card input[type="radio"] {
+            margin-top: 5px;
+            transform: scale(1.3);
+            cursor: pointer;
+        }
+
+        .level-card.selected {
+            border-color: var(--primary-green);
+            background-color: #f0fdf4;
+        }
+
+        .level-card.locked {
+            background: #f3f4f6;
+            border-color: #d1d5db;
+            opacity: 0.7;
+        }
+
+        .level-card.locked input[type="radio"] {
+            cursor: not-allowed;
+        }
+
+        .locked-overlay {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: #e5e7eb;
+            color: #6b7280;
+            padding: 4px 12px;
+            border-bottom-left-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+
+        .level-title {
+            font-weight: 700;
+            color: var(--primary-green);
+            min-width: 90px;
+        }
+
+        .level-desc {
+            font-size: 0.95rem;
+            color: #4b5563;
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .btn-upload-sm {
+            background: #e5e7eb;
+            color: #4b5563;
+            border: 1px dashed #9ca3af;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+            transition: 0.2s;
+        }
+
+        .btn-upload-sm:hover:not(:disabled) {
+            background: var(--sage-bg);
+            color: var(--primary-green);
+            border-color: var(--primary-green);
+        }
+
+        /* Styling List File Jamak & Tombol Hapus */
+        .file-list-container {
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .file-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: #f8fafc;
+            border: 1px solid #cbd5e1;
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+        }
+
+        .file-item-name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #1f2937;
+            font-weight: 500;
+        }
+
+        .btn-del-file {
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+        }
+
+        .btn-del-file:hover {
+            background: #fca5a5;
+            color: white;
+        }
+
+        textarea.form-control {
+            width: 100%;
+            padding: 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            resize: vertical;
+            min-height: 150px;
+            margin-bottom: 30px;
+        }
+
+        .btn-submit {
+            background: var(--primary-green);
+            color: white;
+            border: none;
+            padding: 14px 24px;
+            border-radius: 6px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 1rem;
+            transition: 0.2s;
+            width: 100%;
+        }
+
+        .btn-submit:hover {
+            background: var(--secondary-green);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="layout-wrapper">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <div class="breadcrumb">
+                <a href="matriks.html"><i class="fa-solid fa-arrow-left"></i> Kembali ke Papan Matriks</a>
+            </div>
+
+            <div class="card">
+                <h2 id="var-title"
+                    style="color: var(--primary-green); margin-bottom: 24px; border-bottom: 2px solid var(--sage-bg); padding-bottom: 12px;">
+                    Memuat...</h2>
+
+                <div id="admin-feedback" class="alert-admin">
+                    <h4 style="color: var(--status-revisi); margin-bottom: 4px;"><i
+                            class="fa-solid fa-comment-dots"></i> Catatan Revisi Admin:</h4>
+                    <p id="pesan-revisi" style="color: #4b5563; font-size: 0.95rem; margin-bottom: 8px;"></p>
+                    <p style="font-size: 0.8rem; color: #991b1b; font-weight: bold;">*Silakan hapus berkas yang salah
+                        menggunakan tombol (X) merah, lalu unggah berkas yang benar.</p>
+                </div>
+
+                <form id="form-kematangan">
+                    <label class="form-label">1. Pilih Tingkat Kematangan & Unggah Bukti Fisik</label>
+                    <p style="font-size: 0.85rem; color: #6b7280; margin-bottom: 16px;"><i
+                            class="fa-solid fa-circle-info"></i> Anda dapat mengunggah lebih dari 1 berkas per level.
+                        Level berikutnya akan otomatis terbuka jika bukti level sebelumnya telah terisi.</p>
+
+                    <div class="level-options" id="level-container"></div>
+
+                    <label class="form-label">2. Deskripsi / Penjelasan Fakta</label>
+                    <textarea id="input-penjelasan" class="form-control"
+                        placeholder="Ketik deskripsi jawaban sesuai kondisi aktual Perangkat Daerah Anda..."
+                        required></textarea>
+
+                    <button type="submit" class="btn-submit" id="btn-simpan">Simpan & Kirim ke Admin <i
+                            class="fa-solid fa-paper-plane"></i></button>
+                </form>
+            </div>
+        </main>
+    </div>
+
+    <script src="../assets/js/data-variabel.js"></script>
+    <script src="../assets/js/state-manager.js"></script>
+    <script src="../assets/components/sidebar.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            checkSession('opd', '../');
+            renderSidebar('../', 'opd');
+
+            const urlParams = new URLSearchParams(window.location.search);
+            const varId = parseInt(urlParams.get('v'));
+            if (!varId || varId < 1 || varId > 11) { window.location.href = "matriks.html"; return; }
+
+            const dataVariabel = dbVariabel.find(v => v.id === varId) || { judul: `Variabel ${varId}`, levels: Array(5).fill("Tingkat: Deskripsi belum tersedia.") };
+            document.getElementById('var-title').innerText = dataVariabel.judul;
+
+            const opdData = getCurrentOpdData();
+            let currentState = opdData.variabelStatus[`v${varId}`];
+
+            // Migrasi darurat jika data lama masih nyangkut berupa string/null (ubah paksa jadi array)
+            if (!currentState.uploads || !Array.isArray(currentState.uploads[1])) {
+                currentState.uploads = { 1: [], 2: [], 3: [], 4: [], 5: [] };
+            }
+
+            const levelContainer = document.getElementById('level-container');
+
+            // FUNGSI RENDER LEVEL & LIST FILE
+            window.renderLevels = function () {
+                levelContainer.innerHTML = '';
+
+                dataVariabel.levels.forEach((teks, index) => {
+                    const levelNum = index + 1;
+                    const arrFiles = currentState.uploads[levelNum] || [];
+
+                    // Gembok Level: Terkunci JIKA level > 1 DAN level sebelumnya kosong file-nya
+                    const isLocked = levelNum > 1 && (!currentState.uploads[levelNum - 1] || currentState.uploads[levelNum - 1].length === 0);
+
+                    const splitTeks = teks.split(':');
+                    const lvlTitle = splitTeks[0];
+                    const lvlDesc = splitTeks[1] ? splitTeks[1].trim() : teks;
+
+                    const lockOverlay = isLocked ? `<div class="locked-overlay"><i class="fa-solid fa-lock"></i> Terkunci</div>` : '';
+
+                    // Render List File Terunggah
+                    let fileListHTML = '';
+                    if (arrFiles.length > 0) {
+                        fileListHTML = '<div class="file-list-container">';
+                        arrFiles.forEach((fname, idx) => {
+                            // Sembunyikan tombol hapus jika status selesai (4)
+                            const delBtn = currentState.status !== 4 ? `<button type="button" class="btn-del-file" title="Hapus Berkas" onclick="hapusFile(${levelNum}, ${idx})"><i class="fa-solid fa-xmark"></i></button>` : '';
+                            fileListHTML += `
+                                <div class="file-item">
+                                    <span class="file-item-name"><i class="fa-solid fa-file-pdf" style="color:#ef4444;"></i> ${fname}</span>
+                                    ${delBtn}
+                                </div>`;
+                        });
+                        fileListHTML += '</div>';
+                    }
+
+                    // Tombol Upload (multiple active)
+                    const uploadBtnHTML = isLocked || currentState.status === 4 ? '' : `
+                        <div style="margin-top: 10px;">
+                            <input type="file" id="file-lvl-${levelNum}" style="display: none;" multiple accept=".pdf,.doc,.docx,.xls,.xlsx" onchange="handleFileUpload(${levelNum}, this)">
+                            <button type="button" class="btn-upload-sm" onclick="document.getElementById('file-lvl-${levelNum}').click()">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Tambah Berkas Pendukung (Bisa Lebih dari 1)
+                            </button>
+                        </div>
+                    `;
+
+                    levelContainer.innerHTML += `
+                        <label class="level-card ${isLocked ? 'locked' : ''}" id="card-lvl-${levelNum}">
+                            ${lockOverlay}
+                            <input type="radio" name="level" value="${levelNum}" ${isLocked ? 'disabled' : ''} required>
+                            <div style="flex: 1;">
+                                <div class="level-title">${lvlTitle}</div>
+                                <div class="level-desc">${lvlDesc}</div>
+                                ${uploadBtnHTML}
+                                ${fileListHTML}
+                            </div>
+                        </label>
+                    `;
+                });
+
+                if (currentState.levelPilihan && !document.querySelector(`input[name="level"][value="${currentState.levelPilihan}"]`).disabled) {
+                    const radio = document.querySelector(`input[name="level"][value="${currentState.levelPilihan}"]`);
+                    radio.checked = true;
+                    document.getElementById(`card-lvl-${currentState.levelPilihan}`).classList.add('selected');
+                }
+
+                document.querySelectorAll('input[name="level"]').forEach(r => {
+                    r.addEventListener('change', function () {
+                        document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
+                        if (this.checked) document.getElementById(`card-lvl-${this.value}`).classList.add('selected');
+                    });
+                });
+            }
+
+            // Fungsi Unggah Banyak File
+            window.handleFileUpload = function (levelNum, inputElement) {
+                if (inputElement.files.length > 0) {
+                    Array.from(inputElement.files).forEach(file => {
+                        currentState.uploads[levelNum].push(file.name);
+                    });
+                    simpanStateSementara();
+                    renderLevels();
+                }
+            };
+
+            // Fungsi Hapus 1 File Spesifik
+            window.hapusFile = function (levelNum, fileIndex) {
+                if (confirm(`Yakin ingin menghapus berkas "${currentState.uploads[levelNum][fileIndex]}"?`)) {
+                    currentState.uploads[levelNum].splice(fileIndex, 1);
+                    simpanStateSementara();
+                    renderLevels();
+                }
+            };
+
+            // Simpan Data Sementara ke DB
+            function simpanStateSementara() {
+                const db = JSON.parse(localStorage.getItem('kopd_db'));
+                const opdIndex = db.opds.findIndex(o => o.id === opdData.id);
+                db.opds[opdIndex].variabelStatus[`v${varId}`] = currentState;
+                localStorage.setItem('kopd_db', JSON.stringify(db));
+            }
+
+            renderLevels();
+            document.getElementById('input-penjelasan').value = currentState.deskripsi;
+
+            if (currentState.status === 2) {
+                document.getElementById('admin-feedback').style.display = 'block';
+                document.getElementById('pesan-revisi').innerText = currentState.catatanAdmin;
+            }
+
+            if (currentState.status === 4) {
+                document.getElementById('btn-simpan').style.display = 'none';
+                document.getElementById('input-penjelasan').disabled = true;
+                document.querySelectorAll('input').forEach(r => r.disabled = true);
+
+                document.getElementById('admin-feedback').style.display = 'block';
+                document.getElementById('admin-feedback').style.borderLeftColor = 'var(--status-selesai)';
+                document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-selesai)';
+                document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-circle-check"></i> Variabel Telah Disetujui';
+                document.getElementById('pesan-revisi').innerText = "Data Anda telah diverifikasi dan dikunci secara permanen.";
+                document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
+            }
+
+            document.getElementById('form-kematangan').addEventListener('submit', function (e) {
+                e.preventDefault();
+                const selectedLevel = parseInt(document.querySelector('input[name="level"]:checked').value);
+                const penjelasan = document.getElementById('input-penjelasan').value;
+
+                if (currentState.uploads[selectedLevel].length === 0) {
+                    alert(`Anda memilih Tingkat ${selectedLevel}, tetapi belum mengunggah Bukti Fisik apa pun di level tersebut!`);
+                    return;
+                }
+
+                currentState.status = currentState.status === 2 ? 3 : 1;
+                currentState.levelPilihan = selectedLevel;
+                currentState.deskripsi = penjelasan;
+
+                simpanStateSementara();
+                alert("Data berhasil dikirim ke Admin!");
+                window.location.href = "matriks.html";
+            });
+        });
+    </script>
+</body>
+
+</html>
