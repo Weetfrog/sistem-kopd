@@ -153,7 +153,7 @@
 
                 <div class="stat-cards">
                     <div class="card-global">
-                        <h3>Total OPD Terdaftar</h3>
+                        <h3>Total Perangkat Daerah Terdaftar</h3>
                         <div class="value" id="stat-total-opd">0</div>
                     </div>
                     <div class="card-global" style="border-top-color: var(--water-yellow);">
@@ -162,21 +162,30 @@
                                 style="font-size:1rem; color:#9ca3af;">/ 55</span></div>
                     </div>
                     <div class="card-global" style="border-top-color: var(--status-selesai);">
-                        <h3>OPD Selesai 100%</h3>
+                        <h3>Perangkat Daerah Selesai 100%</h3>
                         <div class="value" id="stat-selesai" style="color: var(--status-selesai);">0</div>
                     </div>
                 </div>
 
                 <div class="table-container">
+                    <!-- Filter Pencarian (tidak tercetak ke PDF) -->
+                    <div data-html2canvas-ignore="true" style="margin-bottom: 16px;">
+                        <input type="text" id="search-laporan"
+                            placeholder="🔍  Cari nama Perangkat Daerah..."
+                            oninput="filterTabelLaporan(this.value)"
+                            style="width: 100%; max-width: 400px; padding: 9px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s;"
+                            onfocus="this.style.borderColor='var(--primary-green)'"
+                            onblur="this.style.borderColor='#e5e7eb'">
+                    </div>
                     <table>
                         <thead>
                             <tr>
-                                <th>Peringkat</th>
-                                <th>Nama Instansi / OPD</th>
+                                <th>No</th>
+                                <th>Nama Perangkat Daerah</th>
                                 <th>Progress (Selesai)</th>
                                 <th>Skor Indeks</th>
                                 <th>Kategori Kematangan</th>
-                                <th data-html2canvas-ignore="true">Dokumen Laporan</th>
+                                <th data-html2canvas-ignore="true">Bukti Dukung (Link Drive)</th>
                             </tr>
                         </thead>
                         <tbody id="tabel-global"></tbody>
@@ -195,11 +204,10 @@
             renderSidebar('../', 'admin');
 
             const db = JSON.parse(localStorage.getItem('kopd_db'));
-            const tbody = document.getElementById('tabel-global');
 
             let dataRekap = [];
             let totalKabupatenScore = 0;
-            let totalOpdSelesai = 0;
+            let totalPDSelesai = 0;
 
             // Kalkulasi Data
             db.opds.forEach(opd => {
@@ -210,19 +218,14 @@
                     const state = opd.variabelStatus[`v${i}`];
                     if (state) {
                         let levelSah = parseInt(state.levelDisetujui || 0);
-                        skor += levelSah; // Skor Indeks ditarik dari "Tabungan Memori", bukan usulan!
-
-                        // Variabel dianggap "Tuntas" HANYA JIKA sudah disetujui sampai Level 5 (Maksimal)
-                        if (levelSah === 5) {
-                            varSelesai++;
-                        }
+                        skor += levelSah;
+                        if (levelSah === 5) varSelesai++;
                     }
                 }
 
                 totalKabupatenScore += skor;
-                if (varSelesai === 11) totalOpdSelesai++;
+                if (varSelesai === 11) totalPDSelesai++;
 
-                // Kategori
                 let kategori = "-";
                 if (skor > 0) {
                     if (skor <= 19) kategori = "Sangat Rendah";
@@ -233,50 +236,62 @@
                 }
 
                 const stateDrive = opd.variabelStatus ? opd.variabelStatus['v12'] : null;
-                const driveLink = stateDrive ? stateDrive.driveLink : '';
-                dataRekap.push({ name: opd.name, varSelesai, skor, kategori, laporan: opd.laporanAkhirUrl, driveLink: driveLink });
+                const driveLink = (stateDrive && stateDrive.driveLink) ? stateDrive.driveLink : '';
+                dataRekap.push({ name: opd.name, varSelesai, skor, kategori, driveLink });
             });
 
-            // Urutkan berdasarkan skor tertinggi (Peringkat)
+            // Urutkan berdasarkan skor tertinggi
             dataRekap.sort((a, b) => b.skor - a.skor);
 
-            // Render Tabel
-            dataRekap.forEach((data, index) => {
-                let btnLaporan = '';
+            // Fungsi render baris tabel (dapat difilter)
+            function renderBarisTabel(data, nomor) {
+                let btnDrive = '';
                 if (data.driveLink) {
-                    btnLaporan = `<a href="${data.driveLink}" target="_blank" class="btn-download" style="background:#2563eb; text-decoration:none;"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>`;
-                } else if (data.laporan) {
-                    btnLaporan = `<a href="#" class="btn-download" onclick="alert('Dokumen: ${data.laporan}')"><i class="fa-solid fa-file-pdf"></i> Dokumen</a>`;
+                    btnDrive = `<a href="${data.driveLink}" target="_blank" class="btn-download" style="background:#2563eb; text-decoration:none;"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>`;
                 } else {
-                    btnLaporan = `<span class="btn-download disabled"><i class="fa-solid fa-clock"></i> Belum Diunggah</span>`;
+                    btnDrive = `<span class="btn-download disabled"><i class="fa-solid fa-clock"></i> Belum Diisi</span>`;
                 }
-
-                tbody.innerHTML += `
-                    <tr>
-                        <td style="text-align:center; font-weight:bold; color:#64748b;">${index + 1}</td>
+                return `
+                    <tr data-name="${data.name.toLowerCase()}">
+                        <td style="text-align:center; font-weight:bold; color:#64748b;">${nomor}</td>
                         <td style="font-weight:600; color:#1e293b;">${data.name}</td>
                         <td>${data.varSelesai} / 11</td>
                         <td style="font-weight:bold; color:var(--primary-green); font-size:1.1rem;">${data.skor}</td>
                         <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:600; color:#475569;">${data.kategori}</span></td>
-                        <td data-html2canvas-ignore="true">${btnLaporan}</td>
+                        <td data-html2canvas-ignore="true">${btnDrive}</td>
                     </tr>
                 `;
+            }
+
+            // Render awal tabel
+            const tbody = document.getElementById('tabel-global');
+            dataRekap.forEach((data, index) => {
+                tbody.innerHTML += renderBarisTabel(data, index + 1);
             });
 
-            // Update Kartu Atas
+            // Update Kartu Statistik
             document.getElementById('stat-total-opd').innerText = db.opds.length;
-            document.getElementById('stat-selesai').innerText = totalOpdSelesai;
+            document.getElementById('stat-selesai').innerText = totalPDSelesai;
             if (db.opds.length > 0) {
                 document.getElementById('stat-avg-score').innerHTML = `${(totalKabupatenScore / db.opds.length).toFixed(2)} <span style="font-size:1rem; color:#9ca3af;">/ 55</span>`;
             }
 
+            // Fungsi Filter Pencarian Tabel
+            window.filterTabelLaporan = function (keyword) {
+                const rows = tbody.querySelectorAll('tr[data-name]');
+                const kw = keyword.toLowerCase().trim();
+                rows.forEach(row => {
+                    row.style.display = row.dataset.name.includes(kw) ? '' : 'none';
+                });
+            };
+
             // ==========================================
-            // FUNGSI 1: EXPORT CSV
+            // FUNGSI EKSPOR CSV
             // ==========================================
             window.exportToCSV = function () {
-                let csvContent = "data:text/csv;charset=utf-8,Peringkat,Nama OPD,Progress Verifikasi,Skor Indeks,Kategori\n";
+                let csvContent = "data:text/csv;charset=utf-8,No,Nama Perangkat Daerah,Progress Verifikasi,Skor Indeks,Kategori Kematangan,Link Drive Bukti Dukung\n";
                 dataRekap.forEach((d, i) => {
-                    csvContent += `${i + 1},"${d.name}",${d.varSelesai}/11,${d.skor},"${d.kategori}"\n`;
+                    csvContent += `${i + 1},"${d.name}",${d.varSelesai}/11,${d.skor},"${d.kategori}","${d.driveLink || '-'}"\n`;
                 });
                 const encodedUri = encodeURI(csvContent);
                 const link = document.createElement("a");
@@ -288,29 +303,24 @@
             }
 
             // ==========================================
-            // FUNGSI 2: EXPORT PDF (Landscape Legal)
+            // FUNGSI EKSPOR PDF (Landscape Legal)
             // ==========================================
             window.cetakLaporanPDF = function () {
                 const areaCetak = document.getElementById('area-cetak-laporan');
-
-                // Konfigurasi Kertas Landscape dan Skala
                 const opsi = {
-                    margin: 0.4, // Margin dalam inci
+                    margin: 0.4,
                     filename: 'Laporan_Global_KOPD_Mabar_2025.pdf',
                     image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true }, // Resolusi HD
-                    jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' } // Mendatar agar tidak terpotong
+                    html2canvas: { scale: 2, useCORS: true },
+                    jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' }
                 };
 
-                // Notifikasi visual (opsional) saat PDF sedang digenerate
                 const btnPdf = document.querySelector('.btn-export-pdf');
                 const teksAsli = btnPdf.innerHTML;
                 btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyusun...';
                 btnPdf.disabled = true;
 
-                // Proses HTML ke PDF
                 html2pdf().set(opsi).from(areaCetak).save().then(() => {
-                    // Kembalikan tombol ke kondisi semula setelah selesai
                     btnPdf.innerHTML = teksAsli;
                     btnPdf.disabled = false;
                 });

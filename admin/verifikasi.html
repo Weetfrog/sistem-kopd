@@ -710,8 +710,17 @@
                                     <h4 style="margin:0 0 6px 0; font-size:0.8rem; color:#6b7280;">CATATAN EVALUATOR:</h4>
                                     <textarea id="catatan-admin-${i}" class="admin-catatan" placeholder="Ketik instruksi perbaikan / catatan di sini...">${state.status === 2 ? (state.catatanAdmin || '') : ''}</textarea>
                                     <div class="action-btn-group">
-                                        <button class="action-btn btn-reject" onclick="eksekusiKeputusanAkhir(${i}, 2)"><i class="fa-solid fa-rotate-left"></i> Kembalikan (Revisi)</button>
-                                        <button class="action-btn btn-approve" onclick="eksekusiKeputusanAkhir(${i}, 4)"><i class="fa-solid fa-check-double"></i> Setujui</button>
+                                        ${state.status === 4 ? `
+                                            <div style="font-size:0.78rem; color:#166534; background:#dcfce7; padding:8px 12px; border-radius:6px; flex:1; font-weight:600;">
+                                                <i class="fa-solid fa-circle-check"></i> Disetujui pada Tingkat ${state.levelDisetujui || '-'}
+                                            </div>
+                                            <button class="action-btn" style="background:#ea580c; flex-shrink:0;" onclick="batalkanPersetujuan(${i})">
+                                                <i class="fa-solid fa-ban"></i> Batalkan
+                                            </button>
+                                        ` : `
+                                            <button class="action-btn btn-reject" onclick="eksekusiKeputusanAkhir(${i}, 2)"><i class="fa-solid fa-rotate-left"></i> Kembalikan (Revisi)</button>
+                                            <button class="action-btn btn-approve" onclick="eksekusiKeputusanAkhir(${i}, 4)"><i class="fa-solid fa-check-double"></i> Setujui</button>
+                                        `}
                                     </div>
                                 </div>
                             </div>
@@ -797,6 +806,18 @@
                 alert(statusBaru === 4 ? "Disetujui!" : "Dikembalikan untuk Revisi.");
                 pilihOpdKeMejaKerja(activeOpdId, db.opds[opdIndex].name);
             };
+
+            window.batalkanPersetujuan = function (vId) {
+                if (!confirm(`Yakin ingin membatalkan persetujuan Variabel ${vId}?\n\nStatus akan dikembalikan ke "Butuh Revisi" dan skor level disetujui akan dihapus.`)) return;
+                const opdIndex = db.opds.findIndex(o => o.id === activeOpdId);
+                db.opds[opdIndex].variabelStatus[`v${vId}`].status = 2;
+                db.opds[opdIndex].variabelStatus[`v${vId}`].levelDisetujui = 0;
+                db.opds[opdIndex].variabelStatus[`v${vId}`].catatanAdmin = "[Admin] Persetujuan dibatalkan. Mohon tinjau kembali dan ajukan ulang.";
+                localStorage.setItem('kopd_db', JSON.stringify(db));
+                alert("Persetujuan berhasil dibatalkan.");
+                pilihOpdKeMejaKerja(activeOpdId, db.opds[opdIndex].name);
+            };
+
 
             window.toggleMinimizePreview = function () {
                 if (window.innerWidth <= 992) { document.body.classList.remove('mobile-show-pdf-modal'); return; }

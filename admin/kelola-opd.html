@@ -220,6 +220,14 @@
                     <button class="btn-sm btn-green" onclick="toggleFormTambah(true)"><i class="fa-solid fa-plus"></i>
                         Buat Akun Baru</button>
                 </div>
+                <div style="margin-bottom: 16px;">
+                    <input type="text" id="search-akun"
+                        placeholder="🔍  Cari berdasarkan nama instansi atau username..."
+                        oninput="renderTabel(this.value)"
+                        style="width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s;"
+                        onfocus="this.style.borderColor='var(--primary-green)'"
+                        onblur="this.style.borderColor='#e5e7eb'">
+                </div>
                 <table>
                     <thead>
                         <tr>
@@ -235,6 +243,19 @@
                     </tbody>
                 </table>
             </div>
+
+            <!-- PANEL RESET DATA TAHUNAN -->
+            <div style="margin-top: 30px; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 4px solid #ef4444;">
+                <h3 style="color: #991b1b; margin: 0 0 8px 0;"><i class="fa-solid fa-rotate-left"></i> Reset Data Tahunan KOPD</h3>
+                <p style="color: #6b7280; font-size: 0.9rem; margin: 0 0 16px 0;">
+                    Fungsi ini dirancang untuk memulai siklus KOPD baru setiap tahun. Seluruh <strong>isian variabel kematangan</strong> (status, skor, deskripsi, tautan Google Drive) pada semua akun Perangkat Daerah akan dihapus dan dikosongkan kembali ke kondisi awal. <br>
+                    <span style="color:#ef4444; font-weight:bold;">⚠ Daftar akun, username, dan password tidak akan terpengaruh.</span>
+                </p>
+                <button onclick="resetDataTahunan()" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Reset Seluruh Data Variabel Kematangan
+                </button>
+            </div>
+
         </main>
     </div>
 
@@ -288,15 +309,25 @@
                 renderTabel();
             });
 
-            // Fungsi Render Tabel Akun (Dengan Kolom Sandi Aktif)
-            function renderTabel() {
+            // Fungsi Render Tabel Akun (dengan filter pencarian)
+            window.renderTabel = function (filterText = '') {
                 db = JSON.parse(localStorage.getItem('kopd_db'));
                 const tbody = document.getElementById('tabel-akun');
                 tbody.innerHTML = '';
+                const keyword = filterText.toLowerCase().trim();
 
-                db.opds.forEach(opd => {
+                const filtered = db.opds.filter(opd =>
+                    opd.name.toLowerCase().includes(keyword) ||
+                    opd.username.toLowerCase().includes(keyword)
+                );
+
+                if (filtered.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Tidak ada hasil untuk "<strong>${filterText}</strong>"</td></tr>`;
+                    return;
+                }
+
+                filtered.forEach(opd => {
                     const statusBadge = opd.isLocked ? `<span class="badge-locked"><i class="fa-solid fa-lock"></i> Terkunci</span>` : `<span class="badge-active"><i class="fa-solid fa-check"></i> Aktif</span>`;
-
                     const lockIcon = opd.isLocked ? 'fa-lock-open' : 'fa-lock';
                     const lockTitle = opd.isLocked ? 'Buka Kunci' : 'Kunci Akun';
 
@@ -338,7 +369,7 @@
                 if (opdIndex > -1) {
                     db.opds[opdIndex].isLocked = lockStatus;
                     localStorage.setItem('kopd_db', JSON.stringify(db));
-                    renderTabel();
+                    renderTabel(document.getElementById('search-akun').value);
                 }
             };
 
@@ -347,8 +378,28 @@
                 if (confirm("Apakah Anda yakin ingin menghapus akun '" + name + "' secara permanen? Seluruh riwayat pengisian data kematangannya akan ikut terhapus.")) {
                     db.opds = db.opds.filter(o => o.id !== id);
                     localStorage.setItem('kopd_db', JSON.stringify(db));
-                    renderTabel();
+                    renderTabel(document.getElementById('search-akun').value);
                 }
+            };
+
+            // Fungsi Reset Data Tahunan (hanya variabel, akun tetap aman)
+            window.resetDataTahunan = function () {
+                const step1 = confirm("⚠️ PERINGATAN!\n\nAnda akan mereset SELURUH data variabel kematangan semua Perangkat Daerah.\n\nDaftar akun, username, dan password TIDAK akan terhapus.\n\nApakah Anda yakin ingin melanjutkan?");
+                if (!step1) return;
+
+                const konfirmasi = prompt("Untuk konfirmasi, ketik kata RESET (huruf kapital) lalu klik OK:");
+                if (konfirmasi !== 'RESET') {
+                    alert("Reset dibatalkan. Kata konfirmasi tidak sesuai.");
+                    return;
+                }
+
+                db = JSON.parse(localStorage.getItem('kopd_db'));
+                db.opds.forEach(opd => {
+                    opd.variabelStatus = generateInitialVariabel();
+                });
+                localStorage.setItem('kopd_db', JSON.stringify(db));
+                alert("✅ Data variabel kematangan seluruh Perangkat Daerah berhasil direset.\nDaftar akun tidak berubah.");
+                renderTabel();
             };
         });
     </script>
