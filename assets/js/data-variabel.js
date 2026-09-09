@@ -12,6 +12,13 @@ const dbVariabel = [
             "Tingkat III: Penentuan prioritas kegiatan dalam dokumen rencana tahunan dilakukan berdasarkan analisis hasil (outcome) dan analisis kemampuan kegiatan menghasilkan hasil (outcome). [cite: 11]",
             "Tingkat IV: Penentuan prioritas kegiatan dilakukan berdasarkan analisis yang membandingkan hasil (outcome) yang akan dicapai antara satu alternatif kegiatan dengan alternatif kegiatan yang lain. [cite: 11]",
             "Tingkat V: Penentuan prioritas kegiatan dalam dokumen tahunan dilakukan dengan perbandingan hasil (outcome) antara satu alternatif kegiatan dengan alternatif kegiatan yang lain dan dibantu dengan teknologi informasi. [cite: 11, 12]"
+        ],
+        dokumenDukung: [
+            "Renja dan Renstra",
+            "Renwal Renja dan RKA Berbasis Renaksi",
+            "Renja berbasis Renstra",
+            "Cascading/pohon kinerja",
+            "Screenshot, manual aplikasi e-planning"
         ]
     },
     {
@@ -23,6 +30,13 @@ const dbVariabel = [
             "Tingkat III: Monitoring dan pengendalian dilakukan secara berkala dengan kriteria penyimpangan yang terstandarisasi pada setiap tahap kegiatan. [cite: 13]",
             "Tingkat IV: Monitoring dan pengendalian dilakukan secara berkala dengan kriteria penyimpangan yang terstandarisasi dan diikuti dengan umpan balik berupa perbaikan yang terdokumentasi dengan baik. [cite: 13]",
             "Tingkat V: Monitoring dan pengendalian dilakukan secara sistematis, terstandarisasi termasuk umpan balik yang didukung oleh penggunaan teknologi informasi berbasis internet. [cite: 13, 14]"
+        ],
+        dokumenDukung: [
+            "Rapat monitoring (daftar hadir, notulensi)",
+            "Regulasi monitoring (waktu dan muatan), hasil monitoring",
+            "Capaian realisasi fisik kegiatan ≤ 5%",
+            "Unit kerja dengan kinerja terendah",
+            "Hasil tindaklanjut monitoring"
         ]
     },
     {
@@ -34,6 +48,13 @@ const dbVariabel = [
             "Tingkat III: Mutu produk dan proses sudah distandarisasi dan dilakukan pengujian secara berkala secara internal. [cite: 15]",
             "Tingkat IV: Penjaminan mutu produk dan proses sudah distandarisasi serta dilakukan pengukuran/ pengujian secara berkala oleh tenaga yang bersertifikat. [cite: 15]",
             "Tingkat V: Penjaminan mutu produk dan proses dilakukan terstandarisasi dan berkala oleh tenaga ahli bersertifikat serta didukung oleh teknologi informasi berbasis internet. [cite: 16]"
+        ],
+        dokumenDukung: [
+            "Tanpa dokumen",
+            "Paraf pelaksanaan tugas/kegiatan, telaah staf, rapat teknis internal",
+            "SPP, SOP, rapat teknis internal, hasil evaluasi, second opinion ahli",
+            "Sistem penjaminan mutu (ISO/SMM/Akreditasi, dll)",
+            "Screenshot, manual aplikasi assurance"
         ]
     },
     {
@@ -45,6 +66,13 @@ const dbVariabel = [
             "Tingkat III: Definisi proses organisasi sudah dituangkan ke dalam SOP dan telah dilakukan evaluasi berkala terhadap penerapan SOP. [cite: 19]",
             "Tingkat IV: Definisi proses organisasi sudah dituangkan dalam SOP, sudah dievaluasi secara berkala dan dilakukan tindak lanjut terhadap hasil evaluasi penerapan SOP berupa tindakan koreksi atau perbaikan SOP. [cite: 20]",
             "Tingkat V: Definisi proses organisasi sudah dituangkan dalam SOP dan sudah dilakukan evaluasi serta tindak lanjut, kemudian disesuaikan dengan kebutuhan/keluhan pelanggan serta didukung oleh teknologi berbasis internet. [cite: 21]"
+        ],
+        dokumenDukung: [
+            "Tanpa dokumen",
+            "List SOP resmi",
+            "Rapat evaluasi SOP",
+            "List SOP revisi",
+            "Input pelanggan atas SOP, screenshot dan manual SOP"
         ]
     },
     {
@@ -56,6 +84,13 @@ const dbVariabel = [
             "Tingkat III: Dokumen rencana kebutuhan pengembangan pegawai disusun untuk seluruh jabatan. [cite: 23]",
             "Tingkat IV: Rencana pengembangan pegawai dievaluasi secara regular dan seluruh pengembangan pegawai sudah dilaksanakan sesuai dengan dokumen rencana pengembangan pegawai yang sudah ditetapkan. [cite: 23]",
             "Tingkat V: Hasil (outcome) pengembangan pegawai dievalusi secara regular sebagai umpan balik. [cite: 24]"
+        ],
+        dokumenDukung: [
+            "Tanpa dokumen",
+            "Rencana kebutuhan diklat (daftar nama, alokasi anggaran), nota dinas diklat, surat tugas diklat, dll (parsial)",
+            "Rencana kebutuhan diklat (daftar nama, alokasi anggaran), nota dinas diklat, surat tugas diklat, dll (komprehensif)",
+            "Monev diklat, tingkat capaian diklat",
+            "Revisi rencana pengembangan diklat secara periodik (sesuai analisis kebutuhan diklat)"
         ]
     },
     {
@@ -67,6 +102,13 @@ const dbVariabel = [
             "Tingkat III: Analisis kebijakan dan pemecahan masalah yang berdampak ke publik dilakukan menggunakan metode/ teknik ilmiah oleh tim internal dengan melibatkan instansi pemerintah terkait. [cite: 26]",
             "Tingkat IV: Analisis kebijakan dan pemecahan masalah yang bersifat strategis/ berdampak ke publik melibatkan tim ahli. [cite: 26]",
             "Tingkat V: Analisis kebijakan dan pemecahan masalah strategis/ berdampak ke publik melibatkan tim ahli dengan melakukan konsultasi publik dan analisis umpan balik yang terukur dan terdokumentasi. [cite: 27]"
+        ],
+        dokumenDukung: [
+            "Sederhana (telaah staf, ratek internal)",
+            "SK Tim Khusus (internal PD), kegiatan tim, hasil dan rekom tim, laporan kajian",
+            "SK Tim Teknis (lintas PD), kegiatan tim, hasil dan rekom tim, laporan kajian",
+            "SK Tim Ahli (Narsum dan Kerjasama), kegiatan tim, hasil dan rekom tim, laporan kajian",
+            "SK Tim Ahli (Narsum dan Kerjasama), kegiatan tim, hasil dan rekom tim, laporan kajian menggunakan konsultasi publik dan analisis feedback (undangan, notulen, hasil, rekom)"
         ]
     },
     {
@@ -78,6 +120,13 @@ const dbVariabel = [
             "Tingkat III: Analisis kebutuhan input/ sumber daya proyek sudah distandarisasi dengan proses uji coba secara terbuka dan menggunakan metode ilmiah. [cite: 28]",
             "Tingkat IV: Penyediaan sumber daya dalam pelaksanaan proyek dimonitor secara ketat berdasarkan standar input sumberdaya, SOP dan prosedur penjaminan mutu produk. [cite: 29]",
             "Tingkat V: Penyediaan sumber daya dan pelaksanaan proyek dimonitor secara ketat berdasarkan SOP dan prosedur penjaminan mutu produk dan didukung oleh teknologi informasi berbasis internet. [cite: 29]"
+        ],
+        dokumenDukung: [
+            "Aturan formal pengelolaan sumber daya (man, money, material)",
+            "Analisis kebutuhan sumber daya (uji coba ASB, Peta Jabatan, Analisis Material)",
+            "ASB, Anjab, ABK, Analisis Material",
+            "Monev penyediaan sumber daya, SOP, dan penjaminan mutu",
+            "Screenshot, manual aplikasi elektronik (man, money, material)"
         ]
     },
     {
@@ -89,6 +138,13 @@ const dbVariabel = [
             "Tingkat III: Perangkat daerah sudah menetapkan prosedur pengelolaan resiko dalam pelaksanaan tugas tertentu yang dipandang mempunyai resiko tinggi. [cite: 30, 31]",
             "Tingkat IV: Perangkat daerah sudah menetapkan prosedur pengelolaan resiko untuk seluruh tugas pada perangkat daerah yang bersangkutan, namun belum dilakukan evaluasi secara berkala. [cite: 31]",
             "Tingkat V: Perangkat Daerah sudah menetapkan prosedur pengelolaan resiko dalam pelaksanaan tugas serta semua resiko dapat dikendalikan tanpa ada kerugian baik bagi pegawai maupun instansi. [cite: 32]"
+        ],
+        dokumenDukung: [
+            "Tanpa dokumen",
+            "Analisis risiko tugas individu",
+            "Analisis risiko tugas berisiko tinggi (SK Satgas SPIP, Register Resiko)",
+            "Register resiko seluruh tugas (komprehensif) sesuai cascading Renstra",
+            "Evaluasi risiko (laporan penyelenggaraan SPIP, analisis asumsi kerugian, updating register risiko)"
         ]
     },
     {
@@ -100,6 +156,13 @@ const dbVariabel = [
             "Tingkat III: Sudah ada target kinerja perangkat daerah yang konsisten dengan dokumen perencanaan. [cite: 34]",
             "Tingkat IV: Target kinerja perangkat daerah sudah dilakukan pengukuran pencapaiannya. [cite: 35]",
             "Tingkat V: Pencapaian target kinerja perangkat daerah sudah diukur dan sudah tercapai dengan baik (di atas 90%) serta telah dilakukan evaluasi pencapaian target kinerja serta didukung dengan teknologi informasi. [cite: 35]"
+        ],
+        dokumenDukung: [
+            "Tanpa dokumen",
+            "PK dan Renstra (belum konsisten)",
+            "PK dan Renstra (sudah konsisten)",
+            "LKjIP dan LHE SAKIP",
+            "LKjIP dan LHE SAKIP dengan capaian kinerja di atas 90%, screen shot dan manual aplikasi e-kinerja"
         ]
     },
     {
@@ -111,6 +174,13 @@ const dbVariabel = [
             "Tingkat III: Telah disusun rencana pengembangan inovasi baik jenis, mutu maupun metodenya. [cite: 36]",
             "Tingkat IV: Telah ada inovasi yang dikembangkan sendiri oleh perangkat daerah yang bersangkutan. [cite: 36, 37]",
             "Tingkat V: Perangkat daerah sudah mempunyai program pengkajian dan inovasi secara terencana dan berkelanjutan. [cite: 37]"
+        ],
+        dokumenDukung: [
+            "Tanpa dokumen",
+            "Proposal inovasi (screenshot)",
+            "List adopsi/replikasi inovasi",
+            "List invensi inovasi",
+            "Roadmap inovasi, SK Tim inovasi"
         ]
     },
     {
@@ -122,6 +192,13 @@ const dbVariabel = [
             "Tingkat III: Sudah ada dokumen budaya organisasi yang resmi menggambarkan nilai-nilai, sikap dan perilaku di perangkat daerah yang bersangkutan. [cite: 38]",
             "Tingkat IV: Sudah ada program internalisasi budaya organisasi yang berkelanjutan berdasarkan dokumen resmi. [cite: 38]",
             "Tingkat V: Budaya organisasi sudah tercermin dalam sikap dan perilaku pegawai pada perangkat daerah yang bersangkutan berdasarkan hasil evaluasi secara rutin dan berkelanjutan. [cite: 38, 39]"
+        ],
+        dokumenDukung: [
+            "Tanpa dokumen",
+            "Slogan budaya organisasi (cetak dan elektronik)",
+            "SK nilai budaya organisasi (KBK, GKM, Agent of Change, dll)",
+            "Rencana pengembangan budaya organisasi (sosialisasi, sarasehan, expo, lomba, bintek, dll)",
+            "Monev budaya kerja (evaluasi rencana budaya kerja)"
         ]
     },
     {

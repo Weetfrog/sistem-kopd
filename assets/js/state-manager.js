@@ -99,6 +99,7 @@ function loginUser(username, password) {
     if (username === db.admin.username && password === db.admin.password) {
         db.session = { role: 'admin', id: null, name: db.admin.name };
         localStorage.setItem('kopd_db', JSON.stringify(db));
+        localStorage.setItem('kopd_last_user', username);
         return { success: true, redirect: 'admin/index.html' };
     }
 
@@ -108,6 +109,7 @@ function loginUser(username, password) {
         if (opd.isLocked) return { success: false, message: 'Akun Anda dikunci oleh Super Admin.' };
         db.session = { role: 'opd', id: opd.id, name: opd.name };
         localStorage.setItem('kopd_db', JSON.stringify(db));
+        localStorage.setItem('kopd_last_user', username);
         return { success: true, redirect: 'opd/index.html' };
     }
 

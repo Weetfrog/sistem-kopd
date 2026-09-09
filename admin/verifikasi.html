@@ -542,10 +542,15 @@
             </div>
 
             <div class="panel-variabel" id="col-2">
-                <div class="var-top-bar">
-                    <button class="btn-mobile-back" id="btn-back-mobile" onclick="kembaliKeDaftarOpd()"><i
-                            class="fa-solid fa-chevron-left"></i> Kembali</button>
-                    <span id="dom-nama-opd-aktif">Silakan Pilih Instansi di Panel Kiri</span>
+                <div class="var-top-bar" style="justify-content: space-between;">
+                    <div style="display:flex; align-items:center; gap:12px;">
+                        <button class="btn-mobile-back" id="btn-back-mobile" onclick="kembaliKeDaftarOpd()"><i
+                                class="fa-solid fa-chevron-left"></i> Kembali</button>
+                        <span id="dom-nama-opd-aktif">Silakan Pilih Instansi di Panel Kiri</span>
+                    </div>
+                    <button class="btn-minimize-panel" onclick="toggleMinimizePreview()" title="Tutup/Buka Pratinjau" style="display: none;" id="dom-btn-minimize">
+                        <i class="fa-solid fa-angles-right" id="minimize-icon"></i>
+                    </button>
                 </div>
                 <div class="var-scroll-grid" id="dom-box-variabel">
                     <div class="empty-state-view">
@@ -559,10 +564,7 @@
             <div class="panel-preview" id="col-3">
                 <div class="preview-header">
                     <span><i class="fa-solid fa-file-shield" style="color:var(--primary-green); margin-right:6px;"></i>
-                        Lembar Bukti Dokumen</span>
-                    <button class="btn-minimize-panel" onclick="toggleMinimizePreview()" title="Tutup/Buka Pratinjau">
-                        <i class="fa-solid fa-angles-right" id="minimize-icon"></i>
-                    </button>
+                        Panduan Penilaian & Bukti Fisik</span>
                 </div>
 
                 <div id="dom-wrapper-files" class="file-list-admin"
@@ -572,27 +574,19 @@
 
                 <div class="preview-scroll-area">
                     <div class="empty-state-view" id="preview-empty-state" style="color:#cbd5e1;">
-                        <i class="fa-solid fa-file-lines"
+                        <i class="fa-solid fa-list-check"
                             style="font-size: 3.5rem; margin-bottom: 12px; color:#64748b;"></i>
-                        <p>Pilih file bukti fisik di atas untuk memunculkan pratinjau lembar dokumen.</p>
+                        <p>Pilih variabel di panel tengah untuk melihat instruksi dan panduan penilaian.</p>
                     </div>
 
-                    <div class="pdf-sheet-mockup" id="dom-pdf-viewer">
+                    <div class="pdf-sheet-mockup" id="modul-petunjuk-viewer" style="display:none; text-align:left;">
                         <div
-                            style="text-align:center; border-bottom:2px solid #1e293b; padding-bottom:12px; margin-bottom:20px;">
-                            <h3 style="margin:0; color:#1b4332;">DOKUMEN DATA DUKUNG</h3>
-                            <p style="font-size:0.75rem; color:#6b7280; margin:4px 0 0 0;">KOPD KAB. MANGGARAI BARAT
-                                <span class="tahun-verifikasi"></span></p>
+                            style="border-bottom:2px solid #e2e8f0; padding-bottom:12px; margin-bottom:20px;">
+                            <h3 style="margin:0; color:#1b4332; font-size:1.1rem;">Kriteria & Syarat Dokumen Bukti</h3>
+                            <p style="font-size:0.75rem; color:#6b7280; margin:4px 0 0 0;">Cocokkan tautan/file yang dikirim dengan syarat berikut.</p>
                         </div>
-                        <div style="font-size: 0.85rem; line-height: 1.6;">
-                            <p><strong>Nama Fail:</strong> <span id="pdf-mock-filename"
-                                    style="color:#b91c1c; font-weight:bold;">-</span></p>
-                            <p><strong>Kesesuaian Aturan:</strong> <span id="pdf-mock-kriteria">-</span></p>
-                            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:16px 0;">
-                            <h4 style="color:var(--primary-green); margin-bottom:6px;"><i
-                                    class="fa-solid fa-file-invoice"></i> Ringkasan Bukti Kebijakan:</h4>
-                            <p style="font-style:italic; color:#4b5563;">Dokumen ini dilampirkan oleh OPD sebagai
-                                pemenuhan indikator penilaian instrumen kematangan aparatur daerah.</p>
+                        <div id="dom-list-petunjuk" style="font-size: 0.85rem; line-height: 1.6;">
+                            <!-- List petunjuk level 1-5 akan di-render di sini -->
                         </div>
                     </div>
                 </div>
@@ -737,46 +731,56 @@
                 }
             }
 
-            function tampilkanInfoDriveDiPanelKanan() {
+            function tampilkanPetunjukDiPanelKanan(vId) {
                 const opdData = db.opds.find(o => o.id === activeOpdId);
                 if (!opdData) return;
-                const stateDrive = opdData.variabelStatus['v12'];
+                
                 const previewEmpty = document.getElementById('preview-empty-state');
-                const pdfViewer = document.getElementById('dom-pdf-viewer');
+                const petunjukViewer = document.getElementById('modul-petunjuk-viewer');
+                const listPetunjuk = document.getElementById('dom-list-petunjuk');
 
-                if (stateDrive && stateDrive.driveLink) {
-                    previewEmpty.style.display = 'none';
-                    pdfViewer.style.display = 'block';
-                    pdfViewer.innerHTML = `
-                        <div style="text-align:center; border-bottom:2px solid #1e293b; padding-bottom:12px; margin-bottom:20px;">
-                            <h3 style="margin:0; color:#1b4332;"><i class="fa-brands fa-google-drive" style="color:#2563eb;"></i> FOLDER BUKTI FISIK OPD</h3>
-                            <p style="font-size:0.75rem; color:#6b7280; margin:4px 0 0 0;">KOPD KAB. MANGGARAI BARAT <span class="tahun-verifikasi"></span></p>
-                        </div>
-                        <div style="font-size: 0.85rem; line-height: 1.6;">
-                            <p><strong>Instansi:</strong> <span style="color:#1b4332; font-weight:bold;">${opdData.name}</span></p>
-                            <p><strong>Tautan Google Drive:</strong></p>
+                previewEmpty.style.display = 'none';
+                petunjukViewer.style.display = 'block';
+
+                if (vId === 12) {
+                    const stateDrive = opdData.variabelStatus['v12'];
+                    if (stateDrive && stateDrive.driveLink) {
+                        listPetunjuk.innerHTML = `
                             <div style="margin: 12px 0; background:#eff6ff; border:1px solid #bfdbfe; padding:12px; border-radius:8px;">
+                                <p style="margin-top:0; color:#1b4332; font-weight:bold;"><i class="fa-brands fa-google-drive"></i> Tautan Folder Drive OPD</p>
                                 <a href="${stateDrive.driveLink}" target="_blank" style="color:#1d4ed8; font-weight:bold; font-size:0.9rem; text-decoration:none; word-break:break-all;">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> ${stateDrive.driveLink}
+                                    ${stateDrive.driveLink}
                                 </a>
                             </div>
                             <a href="${stateDrive.driveLink}" target="_blank" style="display:block; text-align:center; background:#2563eb; color:white; padding:12px; border-radius:6px; font-weight:bold; text-decoration:none; margin:16px 0; transition:0.2s;">
-                                <i class="fa-solid fa-folder-open"></i> Buka Google Drive di Tab Baru
+                                Buka Google Drive
                             </a>
-                            <hr style="border:0; border-top:1px dashed #cbd5e1; margin:16px 0;">
-                            <h4 style="color:var(--primary-green); margin-bottom:6px;"><i class="fa-solid fa-circle-info"></i> Petunjuk Verifikasi:</h4>
-                            <p style="color:#4b5563; font-size:0.8rem; line-height:1.5;">
-                                Klik tombol di atas untuk membuka folder Google Drive instansi terkait. Seluruh dokumen bukti dukung 11 variabel disimpan dalam folder tersebut.
-                            </p>
-                        </div>
-                    `;
+                        `;
+                    } else {
+                        petunjukViewer.style.display = 'none';
+                        previewEmpty.style.display = 'flex';
+                        previewEmpty.innerHTML = `
+                            <i class="fa-brands fa-google-drive" style="font-size: 3.5rem; margin-bottom: 12px; color:#64748b;"></i>
+                            <p>OPD ini belum memasukkan tautan Google Drive Bukti Fisik di Matriks 12.</p>
+                        `;
+                    }
                 } else {
-                    pdfViewer.style.display = 'none';
-                    previewEmpty.style.display = 'flex';
-                    previewEmpty.innerHTML = `
-                        <i class="fa-brands fa-google-drive" style="font-size: 3.5rem; margin-bottom: 12px; color:#64748b;"></i>
-                        <p>OPD ini belum memasukkan tautan Google Drive Bukti Fisik di Matriks 12.</p>
-                    `;
+                    const varData = dbVariabel.find(v => v.id === vId);
+                    if (varData && varData.dokumenDukung) {
+                        let html = '<div style="display:flex; flex-direction:column; gap:12px;">';
+                        varData.dokumenDukung.forEach((dokumen, index) => {
+                            html += `
+                            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid var(--primary-green); padding:12px; border-radius:6px;">
+                                <div style="font-weight:bold; color:var(--primary-green); margin-bottom:4px;">Tingkat ${index + 1}</div>
+                                <div style="color:#334155;">${dokumen}</div>
+                            </div>
+                            `;
+                        });
+                        html += '</div>';
+                        listPetunjuk.innerHTML = html;
+                    } else {
+                        listPetunjuk.innerHTML = `<p>Petunjuk belum tersedia.</p>`;
+                    }
                 }
             }
 
@@ -789,7 +793,7 @@
                 const targetCard = document.getElementById(`card-var-${vId}`);
                 if (targetCard) targetCard.classList.add('active-var');
 
-                tampilkanInfoDriveDiPanelKanan();
+                tampilkanPetunjukDiPanelKanan(vId);
             };
 
             window.eksekusiKeputusanAkhir = function (vId, statusBaru) {
@@ -843,10 +847,21 @@
 
             function resetPanelKananPreview() {
                 document.getElementById('dom-wrapper-files').style.display = 'none';
-                document.getElementById('dom-pdf-viewer').style.display = 'none';
+                document.getElementById('modul-petunjuk-viewer').style.display = 'none';
                 document.getElementById('preview-empty-state').style.display = 'flex';
+                document.getElementById('preview-empty-state').innerHTML = `
+                    <i class="fa-solid fa-list-check" style="font-size: 3.5rem; margin-bottom: 12px; color:#64748b;"></i>
+                    <p>Pilih variabel di panel tengah untuk melihat instruksi dan panduan penilaian.</p>
+                `;
                 document.getElementById('mobile-file-count').innerText = "0";
             }
+            
+            // Tombol minimize muncul saat sebuah OPD dipilih
+            const oldPilihOpd = window.pilihOpdKeMejaKerja;
+            window.pilihOpdKeMejaKerja = function(id, nama) {
+                if(oldPilihOpd) oldPilihOpd(id, nama);
+                document.getElementById('dom-btn-minimize').style.display = 'inline-block';
+            };
         });
     </script>
 </body>
