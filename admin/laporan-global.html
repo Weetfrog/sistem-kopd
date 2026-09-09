@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="../assets/css/global.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         .layout-wrapper {
             display: flex;
@@ -138,12 +139,12 @@
                     <div>
                         <h1 style="color: var(--primary-green); margin: 0 0 8px 0;">Laporan Keseluruhan KOPD</h1>
                         <p style="color: #4b5563; margin: 0;">Rekapitulasi nilai indeks sementara dan final tingkat
-                            Kabupaten Manggarai Barat 2025.</p>
+                            Kabupaten Manggarai Barat 2026.</p>
                     </div>
 
                     <div data-html2canvas-ignore="true" style="display: flex; gap: 10px;">
-                        <button class="btn-export" onclick="exportToCSV()" style="background: #3b82f6;">
-                            <i class="fa-solid fa-file-csv"></i> Ekspor CSV
+                        <button class="btn-export" onclick="exportToExcel()" style="background: #16a34a;">
+                            <i class="fa-solid fa-file-excel"></i> Ekspor Excel
                         </button>
                         <button class="btn-export btn-export-pdf" onclick="cetakLaporanPDF()">
                             <i class="fa-solid fa-file-pdf"></i> Ekspor PDF
@@ -185,7 +186,7 @@
                                 <th>Progress (Selesai)</th>
                                 <th>Skor Indeks</th>
                                 <th>Kategori Kematangan</th>
-                                <th data-html2canvas-ignore="true">Bukti Dukung (Link Drive)</th>
+                                <th>Bukti Dukung (Link Drive)</th>
                             </tr>
                         </thead>
                         <tbody id="tabel-global"></tbody>
@@ -258,7 +259,7 @@
                         <td>${data.varSelesai} / 11</td>
                         <td style="font-weight:bold; color:var(--primary-green); font-size:1.1rem;">${data.skor}</td>
                         <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:600; color:#475569;">${data.kategori}</span></td>
-                        <td data-html2canvas-ignore="true">${btnDrive}</td>
+                        <td>${btnDrive}</td>
                     </tr>
                 `;
             }
@@ -286,20 +287,64 @@
             };
 
             // ==========================================
-            // FUNGSI EKSPOR CSV
+            // FUNGSI EKSPOR EXCEL MULTI-SHEET
             // ==========================================
-            window.exportToCSV = function () {
-                let csvContent = "data:text/csv;charset=utf-8,No,Nama Perangkat Daerah,Progress Verifikasi,Skor Indeks,Kategori Kematangan,Link Drive Bukti Dukung\n";
+            window.exportToExcel = function () {
+                const wb = XLSX.utils.book_new();
+
+                // 1. Sheet Laporan Global
+                const globalData = [['No', 'Nama Perangkat Daerah', 'Progress Verifikasi', 'Skor Indeks', 'Kategori Kematangan', 'Link Drive Bukti Dukung']];
                 dataRekap.forEach((d, i) => {
-                    csvContent += `${i + 1},"${d.name}",${d.varSelesai}/11,${d.skor},"${d.kategori}","${d.driveLink || '-'}"\n`;
+                    globalData.push([i + 1, d.name, `${d.varSelesai}/11`, d.skor, d.kategori, d.driveLink || '-']);
                 });
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", "Rekap_KOPD_Mabar_2025.csv");
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
+                const wsGlobal = XLSX.utils.aoa_to_sheet(globalData);
+                XLSX.utils.book_append_sheet(wb, wsGlobal, "Laporan Keseluruhan");
+
+                // 2. Sheet per OPD
+                db.opds.forEach(opd => {
+                    const opdData = [
+                        ['Informasi Perangkat Daerah'],
+                        ['Nama OPD', opd.name],
+                        ['Username', opd.username],
+                        ['Link Drive', (opd.variabelStatus && opd.variabelStatus['v12'] ? opd.variabelStatus['v12'].driveLink : '-')],
+                        [],
+                        ['Indikator', 'Status', 'Level Diajukan', 'Level Disetujui', 'Fakta OPD', 'Catatan Evaluator']
+                    ];
+
+                    for (let i = 1; i <= 11; i++) {
+                        const state = opd.variabelStatus[`v${i}`];
+                        if (state) {
+                            let statusText = "Belum Diisi";
+                            if (state.status === 1) statusText = "Menunggu Verifikasi";
+                            else if (state.status === 2) statusText = "Butuh Revisi";
+                            else if (state.status === 3) statusText = "Verifikasi Ulang";
+                            else if (state.status === 4) statusText = "Disetujui";
+
+                            opdData.push([
+                                `Variabel ${i}`,
+                                statusText,
+                                state.levelPilihan || '-',
+                                state.levelDisetujui || '-',
+                                state.deskripsi || '-',
+                                state.catatanAdmin || '-'
+                            ]);
+                        }
+                    }
+
+                    const wsOpd = XLSX.utils.aoa_to_sheet(opdData);
+                    
+                    // Nama sheet maksimal 31 karakter dan tidak boleh ada karakter khusus
+                    let sheetName = opd.username.substring(0, 31).replace(/[\\/?*\[\]:]/g, '_');
+                    
+                    try {
+                        XLSX.utils.book_append_sheet(wb, wsOpd, sheetName);
+                    } catch(e) {
+                        // Jika nama sheet duplikat, tambahkan ID
+                        XLSX.utils.book_append_sheet(wb, wsOpd, `${sheetName}_${opd.id}`.substring(0,31));
+                    }
+                });
+
+                XLSX.writeFile(wb, "Rekap_KOPD_Mabar_2026.xlsx");
             }
 
             // ==========================================
@@ -309,7 +354,7 @@
                 const areaCetak = document.getElementById('area-cetak-laporan');
                 const opsi = {
                     margin: 0.4,
-                    filename: 'Laporan_Global_KOPD_Mabar_2025.pdf',
+                    filename: 'Laporan_Global_KOPD_Mabar_2026.pdf',
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true },
                     jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' }

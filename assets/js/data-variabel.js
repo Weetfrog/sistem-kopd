@@ -1,5 +1,5 @@
 /**
- * Kamus Data 11 Variabel Penilaian KOPD Manggarai Barat Tahun 2025
+ * Kamus Data 11 Variabel Penilaian KOPD Manggarai Barat Tahun 2026
  * Bersumber dari Pedoman Pengisian Instrumen Penilaian Tingkat Kematangan Perangkat Daerah [cite: 1]
  */
 const dbVariabel = [

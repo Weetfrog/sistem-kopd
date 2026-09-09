@@ -1,5 +1,5 @@
 /**
- * SIDEBAR MODULAR COMPONENT V2 - KOPD Mabar 2025
+ * SIDEBAR MODULAR COMPONENT V2 - KOPD Mabar 2026
  * Fitur: Collapsible (Hamburger), Dropdown Pintasan 11 Var, & Live Red-Dot Notification
  */
 
@@ -89,7 +89,7 @@ function renderSidebar(basePath = '../', role = 'opd') {
         <aside class="sidebar-wrapper" id="main-sidebar">
             <div class="sidebar-header">
                 <h2 class="logo-text">KOPD Mabar</h2>
-                <p class="logo-sub">Tahun 2025</p>
+                <p class="logo-sub">Tahun 2026</p>
             </div>
             <ul class="sidebar-menu">
                 ${menuHTML}
