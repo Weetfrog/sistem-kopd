@@ -117,37 +117,6 @@
             font-style: italic;
         }
 
-        /* Area Unggah Dokumen Final */
-        .upload-final-card {
-            background: #f8fafc;
-            border: 2px dashed #cbd5e1;
-            border-radius: 12px;
-            padding: 30px;
-            text-align: center;
-            margin-top: 50px;
-            transition: 0.2s;
-        }
-
-        .upload-final-card:hover {
-            border-color: var(--primary-green);
-            background: #f0fdf4;
-        }
-
-        .btn-upload {
-            background: var(--primary-green);
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 6px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 16px;
-            transition: 0.2s;
-        }
-
-        .btn-upload:hover {
-            background: var(--secondary-green);
-        }
 
         .btn-cetak {
             background: var(--primary-green);
@@ -235,8 +204,8 @@
                 <div class="kop-laporan">
                     <h2>REKAPITULASI PENILAIAN TINGKAT KEMATANGAN</h2>
                     <h2>ORGANISASI PERANGKAT DAERAH (KOPD)</h2>
-                    <p>PEMERINTAH KABUPATEN MANGGARAI BARAT TAHUN 2026</p>
-                    <p style="margin-top: 12px; font-weight: bold; font-size: 1.1rem; color: #1f2937;">Instansi: <span
+                    <p>PEMERINTAH KABUPATEN MANGGARAI BARAT TAHUN <span id="tahun-laporan"></span></p>
+                    <p style="margin-top: 12px; font-weight: bold; font-size: 1.1rem; color: #1f2937;"><span
                             id="nama-instansi-cetak">Memuat...</span></p>
                 </div>
 
@@ -287,23 +256,6 @@
                     </div>
                 </div>
             </div>
-
-            <div class="upload-final-card no-print">
-                <i class="fa-solid fa-file-signature"
-                    style="font-size: 3rem; color: var(--primary-green); margin-bottom: 16px;"></i>
-                <h3 style="color: #1f2937; margin-bottom: 8px;">Unggah Dokumen Hasil Scan Basah & Stempel</h3>
-                <p style="color: #6b7280; font-size: 0.95rem; max-width: 600px; margin: 0 auto;">
-                    Setelah dicetak dan ditandatangani oleh Kepala Dinas/Badan serta dibubuhi stempel fisik, silakan
-                    pindai dokumen tersebut menjadi fail PDF dan unggah kembali di bawah ini.
-                </p>
-
-                <input type="file" id="file-final" style="display: none;" accept=".pdf">
-                <button class="btn-upload" onclick="document.getElementById('file-final').click()">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> Pilih Dokumen PDF Scan Basah
-                </button>
-                <div id="upload-status"
-                    style="margin-top: 12px; font-weight: 600; color: var(--status-selesai); display: none;"></div>
-            </div>
         </main>
     </div>
 
@@ -319,9 +271,12 @@
             const opdData = getCurrentOpdData();
             document.getElementById('nama-instansi-cetak').innerText = opdData.name.toUpperCase();
 
+            // Set tahun dinamis
+            document.getElementById('tahun-laporan').innerText = getTahunAktif();
+
             const tbody = document.getElementById('tbody-laporan');
             let isianLengkap = true;
-            let totalSkorKematangan = 0; // Inisialisasi total akumulasi numerik
+            let totalSkorKematangan = 0;
 
             // Jalankan perulangan baris tabel 1 sampai 11
             for (let i = 1; i <= 11; i++) {
@@ -336,8 +291,6 @@
                     teksStatus = "Terverifikasi";
                     warnaStatus = "var(--primary-green)";
                     teksLevel = `Tingkat ${state.levelPilihan}`;
-
-                    // Tambahkan nilai level pilihan secara akumulatif hanya jika sudah berstatus TERVERIFIKASI (4)
                     totalSkorKematangan += parseInt(state.levelPilihan);
                 } else if (state.status === 2) {
                     teksStatus = "Butuh Revisi";
@@ -365,7 +318,7 @@
             const stateDrive = opdData.variabelStatus['v12'];
             let teksStatusDrive = "Belum Diunggah";
             let warnaDrive = "#6b7280";
-            let linkTeks = "-";
+            let linkKematangan = "-";
 
             if (stateDrive && stateDrive.driveLink) {
                 if (stateDrive.status === 4) {
@@ -378,7 +331,7 @@
                     teksStatusDrive = "Proses Evaluasi";
                     warnaDrive = "var(--status-menunggu)";
                 }
-                linkTeks = `<a href="${stateDrive.driveLink}" target="_blank" style="color:#2563eb; font-size:0.85rem; font-weight:bold; text-decoration:none;"><i class="fa-solid fa-arrow-up-right-from-square"></i> Buka Google Drive</a>`;
+                linkKematangan = `<a href="${stateDrive.driveLink}" target="_blank" style="color:#2563eb; font-size:0.85rem; font-weight:bold; text-decoration:none;"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>`;
             } else {
                 isianLengkap = false;
             }
@@ -388,7 +341,7 @@
                     <td style="text-align: center; font-weight: bold; color:#1e40af;">12</td>
                     <td style="font-weight: 600; color: #1e40af;"><i class="fa-brands fa-google-drive"></i> Tautan Folder Google Drive Bukti Fisik</td>
                     <td style="color: ${warnaDrive}; font-weight: 600;">${teksStatusDrive}</td>
-                    <td>${linkTeks}</td>
+                    <td>${linkKematangan}</td>
                 </tr>
             `;
 
@@ -398,21 +351,15 @@
             // LOGIKA PEMBAGIAN KATEGORI MENURUT RENTANG NOMINAL
             let kategoriTeks = "-";
             if (totalSkorKematangan > 0) {
-                if (totalSkorKematangan <= 19.0) {
-                    kategoriTeks = "Sangat Rendah";
-                } else if (totalSkorKematangan <= 28.0) {
-                    kategoriTeks = "Rendah";
-                } else if (totalSkorKematangan <= 37.0) {
-                    kategoriTeks = "Sedang";
-                } else if (totalSkorKematangan <= 46.0) {
-                    kategoriTeks = "Tinggi";
-                } else if (totalSkorKematangan <= 55.0) {
-                    kategoriTeks = "Sangat Tinggi";
-                }
+                if (totalSkorKematangan <= 19.0) kategoriTeks = "Sangat Rendah";
+                else if (totalSkorKematangan <= 28.0) kategoriTeks = "Rendah";
+                else if (totalSkorKematangan <= 37.0) kategoriTeks = "Sedang";
+                else if (totalSkorKematangan <= 46.0) kategoriTeks = "Tinggi";
+                else if (totalSkorKematangan <= 55.0) kategoriTeks = "Sangat Tinggi";
             }
             document.getElementById('text-kategori-akhir').innerText = kategoriTeks;
 
-            // Memunculkan alert jika draft belum 100% tervalidasi
+            // Peringatan jika belum 100%
             if (!isianLengkap) {
                 document.getElementById('peringatan-container').innerHTML = `
                     <div style="background: #fffbeb; border-left: 4px solid var(--status-menunggu); color: #854d0e; padding: 16px; border-radius: 8px; margin-bottom: 24px; font-weight: 500;">
@@ -428,33 +375,9 @@
                 if (localStorage.getItem(`ttd_${id}`)) el.value = localStorage.getItem(`ttd_${id}`);
                 el.addEventListener('input', () => localStorage.setItem(`ttd_${id}`, el.value));
             });
-
-            // Simulasi Upload Balikan Dokumen Resmi
-            // Simulasi Upload Balikan Dokumen Resmi (Update Data ke DB Lokal)
-            document.getElementById('file-final').addEventListener('change', function () {
-                if (this.files.length > 0) {
-                    const fileName = this.files[0].name;
-
-                    // 1. Ambil DB terbaru
-                    let db = JSON.parse(localStorage.getItem('kopd_db'));
-
-                    // 2. Cari index OPD yang sedang login
-                    const opdIndex = db.opds.findIndex(o => o.id === opdData.id);
-
-                    // 3. Simpan nama file ke property laporanAkhirUrl
-                    db.opds[opdIndex].laporanAkhirUrl = fileName;
-
-                    // 4. Update localStorage
-                    localStorage.setItem('kopd_db', JSON.stringify(db));
-
-                    // 5. Update UI
-                    const statusEl = document.getElementById('upload-status');
-                    statusEl.innerHTML = `<i class="fa-solid fa-circle-check"></i> Arsip Laporan "${fileName}" Berhasil Diunggah Kedalam Sistem!`;
-                    statusEl.style.display = 'block';
-                }
-            });
         });
     </script>
 </body>
 
 </html>
+

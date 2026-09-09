@@ -59,6 +59,13 @@ function initLocalDB() {
                     localStorage.setItem('kopd_db', JSON.stringify(db));
                     console.log("Sistem: Database lokal berhasil dimigrasikan ke 12 variabel.");
                 }
+
+                // Auto-healing: pastikan field tahunAktif ada
+                if (!db.tahunAktif) {
+                    db.tahunAktif = new Date().getFullYear().toString();
+                    localStorage.setItem('kopd_db', JSON.stringify(db));
+                    console.log("Sistem: Field tahunAktif ditambahkan.");
+                }
             }
         } catch (e) {
             // Jika JSON korup/bukan JSON, reset!
@@ -76,6 +83,7 @@ function initLocalDB() {
                 { id: 2, username: 'disdik', password: '123', name: 'Dinas Pendidikan, Kepemudaan dan Olahraga', isLocked: false, variabelStatus: generateInitialVariabel() }
             ],
             broadcastMessage: "",
+            tahunAktif: new Date().getFullYear().toString(),
             session: null
         };
         localStorage.setItem('kopd_db', JSON.stringify(db));
@@ -119,13 +127,18 @@ function logoutUser() {
     sessionStorage.clear();
 }
 
-// 5. Pengecekan Sesi (Anti-Looping)
+// 5. Pengecekan Sesi (Anti-Looping + Back-Button Protection)
 function checkSession(expectedRole, basePath = '../') {
+    // Cegah browser menampilkan halaman dari cache saat tombol Back ditekan
+    window.addEventListener('pageshow', function (event) {
+        if (event.persisted) { window.location.reload(); }
+    });
+
     const rawData = localStorage.getItem('kopd_db');
 
     // Jika tidak ada data, tendang ke login dan hentikan eksekusi (return false)
     if (!rawData) {
-        window.location.href = basePath + 'login.html';
+        window.location.replace(basePath + 'login.html');
         return false;
     }
 
@@ -134,7 +147,7 @@ function checkSession(expectedRole, basePath = '../') {
 
         // Jika sesi kosong atau role salah, tendang ke login
         if (!db.session || db.session.role !== expectedRole) {
-            window.location.href = basePath + 'login.html';
+            window.location.replace(basePath + 'login.html');
             return false;
         }
 
@@ -142,7 +155,7 @@ function checkSession(expectedRole, basePath = '../') {
     } catch (e) {
         // Jika JSON rusak, hapus dan paksa login
         localStorage.removeItem('kopd_db');
-        window.location.href = basePath + 'login.html';
+        window.location.replace(basePath + 'login.html');
         return false;
     }
 }
@@ -151,6 +164,16 @@ function checkSession(expectedRole, basePath = '../') {
 function getCurrentOpdData() {
     const db = JSON.parse(localStorage.getItem('kopd_db'));
     return db.opds.find(o => o.id === db.session.id);
+}
+
+// 7. Ambil Tahun Aktif dari Database
+function getTahunAktif() {
+    try {
+        const db = JSON.parse(localStorage.getItem('kopd_db'));
+        return db.tahunAktif || new Date().getFullYear().toString();
+    } catch (e) {
+        return new Date().getFullYear().toString();
+    }
 }
 
 // Jalankan otomatis saat fail dipanggil

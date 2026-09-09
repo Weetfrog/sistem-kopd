@@ -245,6 +245,24 @@
             </div>
 
             <!-- PANEL RESET DATA TAHUNAN -->
+            <!-- Panel Atur Tahun Kegiatan -->
+            <div style="margin-top: 30px; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 4px solid #2563eb;">
+                <h3 style="color: #1e40af; margin: 0 0 8px 0;"><i class="fa-solid fa-calendar-days"></i> Atur Tahun Kegiatan KOPD</h3>
+                <p style="color: #6b7280; font-size: 0.9rem; margin: 0 0 16px 0;">
+                    Tahun yang diatur di sini akan ditampilkan di <strong>seluruh halaman aplikasi</strong> (sidebar, laporan, ekspor file, dll).
+                </p>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <input type="number" id="input-tahun-aktif" min="2020" max="2099" 
+                        style="width: 120px; padding: 9px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1.1rem; font-weight: bold; text-align: center; outline: none;"
+                        onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
+                    <button onclick="simpanTahunAktif()" 
+                        style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Tahun
+                    </button>
+                    <span id="status-tahun" style="font-size: 0.85rem; font-weight: 600; color: #16a34a; display: none;"><i class="fa-solid fa-circle-check"></i> Tersimpan!</span>
+                </div>
+            </div>
+
             <div style="margin-top: 30px; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 4px solid #ef4444;">
                 <h3 style="color: #991b1b; margin: 0 0 8px 0;"><i class="fa-solid fa-rotate-left"></i> Reset Data Tahunan KOPD</h3>
                 <p style="color: #6b7280; font-size: 0.9rem; margin: 0 0 16px 0;">
@@ -268,6 +286,22 @@
 
             let db = JSON.parse(localStorage.getItem('kopd_db'));
             document.getElementById('input-broadcast').value = db.broadcastMessage || "";
+            document.getElementById('input-tahun-aktif').value = db.tahunAktif || new Date().getFullYear();
+
+            // Fungsi Simpan Tahun Aktif
+            window.simpanTahunAktif = function () {
+                const tahunBaru = document.getElementById('input-tahun-aktif').value.trim();
+                if (!tahunBaru || tahunBaru < 2020 || tahunBaru > 2099) {
+                    alert("Tahun harus antara 2020 dan 2099.");
+                    return;
+                }
+                db = JSON.parse(localStorage.getItem('kopd_db'));
+                db.tahunAktif = tahunBaru;
+                localStorage.setItem('kopd_db', JSON.stringify(db));
+                const statusEl = document.getElementById('status-tahun');
+                statusEl.style.display = 'inline';
+                setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+            };
 
             // Fungsi Buka Tutup Form
             window.toggleFormTambah = function (show) {

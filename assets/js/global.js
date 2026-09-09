@@ -25,7 +25,7 @@ function renderSidebar(basePath, role = 'opd') {
     sidebarContainer.innerHTML = `
         <aside class="sidebar" style="width: 250px; background: var(--primary-green); color: white; padding: 20px;">
             <div class="logo">
-                <h3 style="color: var(--water-yellow)">KOPD Mabar 2026</h3>
+                <h3 style="color: var(--water-yellow)">KOPD Mabar ${typeof getTahunAktif === 'function' ? getTahunAktif() : ''}</h3>
             </div>
             <ul style="list-style: none; margin-top: 30px;">
                 ${menuHTML}

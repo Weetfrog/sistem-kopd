@@ -89,7 +89,7 @@ function renderSidebar(basePath = '../', role = 'opd') {
         <aside class="sidebar-wrapper" id="main-sidebar">
             <div class="sidebar-header">
                 <h2 class="logo-text">KOPD Mabar</h2>
-                <p class="logo-sub">Tahun 2026</p>
+                <p class="logo-sub">Tahun ${getTahunAktif()}</p>
             </div>
             <ul class="sidebar-menu">
                 ${menuHTML}
@@ -211,7 +211,7 @@ function renderSidebar(basePath = '../', role = 'opd') {
         e.preventDefault();
         if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
             logoutUser(); // Fungsi dari state-manager.js
-            window.location.href = basePath + 'login.html';
+            window.location.replace(basePath + 'login.html');
         }
     });
 }

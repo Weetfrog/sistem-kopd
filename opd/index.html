@@ -87,7 +87,7 @@
             <div class="header">
                 <h1>Selamat Datang, <span id="nama-opd">Memuat...</span></h1>
                 <p style="color: #4b5563; margin:0;">Sistem Kematangan Organisasi Perangkat Daerah Kabupaten Manggarai
-                    Barat 2026</p>
+                    Barat <span id="tahun-opd-index"></span></p>
             </div>
 
             <div id="broadcast-container" class="alert-broadcast">
@@ -151,6 +151,7 @@
             const db = JSON.parse(localStorage.getItem('kopd_db'));
             const opdData = getCurrentOpdData();
             document.getElementById('nama-opd').innerText = opdData.name;
+            document.getElementById('tahun-opd-index').innerText = getTahunAktif();
 
             if (db.broadcastMessage && db.broadcastMessage.trim() !== "") {
                 document.getElementById('broadcast-container').style.display = 'block';

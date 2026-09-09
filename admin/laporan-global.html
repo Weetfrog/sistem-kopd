@@ -139,7 +139,7 @@
                     <div>
                         <h1 style="color: var(--primary-green); margin: 0 0 8px 0;">Laporan Keseluruhan KOPD</h1>
                         <p style="color: #4b5563; margin: 0;">Rekapitulasi nilai indeks sementara dan final tingkat
-                            Kabupaten Manggarai Barat 2026.</p>
+                            Kabupaten Manggarai Barat <span id="tahun-laporan-global"></span>.</p>
                     </div>
 
                     <div data-html2canvas-ignore="true" style="display: flex; gap: 10px;">
@@ -205,6 +205,9 @@
             renderSidebar('../', 'admin');
 
             const db = JSON.parse(localStorage.getItem('kopd_db'));
+            const tahun = getTahunAktif();
+            document.getElementById('tahun-laporan-global').innerText = tahun;
+            document.title = `Laporan Global OPD - KOPD Mabar ${tahun}`;
 
             let dataRekap = [];
             let totalKabupatenScore = 0;
@@ -344,7 +347,7 @@
                     }
                 });
 
-                XLSX.writeFile(wb, "Rekap_KOPD_Mabar_2026.xlsx");
+                XLSX.writeFile(wb, `Rekap_KOPD_Mabar_${tahun}.xlsx`);
             }
 
             // ==========================================
@@ -354,7 +357,7 @@
                 const areaCetak = document.getElementById('area-cetak-laporan');
                 const opsi = {
                     margin: 0.4,
-                    filename: 'Laporan_Global_KOPD_Mabar_2026.pdf',
+                    filename: `Laporan_Global_KOPD_Mabar_${tahun}.pdf`,
                     image: { type: 'jpeg', quality: 0.98 },
                     html2canvas: { scale: 2, useCORS: true },
                     jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' }
