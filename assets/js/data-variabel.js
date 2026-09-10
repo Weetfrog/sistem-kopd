@@ -208,3 +208,5 @@ const dbVariabel = [
         deskripsiPanduan: "Masukkan tautan (URL) folder Google Drive yang memuat seluruh dokumen bukti dukung fisik KOPD. Pastikan izin akses link telah diatur ke 'Siapa saja yang memiliki link dapat melihat' (Viewer)."
     }
 ];
+
+window.dbVariabel = dbVariabel;
