@@ -151,6 +151,13 @@
         if (!opdData) {
             alert("Data OPD tidak ditemukan.");
             window.location.replace('../login.html');
+            return;
+        }
+
+        // Self-healing jika variabelStatus hilang dari database
+        if (!opdData.variabelStatus) {
+            opdData.variabelStatus = window.generateInitialVariabel();
+            await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdData.docId), { variabelStatus: opdData.variabelStatus });
         }
 
         const settings = await window.getSettings(); // Untuk broadcast message

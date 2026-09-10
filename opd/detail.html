@@ -311,6 +311,12 @@
             return;
         }
 
+        // Self-healing jika variabelStatus hilang dari database
+        if (!opdData.variabelStatus) {
+            opdData.variabelStatus = window.generateInitialVariabel();
+            await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdData.docId), { variabelStatus: opdData.variabelStatus });
+        }
+
         if (!opdData.variabelStatus[`v${varId}`]) {
             opdData.variabelStatus[`v${varId}`] = {
                 status: 0,
@@ -499,9 +505,9 @@
             try {
                 const docRef = window.fbDoc(window.db, "opds", opdData.docId);
                 // Update specific field using dot notation for nested objects
-                await window.fbUpdateDoc(docRef, {
-                    [\`variabelStatus.v\${varId}\`]: currentState
-                });
+                let updates = {};
+                updates[`variabelStatus.v${varId}`] = currentState;
+                await window.fbUpdateDoc(docRef, updates);
             } catch (e) {
                 console.error("Error saving data:", e);
                 alert("Gagal menyimpan data ke server. Periksa koneksi internet.");
