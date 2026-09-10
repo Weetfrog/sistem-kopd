@@ -130,8 +130,9 @@
         </form>
     </div>
 
-    <script type="module" src="assets/js/state-manager.js"></script>
     <script type="module">
+        import 'assets/js/state-manager.js';
+
         document.addEventListener('DOMContentLoaded', () => {
             // Manipulasi History: Putuskan ikatan kembali (Back) setelah mendarat di halaman login (sehabis logout)
             window.history.pushState(null, null, window.location.href);

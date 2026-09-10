@@ -126,9 +126,10 @@
         </main>
     </div>
 
-    <script type="module" src="../assets/js/state-manager.js"></script>
-    <script type="module" src="../assets/components/sidebar.js"></script>
     <script type="module">
+        import '../assets/js/state-manager.js';
+        import '../assets/components/sidebar.js';
+
         // 1. Rem Darurat Keamanan
         if (!window.checkSession('admin', '../')) throw new Error("Unauthenticated");
         await window.renderSidebar('../', 'admin');

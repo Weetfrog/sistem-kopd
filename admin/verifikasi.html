@@ -594,10 +594,9 @@
         <i class="fa-solid fa-file-pdf"></i> <span>Lihat Berkas (<span id="mobile-file-count">0</span>)</span>
     </button>
 
-    <script type="module" src="../assets/js/state-manager.js"></script>
-    <script type="module" src="../assets/components/sidebar.js"></script>
-
     <script type="module">
+        import '../assets/js/state-manager.js';
+        import '../assets/components/sidebar.js';
         import { dbVariabel } from '../assets/js/data-variabel.js';
 
         if (!window.checkSession('admin', '../')) throw new Error("Unauthenticated");

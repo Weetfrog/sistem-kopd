@@ -251,6 +251,13 @@
                 </form>
             </div>
 
+            <div class="panel-broadcast" style="border-left-color: #ea580c;">
+                <h3 style="color: #9a3412;"><i class="fa-solid fa-wrench"></i> Perbaiki Data Variabel OPD</h3>
+                <p style="font-size:0.85rem; color:#78350f; margin:0 0 12px 0;">Jalankan ini jika data variabel OPD terlihat hilang atau rusak. Fungsi ini akan mengisi variabel yang hilang tanpa menghapus data yang sudah ada.</p>
+                <button class="btn-sm" onclick="window.repairAllOpdData()" style="background:#ea580c; color:white;"><i class="fa-solid fa-rotate"></i> Jalankan Perbaikan Data Sekarang</button>
+                <span id="repair-status" style="display:none; margin-left:10px; font-size:0.85rem; font-weight:bold; color:#166534;"></span>
+            </div>
+
             <div class="table-container">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="color: var(--primary-green);"><i class="fa-solid fa-users"></i> Daftar Akun Pengguna</h3>
@@ -339,9 +346,10 @@
         </div>
     </div>
 
-    <script type="module" src="../assets/js/state-manager.js"></script>
-    <script type="module" src="../assets/components/sidebar.js"></script>
     <script type="module">
+        import '../assets/js/state-manager.js';
+        import '../assets/components/sidebar.js';
+
         if (!window.checkSession('admin', '../')) throw new Error("Unauthenticated");
         await window.renderSidebar('../', 'admin');
 
@@ -412,6 +420,64 @@
 
         // Render perdana
         await window.renderTabel();
+
+        // ===== FUNGSI PERBAIKAN DATA OPD =====
+        // Melakukan MERGE: mengisi variabel yang hilang tanpa menghapus data yang ada
+        window.repairAllOpdData = async function () {
+            if (!confirm("Yakin ingin menjalankan perbaikan data? Proses ini akan mengisi variabel yang hilang pada semua OPD.")) return;
+
+            const statusEl = document.getElementById('repair-status');
+            statusEl.style.display = 'inline';
+            statusEl.innerText = 'Sedang memperbaiki...';
+
+            const defaultVar = {
+                status: 0,
+                levelPilihan: null,
+                levelDisetujui: 0,
+                deskripsi: "",
+                driveLink: "",
+                uploads: {},
+                catatanAdmin: ""
+            };
+
+            try {
+                const snap = await window.fbGetDocs(window.fbCollection(window.db, "opds"));
+                let repaired = 0;
+
+                for (const docSnap of snap.docs) {
+                    const opd = docSnap.data();
+                    let needsUpdate = false;
+                    let updates = {};
+
+                    // Cek setiap variabel v1 sampai v12
+                    for (let i = 1; i <= 12; i++) {
+                        const key = `variabelStatus.v${i}`;
+                        const existingVar = opd.variabelStatus ? opd.variabelStatus[`v${i}`] : null;
+
+                        if (!existingVar) {
+                            // Variabel ini hilang, tambahkan dengan nilai default
+                            const def = { ...defaultVar };
+                            if (i === 12) def.levelPilihan = 1; // v12 Drive Link default level 1
+                            updates[key] = def;
+                            needsUpdate = true;
+                        }
+                    }
+
+                    if (needsUpdate) {
+                        await window.fbUpdateDoc(window.fbDoc(window.db, "opds", docSnap.id), updates);
+                        repaired++;
+                    }
+                }
+
+                statusEl.innerText = `✅ Selesai! ${repaired} dokumen diperbaiki.`;
+                await window.renderTabel();
+                setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+            } catch (e) {
+                console.error("Repair error:", e);
+                statusEl.innerText = '❌ Gagal. Periksa konsol.';
+                statusEl.style.color = '#991b1b';
+            }
+        };
 
         // Fungsi Simpan Tahun Aktif
         window.simpanTahunAktif = async function () {
