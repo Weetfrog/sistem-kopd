@@ -308,7 +308,7 @@
         if (!opdData) {
             alert("Data OPD tidak ditemukan.");
             window.location.replace('../login.html');
-            return;
+            throw new Error("No OPD data");
         }
 
         // Self-healing jika variabelStatus hilang dari database
