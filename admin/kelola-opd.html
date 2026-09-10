@@ -164,6 +164,43 @@
             font-size: 0.75rem;
             font-weight: bold;
         }
+        .btn-yellow {
+            background: #d97706;
+        }
+
+        .btn-yellow:hover {
+            background: #b45309;
+        }
+
+        /* Modal Edit OPD */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.aktif {
+            display: flex;
+        }
+
+        .modal-box {
+            background: white;
+            border-radius: 12px;
+            padding: 28px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.2);
+            border-top: 4px solid #d97706;
+        }
+
+        .modal-box h3 {
+            color: #92400e;
+            margin: 0 0 20px 0;
+        }
     </style>
 </head>
 
@@ -277,6 +314,31 @@
         </main>
     </div>
 
+    <!-- MODAL EDIT AKUN OPD -->
+    <div class="modal-overlay" id="modal-edit-opd">
+        <div class="modal-box">
+            <h3><i class="fa-solid fa-pen-to-square"></i> Edit Akun Perangkat Daerah</h3>
+            <input type="hidden" id="edit-opd-id">
+            <div class="form-group-input" style="margin-bottom: 14px;">
+                <label>Nama Lengkap Instansi</label>
+                <input type="text" id="edit-name" placeholder="Nama instansi" autocomplete="off">
+            </div>
+            <div class="form-group-input" style="margin-bottom: 6px;">
+                <label>Username Login <span style="color:#9ca3af; font-weight:400; font-size:0.8rem;">(tidak dapat diubah)</span></label>
+                <input type="text" id="edit-username-display" disabled
+                    style="background:#f1f5f9; color:#6b7280; cursor:not-allowed;">
+            </div>
+            <div class="form-group-input" style="margin-bottom: 20px;">
+                <label>Kata Sandi Baru <span style="color:#9ca3af; font-weight:400; font-size:0.8rem;">(kosongkan jika tidak ingin mengubah)</span></label>
+                <input type="text" id="edit-password" placeholder="Ketik sandi baru..." autocomplete="off">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn-sm btn-red" onclick="tutupModalEdit()"><i class="fa-solid fa-xmark"></i> Batal</button>
+                <button class="btn-sm btn-yellow" onclick="simpanEditOpd()"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
     <script src="../assets/js/state-manager.js"></script>
     <script src="../assets/components/sidebar.js"></script>
     <script>
@@ -374,6 +436,9 @@
                             <td>${statusBadge}</td>
                             <td>
                                 <div style="display:flex; gap:6px;">
+                                    <button class="btn-sm btn-yellow" title="Edit Akun" onclick="bukaModalEdit(${opd.id})">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
                                     <button class="btn-sm btn-blue" title="${lockTitle}" onclick="toggleLock(${opd.id}, ${!opd.isLocked})">
                                         <i class="fa-solid ${lockIcon}"></i>
                                     </button>
@@ -435,6 +500,53 @@
                 alert("✅ Data variabel kematangan seluruh Perangkat Daerah berhasil direset.\nDaftar akun tidak berubah.");
                 renderTabel();
             };
+
+            // Fungsi Modal Edit Akun OPD
+            window.bukaModalEdit = function (id) {
+                db = JSON.parse(localStorage.getItem('kopd_db'));
+                const opd = db.opds.find(o => o.id === id);
+                if (!opd) return;
+                document.getElementById('edit-opd-id').value = opd.id;
+                document.getElementById('edit-name').value = opd.name;
+                document.getElementById('edit-username-display').value = opd.username;
+                document.getElementById('edit-password').value = '';
+                document.getElementById('modal-edit-opd').classList.add('aktif');
+            };
+
+            window.tutupModalEdit = function () {
+                document.getElementById('modal-edit-opd').classList.remove('aktif');
+            };
+
+            window.simpanEditOpd = function () {
+                const id = parseInt(document.getElementById('edit-opd-id').value);
+                const namaBaru = document.getElementById('edit-name').value.trim();
+                const passwordBaru = document.getElementById('edit-password').value.trim();
+
+                if (!namaBaru) {
+                    alert("Nama instansi tidak boleh kosong.");
+                    document.getElementById('edit-name').focus();
+                    return;
+                }
+
+                db = JSON.parse(localStorage.getItem('kopd_db'));
+                const opdIndex = db.opds.findIndex(o => o.id === id);
+                if (opdIndex === -1) return;
+
+                db.opds[opdIndex].name = namaBaru;
+                if (passwordBaru) {
+                    db.opds[opdIndex].password = passwordBaru;
+                }
+
+                localStorage.setItem('kopd_db', JSON.stringify(db));
+                tutupModalEdit();
+                renderTabel(document.getElementById('search-akun').value);
+                alert(`Akun "${namaBaru}" berhasil diperbarui.`);
+            };
+
+            // Tutup modal saat klik di luar kotak
+            document.getElementById('modal-edit-opd').addEventListener('click', function (e) {
+                if (e.target === this) tutupModalEdit();
+            });
         });
     </script>
 </body>

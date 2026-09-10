@@ -651,6 +651,23 @@
             });
             initMasterOpdList();
 
+            // AUTO-PILIH dari deep-link: verifikasi.html?opd=X&v=Y
+            const urlParams = new URLSearchParams(window.location.search);
+            const paramOpd = parseInt(urlParams.get('opd'));
+            const paramV   = parseInt(urlParams.get('v'));
+            if (paramOpd) {
+                const targetOpd = db.opds.find(o => o.id === paramOpd);
+                if (targetOpd) {
+                    // Tunggu sebentar agar DOM panel tengah siap, lalu pilih OPD dan variabelnya
+                    setTimeout(() => {
+                        pilihOpdKeMejaKerja(paramOpd, targetOpd.name);
+                        if (paramV && paramV >= 1 && paramV <= 12) {
+                            setTimeout(() => seleksiVariabelSpesifik(paramV), 150);
+                        }
+                    }, 100);
+                }
+            }
+
             window.pilihOpdKeMejaKerja = function (opdId, opdName) {
                 activeOpdId = opdId;
                 activeVarId = null;

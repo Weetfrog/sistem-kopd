@@ -160,7 +160,7 @@
                                 <td style="font-weight: 600; color:#334155;">${opd.name}</td>
                                 <td>${labelVar}</td>
                                 <td><span class="badge-tabel" style="background: var(--status-menunggu);">Usulan Baru</span></td>
-                                <td><a href="verifikasi.html" class="btn-aksi">Tinjau ➔</a></td>
+                                <td><a href="verifikasi.html?opd=${opd.id}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
                             </tr>
                         `;
                     }
@@ -172,7 +172,7 @@
                                 <td style="font-weight: 600; color:#334155;">${opd.name}</td>
                                 <td>${labelVar}</td>
                                 <td><span class="badge-tabel" style="background: #3b82f6;">Verifikasi Ulang</span></td>
-                                <td><a href="verifikasi.html" class="btn-aksi">Tinjau ➔</a></td>
+                                <td><a href="verifikasi.html?opd=${opd.id}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
                             </tr>
                         `;
                     }
