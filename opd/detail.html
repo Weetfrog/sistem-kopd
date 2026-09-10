@@ -447,7 +447,7 @@
                 document.getElementById('pesan-revisi').innerText = currentState.catatanAdmin || 'Mohon perbaiki data.';
             }
 
-            // Tampilkan Status Disetujui (Kunci Form)
+            // Tampilkan Status Disetujui (Kunci Form Permanen)
             if (currentState.status === 4) {
                 const btnSimpan = document.getElementById('btn-simpan');
                 const btnSimpanDrive = document.getElementById('btn-simpan-drive');
@@ -461,6 +461,22 @@
                 document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-selesai)';
                 document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-circle-check"></i> Variabel Telah Disetujui';
                 document.getElementById('pesan-revisi').innerText = "Data Anda telah diverifikasi dan disetujui secara permanen.";
+                document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
+            } 
+            // Tampilkan Status Menunggu Verifikasi (Kunci Form Sementara)
+            else if (currentState.status === 1 || currentState.status === 3) {
+                const btnSimpan = document.getElementById('btn-simpan');
+                const btnSimpanDrive = document.getElementById('btn-simpan-drive');
+                if (btnSimpan) btnSimpan.style.display = 'none';
+                if (btnSimpanDrive) btnSimpanDrive.style.display = 'none';
+
+                document.querySelectorAll('input, textarea').forEach(r => r.disabled = true);
+
+                document.getElementById('admin-feedback').style.display = 'block';
+                document.getElementById('admin-feedback').style.borderLeftColor = 'var(--status-menunggu)';
+                document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-menunggu)';
+                document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-clock"></i> Sedang Dievaluasi';
+                document.getElementById('pesan-revisi').innerText = "Data Anda saat ini sedang dalam antrean evaluasi oleh Bagian Organisasi. Isian dikunci sementara.";
                 document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
             }
 

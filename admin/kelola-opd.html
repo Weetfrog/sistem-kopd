@@ -314,7 +314,7 @@
                 e.preventDefault();
                 db = JSON.parse(localStorage.getItem('kopd_db'));
 
-                const name = document.getElementById('add-name').value;
+                const name = document.getElementById('add-name').value.trim();
                 const username = document.getElementById('add-username').value.trim().toLowerCase();
                 const password = document.getElementById('add-password').value;
 

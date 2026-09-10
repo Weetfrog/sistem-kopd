@@ -199,9 +199,35 @@
                             <div style="flex: 1;">
                                 <strong style="color: var(--status-selesai);">${varName}: Disetujui</strong>
                                 <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
-                                    ${i === 12 ? 'Tautan berkas Google Drive telah diverifikasi oleh Evaluator.' : `Tingkat Kematangan Usulan: <strong>Level ${state.levelPilihan}</strong> disetujui.`}
+                                    ${i === 12 ? 'Tautan berkas Google Drive telah diverifikasi oleh Evaluator.' : `Tingkat Kematangan: <strong>Level ${state.levelDisetujui}</strong> disetujui.`}
                                 </div>
                                 <span class="notif-time">Selesai diverifikasi</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (state.status === 1) {
+                    feedHTML += `
+                        <div class="notif-item">
+                            <div class="notif-icon"><i class="fa-solid fa-clock" style="color: var(--status-menunggu);"></i></div>
+                            <div style="flex: 1;">
+                                <strong style="color: var(--status-menunggu);">${varName}: Menunggu Verifikasi</strong>
+                                <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
+                                    Usulan data baru telah dikirim dan sedang dalam antrean evaluasi admin.
+                                </div>
+                                <span class="notif-time">Dalam antrean</span>
+                            </div>
+                        </div>
+                    `;
+                } else if (state.status === 3) {
+                    feedHTML += `
+                        <div class="notif-item">
+                            <div class="notif-icon"><i class="fa-solid fa-clock-rotate-left" style="color: #3b82f6;"></i></div>
+                            <div style="flex: 1;">
+                                <strong style="color: #3b82f6;">${varName}: Verifikasi Ulang</strong>
+                                <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
+                                    Perbaikan data telah dikirim kembali ke evaluator.
+                                </div>
+                                <span class="notif-time">Sedang ditinjau ulang</span>
                             </div>
                         </div>
                     `;
