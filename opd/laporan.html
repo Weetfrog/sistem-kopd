@@ -290,8 +290,8 @@
                 if (state.status === 4) {
                     teksStatus = "Terverifikasi";
                     warnaStatus = "var(--primary-green)";
-                    teksLevel = `Tingkat ${state.levelPilihan}`;
-                    totalSkorKematangan += parseInt(state.levelPilihan);
+                    teksLevel = `Tingkat ${state.levelDisetujui}`; // FIX: gunakan levelDisetujui (keputusan admin)
+                    totalSkorKematangan += parseInt(state.levelDisetujui); // FIX: skor dari level yang disetujui
                 } else if (state.status === 2) {
                     teksStatus = "Butuh Revisi";
                     warnaStatus = "var(--status-revisi)";

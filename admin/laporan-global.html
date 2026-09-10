@@ -216,19 +216,19 @@
             // Kalkulasi Data
             db.opds.forEach(opd => {
                 let skor = 0;
-                let varSelesai = 0;
+                let varSelesai = 0; // Jumlah variabel yang sudah DISETUJUI admin (status === 4)
 
                 for (let i = 1; i <= 11; i++) {
                     const state = opd.variabelStatus[`v${i}`];
                     if (state) {
                         let levelSah = parseInt(state.levelDisetujui || 0);
                         skor += levelSah;
-                        if (levelSah === 5) varSelesai++;
+                        if (state.status === 4) varSelesai++; // FIX: hitung berdasarkan status Disetujui
                     }
                 }
 
                 totalKabupatenScore += skor;
-                if (varSelesai === 11) totalPDSelesai++;
+                if (varSelesai === 11) totalPDSelesai++; // Selesai 100% = semua 11 variabel disetujui
 
                 let kategori = "-";
                 if (skor > 0) {
@@ -248,12 +248,17 @@
             dataRekap.sort((a, b) => b.skor - a.skor);
 
             // Fungsi render baris tabel (dapat difilter)
+            // FIX 2: Kolom Link Drive ditampilkan sebagai teks URL agar bisa dibaca di PDF cetak
             function renderBarisTabel(data, nomor) {
-                let btnDrive = '';
+                let kolDrive = '';
                 if (data.driveLink) {
-                    btnDrive = `<a href="${data.driveLink}" target="_blank" class="btn-download" style="background:#2563eb; text-decoration:none;"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>`;
+                    // Di layar: tampilkan tombol klik + URL teks di bawahnya
+                    kolDrive = `
+                        <a href="${data.driveLink}" target="_blank" class="btn-download" style="background:#2563eb; text-decoration:none; display:inline-block; margin-bottom:4px;"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>
+                        <div style="font-size:0.7rem; color:#4b5563; word-break:break-all; max-width:220px; margin-top:4px;">${data.driveLink}</div>
+                    `;
                 } else {
-                    btnDrive = `<span class="btn-download disabled"><i class="fa-solid fa-clock"></i> Belum Diisi</span>`;
+                    kolDrive = `<span class="btn-download disabled"><i class="fa-solid fa-clock"></i> Belum Diisi</span>`;
                 }
                 return `
                     <tr data-name="${data.name.toLowerCase()}">
@@ -262,7 +267,7 @@
                         <td>${data.varSelesai} / 11</td>
                         <td style="font-weight:bold; color:var(--primary-green); font-size:1.1rem;">${data.skor}</td>
                         <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:600; color:#475569;">${data.kategori}</span></td>
-                        <td>${btnDrive}</td>
+                        <td>${kolDrive}</td>
                     </tr>
                 `;
             }
@@ -296,14 +301,14 @@
                 const wb = XLSX.utils.book_new();
 
                 // 1. Sheet Laporan Global
-                const globalData = [['No', 'Nama Perangkat Daerah', 'Progress Verifikasi', 'Skor Indeks', 'Kategori Kematangan', 'Link Drive Bukti Dukung']];
+                const globalData = [['No', 'Nama Perangkat Daerah', 'Progress Verifikasi (Disetujui)', 'Skor Indeks', 'Kategori Kematangan', 'Link Drive Bukti Dukung']];
                 dataRekap.forEach((d, i) => {
                     globalData.push([i + 1, d.name, `${d.varSelesai}/11`, d.skor, d.kategori, d.driveLink || '-']);
                 });
                 const wsGlobal = XLSX.utils.aoa_to_sheet(globalData);
                 XLSX.utils.book_append_sheet(wb, wsGlobal, "Laporan Keseluruhan");
 
-                // 2. Sheet per OPD
+                // 2. Sheet per OPD — FIX 4: tambahkan baris Total Skor & Kategori
                 db.opds.forEach(opd => {
                     const opdData = [
                         ['Informasi Perangkat Daerah'],
@@ -314,6 +319,7 @@
                         ['Indikator', 'Status', 'Level Diajukan', 'Level Disetujui', 'Fakta OPD', 'Catatan Evaluator']
                     ];
 
+                    let totalSkorOpd = 0;
                     for (let i = 1; i <= 11; i++) {
                         const state = opd.variabelStatus[`v${i}`];
                         if (state) {
@@ -322,6 +328,9 @@
                             else if (state.status === 2) statusText = "Butuh Revisi";
                             else if (state.status === 3) statusText = "Verifikasi Ulang";
                             else if (state.status === 4) statusText = "Disetujui";
+
+                            const levelDisetujui = parseInt(state.levelDisetujui) || 0;
+                            if (state.status === 4) totalSkorOpd += levelDisetujui;
 
                             opdData.push([
                                 `Variabel ${i}`,
@@ -334,11 +343,27 @@
                         }
                     }
 
+                    // Hitung kategori OPD ini
+                    let kategoriOpd = "-";
+                    if (totalSkorOpd > 0) {
+                        if (totalSkorOpd <= 19) kategoriOpd = "Sangat Rendah";
+                        else if (totalSkorOpd <= 28) kategoriOpd = "Rendah";
+                        else if (totalSkorOpd <= 37) kategoriOpd = "Sedang";
+                        else if (totalSkorOpd <= 46) kategoriOpd = "Tinggi";
+                        else kategoriOpd = "Sangat Tinggi";
+                    }
+
+                    // Baris ringkasan nilai akhir
+                    opdData.push([]);
+                    opdData.push(['NILAI AKHIR', '', '', '', '', '']);
+                    opdData.push(['Total Skor Indeks (Maks. 55)', '', '', totalSkorOpd, '', '']);
+                    opdData.push(['Kategori Kematangan', '', '', kategoriOpd, '', '']);
+
                     const wsOpd = XLSX.utils.aoa_to_sheet(opdData);
-                    
+
                     // Nama sheet maksimal 31 karakter dan tidak boleh ada karakter khusus
-                    let sheetName = opd.username.substring(0, 31).replace(/[\\/?*\[\]:]/g, '_');
-                    
+                    let sheetName = opd.username.substring(0, 31).replace(/[\\/?*[\]:]/g, '_');
+
                     try {
                         XLSX.utils.book_append_sheet(wb, wsOpd, sheetName);
                     } catch(e) {
