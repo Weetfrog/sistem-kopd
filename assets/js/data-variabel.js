@@ -2,7 +2,7 @@
  * Kamus Data 11 Variabel Penilaian KOPD Manggarai Barat Tahun 2026
  * Bersumber dari Pedoman Pengisian Instrumen Penilaian Tingkat Kematangan Perangkat Daerah [cite: 1]
  */
-const dbVariabel = [
+export const dbVariabel = [
     {
         id: 1,
         judul: "I. Perencanaan Pembangunan Daerah",
@@ -208,5 +208,3 @@ const dbVariabel = [
         deskripsiPanduan: "Masukkan tautan (URL) folder Google Drive yang memuat seluruh dokumen bukti dukung fisik KOPD. Pastikan izin akses link telah diatur ke 'Siapa saja yang memiliki link dapat melihat' (Viewer)."
     }
 ];
-
-window.dbVariabel = dbVariabel;

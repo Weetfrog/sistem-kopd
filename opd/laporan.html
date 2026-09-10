@@ -259,15 +259,22 @@
         </main>
     </div>
 
-    <script src="../assets/js/data-variabel.js"></script>
     <script type="module" src="../assets/js/state-manager.js"></script>
     <script type="module" src="../assets/components/sidebar.js"></script>
 
     <script type="module">
+        import { dbVariabel } from '../assets/js/data-variabel.js';
+
         if (!window.checkSession('opd', '../')) throw new Error("Unauthenticated");
         await window.renderSidebar('../', 'opd');
 
         const opdData = await window.getCurrentOpdData();
+        if (!opdData) {
+            alert("Data OPD tidak ditemukan.");
+            window.location.replace('../login.html');
+            return;
+        }
+
         document.getElementById('nama-instansi-cetak').innerText = opdData.name.toUpperCase();
 
         // Set tahun dinamis
@@ -280,7 +287,7 @@
 
         // Jalankan perulangan baris tabel 1 sampai 11
         for (let i = 1; i <= 11; i++) {
-            const dataVar = window.dbVariabel.find(v => v.id === i) || { id: i, judul: `Variabel ${i}` };
+            const dataVar = dbVariabel.find(v => v.id === i) || { id: i, judul: `Variabel ${i}` };
             const state = opdData.variabelStatus[`v${i}`];
 
             let teksStatus = "Belum Diisi";

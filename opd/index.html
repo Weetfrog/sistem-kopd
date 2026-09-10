@@ -148,6 +148,11 @@
         await window.renderSidebar('../', 'opd');
 
         const opdData = await window.getCurrentOpdData();
+        if (!opdData) {
+            alert("Data OPD tidak ditemukan.");
+            window.location.replace('../login.html');
+        }
+
         const settings = await window.getSettings(); // Untuk broadcast message
         const tahunAktif = await window.getTahunAktif();
 

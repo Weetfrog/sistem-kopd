@@ -288,6 +288,8 @@
     <script type="module" src="../assets/js/state-manager.js"></script>
     <script type="module" src="../assets/components/sidebar.js"></script>
     <script type="module">
+        import { dbVariabel } from '../assets/js/data-variabel.js';
+
         if (!window.checkSession('opd', '../')) throw new Error("Unauthenticated");
         await window.renderSidebar('../', 'opd');
 
@@ -295,7 +297,7 @@
         const varId = parseInt(urlParams.get('v'));
         if (!varId || varId < 1 || varId > 12) { window.location.href = "matriks.html"; throw new Error("Invalid variable ID"); }
 
-        const dataVariabel = window.dbVariabel.find(v => v.id === varId) || { 
+        const dataVariabel = dbVariabel.find(v => v.id === varId) || { 
             id: varId, 
             judul: `Variabel ${varId}`, 
             levels: Array(5).fill("Tingkat: Deskripsi belum tersedia.") 
@@ -303,6 +305,12 @@
         document.getElementById('var-title').innerText = dataVariabel.judul;
 
         const opdData = await window.getCurrentOpdData();
+        if (!opdData) {
+            alert("Data OPD tidak ditemukan.");
+            window.location.replace('../login.html');
+            return;
+        }
+
         if (!opdData.variabelStatus[`v${varId}`]) {
             opdData.variabelStatus[`v${varId}`] = {
                 status: 0,

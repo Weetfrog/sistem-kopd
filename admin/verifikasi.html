@@ -598,6 +598,8 @@
     <script type="module" src="../assets/components/sidebar.js"></script>
 
     <script type="module">
+        import { dbVariabel } from '../assets/js/data-variabel.js';
+
         if (!window.checkSession('admin', '../')) throw new Error("Unauthenticated");
         await window.renderSidebar('../', 'admin');
 
@@ -671,6 +673,7 @@
             activeOpdId = opdId;
             activeVarId = null;
             initMasterOpdList(document.getElementById('search-opd-admin').value);
+            renderDaftarOpdKiri(document.getElementById('search-opd-admin').value);
             document.getElementById('dom-nama-opd-aktif').innerText = `📂 ${opdName.toUpperCase()}`;
             resetPanelKananPreview();
             if (window.innerWidth <= 992) document.body.classList.add('mobile-view-variables');
@@ -689,7 +692,7 @@
             for (let i = 1; i <= 12; i++) {
                 const state = opdDataActive.variabelStatus[`v${i}`];
                 if (state && state.status > 0) {
-                    const pedoman = window.dbVariabel.find(v => v.id === i);
+                    const pedoman = dbVariabel.find(v => v.id === i);
                     const isActive = activeVarId === i ? 'active-var' : '';
                     const isDriveVar = i === 12;
 
@@ -778,7 +781,7 @@
                     `;
                 }
             } else {
-                const varData = window.dbVariabel.find(v => v.id === vId);
+                const varData = dbVariabel.find(v => v.id === vId);
                 if (varData && varData.dokumenDukung) {
                     let html = '<div style="display:flex; flex-direction:column; gap:12px;">';
                     varData.dokumenDukung.forEach((dokumen, index) => {

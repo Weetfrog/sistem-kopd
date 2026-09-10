@@ -133,6 +133,12 @@ function checkSession(expectedRole, basePath = '../') {
     try {
         const session = JSON.parse(rawData);
         if (session.role !== expectedRole) {
+            sessionStorage.removeItem('kopd_session');
+            window.location.replace(basePath + 'login.html');
+            return false;
+        }
+        if (session.role === 'opd' && !session.docId) {
+            sessionStorage.removeItem('kopd_session');
             window.location.replace(basePath + 'login.html');
             return false;
         }

@@ -61,10 +61,11 @@
         </main>
     </div>
 
-    <script src="../assets/js/data-variabel.js"></script>
     <script type="module" src="../assets/js/state-manager.js"></script>
     <script type="module" src="../assets/components/sidebar.js"></script>
     <script type="module">
+        import { dbVariabel } from '../assets/js/data-variabel.js';
+        
         // 1. Cek Sesi (Wajib Login OPD)
         if (!window.checkSession('opd', '../')) throw new Error("Unauthenticated");
 
@@ -79,6 +80,12 @@
 
         // 3. Ambil data spesifik akun OPD yang sedang login
         const opdData = await window.getCurrentOpdData();
+        if (!opdData) {
+            alert("Data OPD tidak ditemukan atau akun telah dihapus.");
+            window.logoutUser();
+            window.location.replace('../login.html');
+            return;
+        }
 
         // Konfigurasi Label, Ikon, dan Warna untuk 5 Status
         const statusConfig = {
@@ -92,7 +99,7 @@
         // 4. Looping 12 Variabel
         for (let i = 1; i <= 12; i++) {
             // Tarik data judul dari dbVariabel
-            const dataVar = window.dbVariabel.find(v => v.id === i) || { id: i, judul: `Variabel ${i}` };
+            const dataVar = dbVariabel.find(v => v.id === i) || { id: i, judul: `Variabel ${i}` };
 
             // Tarik status dari database lokal
             const vState = opdData.variabelStatus[`v${i}`] || { status: 0 };
