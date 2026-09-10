@@ -676,6 +676,7 @@
                 resetPanelKananPreview();
                 if (window.innerWidth <= 992) document.body.classList.add('mobile-view-variables');
                 renderDaftarVariabelTengah();
+                document.getElementById('dom-btn-minimize').style.display = 'inline-block';
             };
 
             function renderDaftarVariabelTengah() {
@@ -816,7 +817,8 @@
                 db.opds[opdIndex].variabelStatus[`v${vId}`].catatanAdmin = catatanValue || "Disetujui.";
                 
                 // Jika disetujui (status 4), simpan level usulan sebagai level disetujui
-                if (statusBaru === 4) {
+                // Variabel 12 (Google Drive) tidak memiliki skor, levelDisetujui tetap 0
+                if (statusBaru === 4 && vId !== 12) {
                     let levelUsulan = parseInt(db.opds[opdIndex].variabelStatus[`v${vId}`].levelPilihan || 1);
                     db.opds[opdIndex].variabelStatus[`v${vId}`].levelDisetujui = levelUsulan;
                 }
@@ -866,12 +868,6 @@
                 document.getElementById('mobile-file-count').innerText = "0";
             }
             
-            // Tombol minimize muncul saat sebuah OPD dipilih
-            const oldPilihOpd = window.pilihOpdKeMejaKerja;
-            window.pilihOpdKeMejaKerja = function(id, nama) {
-                if(oldPilihOpd) oldPilihOpd(id, nama);
-                document.getElementById('dom-btn-minimize').style.display = 'inline-block';
-            };
         });
     </script>
 </body>

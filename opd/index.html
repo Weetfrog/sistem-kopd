@@ -168,11 +168,11 @@
                 const state = opdData.variabelStatus[`v${i}`];
                 if (!state) continue;
 
-                // Jika sudah ada status pengajuan ATAU sudah ada memori yang disahkan
-                if (state.status > 0 || state.levelDisetujui > 0) terisi++;
-                
-                // Dihitung sebagai "Variabel Disetujui" jika status 4
-                if (state.status === 4 || state.levelDisetujui > 0) disetujui++;
+                // Hitung progress hanya dari 11 variabel kematangan (bukan v12 drive link)
+                if (i <= 11) {
+                    if (state.status > 0 || state.levelDisetujui > 0) terisi++;
+                    if (state.status === 4) disetujui++;
+                }
 
                 const varName = i === 12 ? 'XII. Tautan Google Drive Bukti Fisik' : `Variabel ${i}`;
 
@@ -248,16 +248,16 @@
                 badge.innerText = `${totalRevisi} Perbaikan`;
             }
 
-            // Animasi Tabung Air
+            // Animasi Tabung Air (hanya dari 11 variabel kematangan)
             const tube = document.getElementById('progress-tube');
             const progressText = document.getElementById('progress-text');
             setTimeout(() => {
-                let percentage = Math.min((terisi / 12) * 100, 100);
+                let percentage = Math.min((terisi / 11) * 100, 100);
                 tube.style.setProperty('--water-height', `${percentage}%`);
-                progressText.innerText = `${terisi} / 12 Variabel Terisi`;
+                progressText.innerText = `${terisi} / 11 Variabel Terisi`;
             }, 300);
 
-            document.getElementById('approved-text').innerText = `${disetujui} / 12 Disetujui`;
+            document.getElementById('approved-text').innerText = `${disetujui} / 11 Disetujui`;
         });
     </script>
 </body>

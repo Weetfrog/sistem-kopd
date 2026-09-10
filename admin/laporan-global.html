@@ -222,8 +222,8 @@
                     const state = opd.variabelStatus[`v${i}`];
                     if (state) {
                         let levelSah = parseInt(state.levelDisetujui || 0);
-                        skor += levelSah;
-                        if (state.status === 4) varSelesai++; // FIX: hitung berdasarkan status Disetujui
+                        if (state.status === 4) skor += levelSah; // FIX: hanya hitung skor jika sudah disetujui
+                        if (state.status === 4) varSelesai++;
                     }
                 }
 
