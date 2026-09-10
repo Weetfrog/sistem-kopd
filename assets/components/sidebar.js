@@ -3,7 +3,7 @@
  * Fitur: Collapsible (Hamburger), Dropdown Pintasan 11 Var, & Live Red-Dot Notification
  */
 
-function renderSidebar(basePath = '../', role = 'opd') {
+async function renderSidebar(basePath = '../', role = 'opd') {
     const container = document.getElementById('sidebar-container');
     if (!container) return;
 
@@ -12,16 +12,13 @@ function renderSidebar(basePath = '../', role = 'opd') {
     let varAlerts = Array(13).fill(false); // Index 1-12 untuk mencatat variabel mana yang revisi
 
     if (role === 'opd') {
-        const db = JSON.parse(localStorage.getItem('kopd_db'));
-        if (db && db.session && db.session.role === 'opd') {
-            const currentOpd = db.opds.find(o => o.id === db.session.id);
-            if (currentOpd) {
-                for (let i = 1; i <= 12; i++) {
-                    // Jika status = 2 (Butuh Revisi/Merah), nyalakan alert titik merah
-                    if (currentOpd.variabelStatus[`v${i}`] && currentOpd.variabelStatus[`v${i}`].status === 2) {
-                        varAlerts[i] = true;
-                        globalHasAlert = true; // Trigger titik merah di menu utama Papan Matriks
-                    }
+        const currentOpd = await window.getCurrentOpdData();
+        if (currentOpd) {
+            for (let i = 1; i <= 12; i++) {
+                // Jika status = 2 (Butuh Revisi/Merah), nyalakan alert titik merah
+                if (currentOpd.variabelStatus[`v${i}`] && currentOpd.variabelStatus[`v${i}`].status === 2) {
+                    varAlerts[i] = true;
+                    globalHasAlert = true; // Trigger titik merah di menu utama Papan Matriks
                 }
             }
         }
@@ -80,6 +77,8 @@ function renderSidebar(basePath = '../', role = 'opd') {
         `;
     }
 
+    const tahunAktif = await window.getTahunAktif();
+
     // 3. Gabungkan struktur HTML (Termasuk Tombol Hamburger Terpisah)
     container.innerHTML = `
         <button class="hamburger-toggle" id="hamburger-btn">
@@ -89,7 +88,7 @@ function renderSidebar(basePath = '../', role = 'opd') {
         <aside class="sidebar-wrapper" id="main-sidebar">
             <div class="sidebar-header">
                 <h2 class="logo-text">KOPD Mabar</h2>
-                <p class="logo-sub">Tahun ${getTahunAktif()}</p>
+                <p class="logo-sub">Tahun ${tahunAktif}</p>
             </div>
             <ul class="sidebar-menu">
                 ${menuHTML}
@@ -210,8 +209,9 @@ function renderSidebar(basePath = '../', role = 'opd') {
     document.getElementById('logout-link').addEventListener('click', (e) => {
         e.preventDefault();
         if (confirm("Apakah Anda yakin ingin keluar dari sistem?")) {
-            logoutUser(); // Fungsi dari state-manager.js
+            window.logoutUser(); // Fungsi dari state-manager.js
             window.location.replace(basePath + 'login.html');
         }
     });
 }
+window.renderSidebar = renderSidebar;

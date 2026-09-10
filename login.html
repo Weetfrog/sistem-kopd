@@ -130,8 +130,8 @@
         </form>
     </div>
 
-    <script src="assets/js/state-manager.js"></script>
-    <script>
+    <script type="module" src="assets/js/state-manager.js"></script>
+    <script type="module">
         document.addEventListener('DOMContentLoaded', () => {
             // Manipulasi History: Putuskan ikatan kembali (Back) setelah mendarat di halaman login (sehabis logout)
             window.history.pushState(null, null, window.location.href);
@@ -147,14 +147,12 @@
             }
 
             // 1. CEK: Jika user sudah dalam keadaan Login, otomatis pindahkan ke halaman yang benar
-            const rawData = localStorage.getItem('kopd_db');
+            const rawData = sessionStorage.getItem('kopd_session');
             if (rawData) {
                 try {
-                    const db = JSON.parse(rawData);
-                    if (db.session) {
-                        if (db.session.role === 'admin') window.location.replace('admin/index.html');
-                        else if (db.session.role === 'opd') window.location.replace('opd/index.html');
-                    }
+                    const session = JSON.parse(rawData);
+                    if (session.role === 'admin') window.location.replace('admin/index.html');
+                    else if (session.role === 'opd') window.location.replace('opd/index.html');
                 } catch (e) { }
             }
 
@@ -173,23 +171,29 @@
             });
 
             // 2. PROSES: Saat tombol Masuk diklik
-            document.getElementById('login-form').addEventListener('submit', (e) => {
+            document.getElementById('login-form').addEventListener('submit', async (e) => {
                 e.preventDefault(); // Mencegah halaman refresh
+                
+                const btnSubmit = e.target.querySelector('button[type="submit"]');
+                btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...';
+                btnSubmit.disabled = true;
 
                 const user = document.getElementById('username').value.trim();
                 const pass = document.getElementById('password').value;
 
-                // Gunakan fungsi login dari state-manager.js
-                const res = loginUser(user, pass);
+                // Gunakan fungsi login dari state-manager.js (sekarang async)
+                const res = await window.loginUser(user, pass);
 
                 if (res.success) {
                     // Jika sukses, pindah halaman sesuai role
                     window.location.replace(res.redirect);
                 } else {
-                    // Jika gagal, tampilkan pesan error
+                    // Jika gagal, tampilkan pesan error dan kembalikan tombol
                     const errMsg = document.getElementById('error-msg');
                     errMsg.innerText = res.message;
                     errMsg.style.display = 'block';
+                    btnSubmit.innerHTML = 'Masuk ke Sistem';
+                    btnSubmit.disabled = false;
                 }
             });
         });

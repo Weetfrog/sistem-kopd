@@ -197,208 +197,213 @@
         </main>
     </div>
 
-    <script src="../assets/js/state-manager.js"></script>
-    <script src="../assets/components/sidebar.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            checkSession('admin', '../');
-            renderSidebar('../', 'admin');
+    <script type="module" src="../assets/js/state-manager.js"></script>
+    <script type="module" src="../assets/components/sidebar.js"></script>
+    <script type="module">
+        if (!window.checkSession('admin', '../')) throw new Error("Unauthenticated");
+        await window.renderSidebar('../', 'admin');
 
-            const db = JSON.parse(localStorage.getItem('kopd_db'));
-            const tahun = getTahunAktif();
-            document.getElementById('tahun-laporan-global').innerText = tahun;
-            document.title = `Laporan Global OPD - KOPD Mabar ${tahun}`;
+        const tahun = await window.getTahunAktif();
+        document.getElementById('tahun-laporan-global').innerText = tahun;
+        document.title = `Laporan Global OPD - KOPD Mabar ${tahun}`;
 
-            let dataRekap = [];
-            let totalKabupatenScore = 0;
-            let totalPDSelesai = 0;
+        // Ambil Data OPD dari Firestore
+        const snapshot = await window.fbGetDocs(window.fbCollection(window.db, "opds"));
+        let opds = [];
+        snapshot.forEach(doc => {
+            opds.push({ docId: doc.id, ...doc.data() });
+        });
 
-            // Kalkulasi Data
-            db.opds.forEach(opd => {
-                let skor = 0;
-                let varSelesai = 0; // Jumlah variabel yang sudah DISETUJUI admin (status === 4)
+        let dataRekap = [];
+        let totalKabupatenScore = 0;
+        let totalPDSelesai = 0;
 
+        // Kalkulasi Data
+        opds.forEach(opd => {
+            let skor = 0;
+            let varSelesai = 0; // Jumlah variabel yang sudah DISETUJUI admin (status === 4)
+
+            for (let i = 1; i <= 11; i++) {
+                const state = opd.variabelStatus[`v${i}`];
+                if (state) {
+                    let levelSah = parseInt(state.levelDisetujui || 0);
+                    if (state.status === 4) skor += levelSah; // FIX: hanya hitung skor jika sudah disetujui
+                    if (state.status === 4) varSelesai++;
+                }
+            }
+
+            totalKabupatenScore += skor;
+            if (varSelesai === 11) totalPDSelesai++; // Selesai 100% = semua 11 variabel disetujui
+
+            let kategori = "-";
+            if (skor > 0) {
+                if (skor <= 19) kategori = "Sangat Rendah";
+                else if (skor <= 28) kategori = "Rendah";
+                else if (skor <= 37) kategori = "Sedang";
+                else if (skor <= 46) kategori = "Tinggi";
+                else kategori = "Sangat Tinggi";
+            }
+
+            const stateDrive = opd.variabelStatus ? opd.variabelStatus['v12'] : null;
+            const driveLink = (stateDrive && stateDrive.driveLink) ? stateDrive.driveLink : '';
+            dataRekap.push({ name: opd.name, varSelesai, skor, kategori, driveLink });
+        });
+
+        // Urutkan berdasarkan skor tertinggi
+        dataRekap.sort((a, b) => b.skor - a.skor);
+
+        // Fungsi render baris tabel (dapat difilter)
+        // FIX 2: Kolom Link Drive ditampilkan sebagai teks URL agar bisa dibaca di PDF cetak
+        function renderBarisTabel(data, nomor) {
+            let kolDrive = '';
+            if (data.driveLink) {
+                // Di layar: tampilkan tombol klik + URL teks di bawahnya
+                kolDrive = `
+                    <a href="${data.driveLink}" target="_blank" class="btn-download" style="background:#2563eb; text-decoration:none; display:inline-block; margin-bottom:4px;"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>
+                    <div style="font-size:0.7rem; color:#4b5563; word-break:break-all; max-width:220px; margin-top:4px;">${data.driveLink}</div>
+                `;
+            } else {
+                kolDrive = `<span class="btn-download disabled"><i class="fa-solid fa-clock"></i> Belum Diisi</span>`;
+            }
+            return `
+                <tr data-name="${data.name.toLowerCase()}">
+                    <td style="text-align:center; font-weight:bold; color:#64748b;">${nomor}</td>
+                    <td style="font-weight:600; color:#1e293b;">${data.name}</td>
+                    <td>${data.varSelesai} / 11</td>
+                    <td style="font-weight:bold; color:var(--primary-green); font-size:1.1rem;">${data.skor}</td>
+                    <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:600; color:#475569;">${data.kategori}</span></td>
+                    <td>${kolDrive}</td>
+                </tr>
+            `;
+        }
+
+        // Render awal tabel
+        const tbody = document.getElementById('tabel-global');
+        dataRekap.forEach((data, index) => {
+            tbody.innerHTML += renderBarisTabel(data, index + 1);
+        });
+
+        // Update Kartu Statistik
+        document.getElementById('stat-total-opd').innerText = opds.length;
+        document.getElementById('stat-selesai').innerText = totalPDSelesai;
+
+        if (opds.length > 0) {
+            document.getElementById('stat-avg-score').innerHTML = `${(totalKabupatenScore / opds.length).toFixed(2)} <span style="font-size:1rem; color:#9ca3af;">/ 55</span>`;
+        }
+
+        // Fungsi Filter Pencarian Tabel
+        window.filterTabelLaporan = function (keyword) {
+            const rows = tbody.querySelectorAll('tr[data-name]');
+            const kw = keyword.toLowerCase().trim();
+            rows.forEach(row => {
+                row.style.display = row.dataset.name.includes(kw) ? '' : 'none';
+            });
+        };
+
+        // ==========================================
+        // FUNGSI EKSPOR EXCEL MULTI-SHEET
+        // ==========================================
+        window.exportToExcel = function () {
+            const wb = XLSX.utils.book_new();
+
+            // 1. Sheet Laporan Global
+            const globalData = [['No', 'Nama Perangkat Daerah', 'Progress Verifikasi (Disetujui)', 'Skor Indeks', 'Kategori Kematangan', 'Link Drive Bukti Dukung']];
+            dataRekap.forEach((d, i) => {
+                globalData.push([i + 1, d.name, `${d.varSelesai}/11`, d.skor, d.kategori, d.driveLink || '-']);
+            });
+            const wsGlobal = XLSX.utils.aoa_to_sheet(globalData);
+            XLSX.utils.book_append_sheet(wb, wsGlobal, "Laporan Keseluruhan");
+
+            // 2. Sheet per OPD — FIX 4: tambahkan baris Total Skor & Kategori
+            opds.forEach(opd => {
+                const opdData = [
+                    ['Informasi Perangkat Daerah'],
+                    ['Nama OPD', opd.name],
+                    ['Username', opd.username],
+                    ['Link Drive', (opd.variabelStatus && opd.variabelStatus['v12'] ? opd.variabelStatus['v12'].driveLink : '-')],
+                    [],
+                    ['Indikator', 'Status', 'Level Diajukan', 'Level Disetujui', 'Fakta OPD', 'Catatan Evaluator']
+                ];
+
+                let totalSkorOpd = 0;
                 for (let i = 1; i <= 11; i++) {
                     const state = opd.variabelStatus[`v${i}`];
                     if (state) {
-                        let levelSah = parseInt(state.levelDisetujui || 0);
-                        if (state.status === 4) skor += levelSah; // FIX: hanya hitung skor jika sudah disetujui
-                        if (state.status === 4) varSelesai++;
+                        let statusText = "Belum Diisi";
+                        if (state.status === 1) statusText = "Menunggu Verifikasi";
+                        else if (state.status === 2) statusText = "Butuh Revisi";
+                        else if (state.status === 3) statusText = "Verifikasi Ulang";
+                        else if (state.status === 4) statusText = "Disetujui";
+
+                        const levelDisetujui = parseInt(state.levelDisetujui) || 0;
+                        if (state.status === 4) totalSkorOpd += levelDisetujui;
+
+                        opdData.push([
+                            `Variabel ${i}`,
+                            statusText,
+                            state.levelPilihan || '-',
+                            state.levelDisetujui || '-',
+                            state.deskripsi || '-',
+                            state.catatanAdmin || '-'
+                        ]);
                     }
                 }
 
-                totalKabupatenScore += skor;
-                if (varSelesai === 11) totalPDSelesai++; // Selesai 100% = semua 11 variabel disetujui
-
-                let kategori = "-";
-                if (skor > 0) {
-                    if (skor <= 19) kategori = "Sangat Rendah";
-                    else if (skor <= 28) kategori = "Rendah";
-                    else if (skor <= 37) kategori = "Sedang";
-                    else if (skor <= 46) kategori = "Tinggi";
-                    else kategori = "Sangat Tinggi";
+                // Hitung kategori OPD ini
+                let kategoriOpd = "-";
+                if (totalSkorOpd > 0) {
+                    if (totalSkorOpd <= 19) kategoriOpd = "Sangat Rendah";
+                    else if (totalSkorOpd <= 28) kategoriOpd = "Rendah";
+                    else if (totalSkorOpd <= 37) kategoriOpd = "Sedang";
+                    else if (totalSkorOpd <= 46) kategoriOpd = "Tinggi";
+                    else kategoriOpd = "Sangat Tinggi";
                 }
 
-                const stateDrive = opd.variabelStatus ? opd.variabelStatus['v12'] : null;
-                const driveLink = (stateDrive && stateDrive.driveLink) ? stateDrive.driveLink : '';
-                dataRekap.push({ name: opd.name, varSelesai, skor, kategori, driveLink });
-            });
+                // Baris ringkasan nilai akhir
+                opdData.push([]);
+                opdData.push(['NILAI AKHIR', '', '', '', '', '']);
+                opdData.push(['Total Skor Indeks (Maks. 55)', '', '', totalSkorOpd, '', '']);
+                opdData.push(['Kategori Kematangan', '', '', kategoriOpd, '', '']);
 
-            // Urutkan berdasarkan skor tertinggi
-            dataRekap.sort((a, b) => b.skor - a.skor);
+                const wsOpd = XLSX.utils.aoa_to_sheet(opdData);
 
-            // Fungsi render baris tabel (dapat difilter)
-            // FIX 2: Kolom Link Drive ditampilkan sebagai teks URL agar bisa dibaca di PDF cetak
-            function renderBarisTabel(data, nomor) {
-                let kolDrive = '';
-                if (data.driveLink) {
-                    // Di layar: tampilkan tombol klik + URL teks di bawahnya
-                    kolDrive = `
-                        <a href="${data.driveLink}" target="_blank" class="btn-download" style="background:#2563eb; text-decoration:none; display:inline-block; margin-bottom:4px;"><i class="fa-brands fa-google-drive"></i> Buka Drive</a>
-                        <div style="font-size:0.7rem; color:#4b5563; word-break:break-all; max-width:220px; margin-top:4px;">${data.driveLink}</div>
-                    `;
-                } else {
-                    kolDrive = `<span class="btn-download disabled"><i class="fa-solid fa-clock"></i> Belum Diisi</span>`;
+                // Nama sheet maksimal 31 karakter dan tidak boleh ada karakter khusus
+                let sheetName = opd.username.substring(0, 31).replace(/[\\/?*[\]:]/g, '_');
+
+                try {
+                    XLSX.utils.book_append_sheet(wb, wsOpd, sheetName);
+                } catch(e) {
+                    // Jika nama sheet duplikat, tambahkan ID
+                    XLSX.utils.book_append_sheet(wb, wsOpd, `${sheetName}_${opd.id}`.substring(0,31));
                 }
-                return `
-                    <tr data-name="${data.name.toLowerCase()}">
-                        <td style="text-align:center; font-weight:bold; color:#64748b;">${nomor}</td>
-                        <td style="font-weight:600; color:#1e293b;">${data.name}</td>
-                        <td>${data.varSelesai} / 11</td>
-                        <td style="font-weight:bold; color:var(--primary-green); font-size:1.1rem;">${data.skor}</td>
-                        <td><span style="background:#f1f5f9; padding:4px 8px; border-radius:4px; font-size:0.8rem; font-weight:600; color:#475569;">${data.kategori}</span></td>
-                        <td>${kolDrive}</td>
-                    </tr>
-                `;
-            }
-
-            // Render awal tabel
-            const tbody = document.getElementById('tabel-global');
-            dataRekap.forEach((data, index) => {
-                tbody.innerHTML += renderBarisTabel(data, index + 1);
             });
 
-            // Update Kartu Statistik
-            document.getElementById('stat-total-opd').innerText = db.opds.length;
-            document.getElementById('stat-selesai').innerText = totalPDSelesai;
-            if (db.opds.length > 0) {
-                document.getElementById('stat-avg-score').innerHTML = `${(totalKabupatenScore / db.opds.length).toFixed(2)} <span style="font-size:1rem; color:#9ca3af;">/ 55</span>`;
-            }
+            XLSX.writeFile(wb, `Rekap_KOPD_Mabar_${tahun}.xlsx`);
+        }
 
-            // Fungsi Filter Pencarian Tabel
-            window.filterTabelLaporan = function (keyword) {
-                const rows = tbody.querySelectorAll('tr[data-name]');
-                const kw = keyword.toLowerCase().trim();
-                rows.forEach(row => {
-                    row.style.display = row.dataset.name.includes(kw) ? '' : 'none';
-                });
+        // ==========================================
+        // FUNGSI EKSPOR PDF (Landscape Legal)
+        // ==========================================
+        window.cetakLaporanPDF = function () {
+            const areaCetak = document.getElementById('area-cetak-laporan');
+            const opsi = {
+                margin: 0.4,
+                filename: `Laporan_Global_KOPD_Mabar_${tahun}.pdf`,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' }
             };
 
-            // ==========================================
-            // FUNGSI EKSPOR EXCEL MULTI-SHEET
-            // ==========================================
-            window.exportToExcel = function () {
-                const wb = XLSX.utils.book_new();
+            const btnPdf = document.querySelector('.btn-export-pdf');
+            const teksAsli = btnPdf.innerHTML;
+            btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyusun...';
+            btnPdf.disabled = true;
 
-                // 1. Sheet Laporan Global
-                const globalData = [['No', 'Nama Perangkat Daerah', 'Progress Verifikasi (Disetujui)', 'Skor Indeks', 'Kategori Kematangan', 'Link Drive Bukti Dukung']];
-                dataRekap.forEach((d, i) => {
-                    globalData.push([i + 1, d.name, `${d.varSelesai}/11`, d.skor, d.kategori, d.driveLink || '-']);
-                });
-                const wsGlobal = XLSX.utils.aoa_to_sheet(globalData);
-                XLSX.utils.book_append_sheet(wb, wsGlobal, "Laporan Keseluruhan");
-
-                // 2. Sheet per OPD — FIX 4: tambahkan baris Total Skor & Kategori
-                db.opds.forEach(opd => {
-                    const opdData = [
-                        ['Informasi Perangkat Daerah'],
-                        ['Nama OPD', opd.name],
-                        ['Username', opd.username],
-                        ['Link Drive', (opd.variabelStatus && opd.variabelStatus['v12'] ? opd.variabelStatus['v12'].driveLink : '-')],
-                        [],
-                        ['Indikator', 'Status', 'Level Diajukan', 'Level Disetujui', 'Fakta OPD', 'Catatan Evaluator']
-                    ];
-
-                    let totalSkorOpd = 0;
-                    for (let i = 1; i <= 11; i++) {
-                        const state = opd.variabelStatus[`v${i}`];
-                        if (state) {
-                            let statusText = "Belum Diisi";
-                            if (state.status === 1) statusText = "Menunggu Verifikasi";
-                            else if (state.status === 2) statusText = "Butuh Revisi";
-                            else if (state.status === 3) statusText = "Verifikasi Ulang";
-                            else if (state.status === 4) statusText = "Disetujui";
-
-                            const levelDisetujui = parseInt(state.levelDisetujui) || 0;
-                            if (state.status === 4) totalSkorOpd += levelDisetujui;
-
-                            opdData.push([
-                                `Variabel ${i}`,
-                                statusText,
-                                state.levelPilihan || '-',
-                                state.levelDisetujui || '-',
-                                state.deskripsi || '-',
-                                state.catatanAdmin || '-'
-                            ]);
-                        }
-                    }
-
-                    // Hitung kategori OPD ini
-                    let kategoriOpd = "-";
-                    if (totalSkorOpd > 0) {
-                        if (totalSkorOpd <= 19) kategoriOpd = "Sangat Rendah";
-                        else if (totalSkorOpd <= 28) kategoriOpd = "Rendah";
-                        else if (totalSkorOpd <= 37) kategoriOpd = "Sedang";
-                        else if (totalSkorOpd <= 46) kategoriOpd = "Tinggi";
-                        else kategoriOpd = "Sangat Tinggi";
-                    }
-
-                    // Baris ringkasan nilai akhir
-                    opdData.push([]);
-                    opdData.push(['NILAI AKHIR', '', '', '', '', '']);
-                    opdData.push(['Total Skor Indeks (Maks. 55)', '', '', totalSkorOpd, '', '']);
-                    opdData.push(['Kategori Kematangan', '', '', kategoriOpd, '', '']);
-
-                    const wsOpd = XLSX.utils.aoa_to_sheet(opdData);
-
-                    // Nama sheet maksimal 31 karakter dan tidak boleh ada karakter khusus
-                    let sheetName = opd.username.substring(0, 31).replace(/[\\/?*[\]:]/g, '_');
-
-                    try {
-                        XLSX.utils.book_append_sheet(wb, wsOpd, sheetName);
-                    } catch(e) {
-                        // Jika nama sheet duplikat, tambahkan ID
-                        XLSX.utils.book_append_sheet(wb, wsOpd, `${sheetName}_${opd.id}`.substring(0,31));
-                    }
-                });
-
-                XLSX.writeFile(wb, `Rekap_KOPD_Mabar_${tahun}.xlsx`);
-            }
-
-            // ==========================================
-            // FUNGSI EKSPOR PDF (Landscape Legal)
-            // ==========================================
-            window.cetakLaporanPDF = function () {
-                const areaCetak = document.getElementById('area-cetak-laporan');
-                const opsi = {
-                    margin: 0.4,
-                    filename: `Laporan_Global_KOPD_Mabar_${tahun}.pdf`,
-                    image: { type: 'jpeg', quality: 0.98 },
-                    html2canvas: { scale: 2, useCORS: true },
-                    jsPDF: { unit: 'in', format: 'legal', orientation: 'landscape' }
-                };
-
-                const btnPdf = document.querySelector('.btn-export-pdf');
-                const teksAsli = btnPdf.innerHTML;
-                btnPdf.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyusun...';
-                btnPdf.disabled = true;
-
-                html2pdf().set(opsi).from(areaCetak).save().then(() => {
-                    btnPdf.innerHTML = teksAsli;
-                    btnPdf.disabled = false;
-                });
-            }
-        });
+            html2pdf().set(opsi).from(areaCetak).save().then(() => {
+                btnPdf.innerHTML = teksAsli;
+                btnPdf.disabled = false;
+            });
+        }
     </script>
 </body>
 

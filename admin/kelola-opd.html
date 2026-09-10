@@ -339,214 +339,277 @@
         </div>
     </div>
 
-    <script src="../assets/js/state-manager.js"></script>
-    <script src="../assets/components/sidebar.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            checkSession('admin', '../');
-            renderSidebar('../', 'admin');
+    <script type="module" src="../assets/js/state-manager.js"></script>
+    <script type="module" src="../assets/components/sidebar.js"></script>
+    <script type="module">
+        if (!window.checkSession('admin', '../')) throw new Error("Unauthenticated");
+        await window.renderSidebar('../', 'admin');
 
-            let db = JSON.parse(localStorage.getItem('kopd_db'));
-            document.getElementById('input-broadcast').value = db.broadcastMessage || "";
-            document.getElementById('input-tahun-aktif').value = db.tahunAktif || new Date().getFullYear();
+        let opdsData = [];
 
-            // Fungsi Simpan Tahun Aktif
-            window.simpanTahunAktif = function () {
-                const tahunBaru = document.getElementById('input-tahun-aktif').value.trim();
-                if (!tahunBaru || tahunBaru < 2020 || tahunBaru > 2099) {
-                    alert("Tahun harus antara 2020 dan 2099.");
-                    return;
-                }
-                db = JSON.parse(localStorage.getItem('kopd_db'));
-                db.tahunAktif = tahunBaru;
-                localStorage.setItem('kopd_db', JSON.stringify(db));
+        // Inisialisasi awal (Ambil Settings)
+        const settings = await window.getSettings() || {};
+        document.getElementById('input-broadcast').value = settings.broadcastMessage || "";
+        document.getElementById('input-tahun-aktif').value = settings.tahunAktif || new Date().getFullYear();
+
+        // Helper untuk memuat ulang daftar OPD dari Firestore
+        async function fetchOpds() {
+            const snap = await window.fbGetDocs(window.fbCollection(window.db, "opds"));
+            opdsData = [];
+            snap.forEach(doc => {
+                opdsData.push({ docId: doc.id, ...doc.data() });
+            });
+            // Urutkan berdasarkan id ASC
+            opdsData.sort((a, b) => a.id - b.id);
+        }
+
+        // Fungsi Render Tabel Akun
+        window.renderTabel = async function (filterText = '') {
+            await fetchOpds();
+            const tbody = document.getElementById('tabel-akun');
+            tbody.innerHTML = '';
+            const keyword = filterText.toLowerCase().trim();
+
+            const filtered = opdsData.filter(opd =>
+                opd.name.toLowerCase().includes(keyword) ||
+                opd.username.toLowerCase().includes(keyword)
+            );
+
+            if (filtered.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Tidak ada hasil untuk "<strong>${filterText}</strong>"</td></tr>`;
+                return;
+            }
+
+            filtered.forEach(opd => {
+                const statusBadge = opd.isLocked ? `<span class="badge-locked"><i class="fa-solid fa-lock"></i> Terkunci</span>` : `<span class="badge-active"><i class="fa-solid fa-check"></i> Aktif</span>`;
+                const lockIcon = opd.isLocked ? 'fa-lock-open' : 'fa-lock';
+                const lockTitle = opd.isLocked ? 'Buka Kunci' : 'Kunci Akun';
+
+                tbody.innerHTML += `
+                    <tr>
+                        <td style="text-align:center; font-weight:bold;">${opd.id}</td>
+                        <td style="font-weight:500; color:#1f2937;">${opd.name}</td>
+                        <td><code>${opd.username}</code></td>
+                        <td><span style="font-family: monospace; background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:bold;">${opd.password}</span></td>
+                        <td>${statusBadge}</td>
+                        <td>
+                            <div style="display:flex; gap:6px;">
+                                <button class="btn-sm btn-yellow" title="Edit Akun" onclick="window.bukaModalEdit('${opd.docId}')">
+                                    <i class="fa-solid fa-pen"></i>
+                                </button>
+                                <button class="btn-sm btn-blue" title="${lockTitle}" onclick="window.toggleLock('${opd.docId}', ${!opd.isLocked})">
+                                    <i class="fa-solid ${lockIcon}"></i>
+                                </button>
+                                <button class="btn-sm btn-red" title="Hapus Akun" onclick="window.hapusAkun('${opd.docId}', '${opd.name}')">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            });
+        };
+
+        // Render perdana
+        await window.renderTabel();
+
+        // Fungsi Simpan Tahun Aktif
+        window.simpanTahunAktif = async function () {
+            const btn = document.getElementById('btn-simpan-tahun');
+            const tahunBaru = document.getElementById('input-tahun-aktif').value.trim();
+            if (!tahunBaru || tahunBaru < 2020 || tahunBaru > 2099) {
+                alert("Tahun harus antara 2020 dan 2099.");
+                return;
+            }
+            
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            try {
+                await window.fbUpdateDoc(window.fbDoc(window.db, "settings", "main"), { tahunAktif: tahunBaru });
                 const statusEl = document.getElementById('status-tahun');
                 statusEl.style.display = 'inline';
                 setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-            };
+            } catch (e) {
+                alert("Gagal menyimpan tahun.");
+            } finally {
+                btn.innerHTML = 'Simpan';
+                btn.disabled = false;
+            }
+        };
 
-            // Fungsi Buka Tutup Form
-            window.toggleFormTambah = function (show) {
-                document.getElementById('panel-tambah-opd').style.display = show ? 'block' : 'none';
-                if (!show) document.getElementById('form-tambah-opd').reset();
+        // Fungsi Kirim Broadcast
+        document.getElementById('form-broadcast').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const oldText = btn.innerText;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+
+            const msg = document.getElementById('input-broadcast').value;
+            try {
+                await window.fbUpdateDoc(window.fbDoc(window.db, "settings", "main"), { broadcastMessage: msg });
+                alert("Pengumuman berhasil disiarkan!");
+            } catch (e) {
+                alert("Gagal menyimpan pengumuman.");
+            } finally {
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            }
+        });
+
+        // Fungsi Buka Tutup Form Tambah OPD
+        window.toggleFormTambah = function (show) {
+            document.getElementById('panel-tambah-opd').style.display = show ? 'block' : 'none';
+            if (!show) document.getElementById('form-tambah-opd').reset();
+        }
+
+        // Fungsi Pembuatan Akun Baru
+        document.getElementById('form-tambah-opd').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            
+            const name = document.getElementById('add-name').value.trim();
+            const username = document.getElementById('add-username').value.trim().toLowerCase();
+            const password = document.getElementById('add-password').value;
+
+            // Validasi duplikasi username
+            if (opdsData.some(o => o.username === username)) {
+                alert("Username sudah digunakan oleh instansi lain!");
+                return;
             }
 
-            // Fungsi Pembuatan Akun Baru
-            document.getElementById('form-tambah-opd').addEventListener('submit', function (e) {
-                e.preventDefault();
-                db = JSON.parse(localStorage.getItem('kopd_db'));
+            const btn = e.target.querySelector('button[type="submit"]');
+            const oldText = btn.innerText;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
 
-                const name = document.getElementById('add-name').value.trim();
-                const username = document.getElementById('add-username').value.trim().toLowerCase();
-                const password = document.getElementById('add-password').value;
+            // Kalkulasi ID otomatis berikutnya
+            const nextId = opdsData.length > 0 ? Math.max(...opdsData.map(o => o.id)) + 1 : 1;
 
-                // Validasi duplikasi username
-                if (db.opds.some(o => o.username === username)) {
-                    alert("Username sudah digunakan oleh instansi lain!");
-                    return;
-                }
-
-                // Kalkulasi ID otomatis berikutnya
-                const nextId = db.opds.length > 0 ? Math.max(...db.opds.map(o => o.id)) + 1 : 1;
-
-                // Push ke objek database lokal menggunakan fungsi bawaan dari state-manager
-                db.opds.push({
+            try {
+                const newDocRef = window.fbDoc(window.fbCollection(window.db, "opds"));
+                await window.fbSetDoc(newDocRef, {
                     id: nextId,
                     username: username,
                     password: password,
                     name: name,
                     isLocked: false,
-                    variabelStatus: generateInitialVariabel() // Cetakan kosong: v1-v11 kematangan + v12 link Drive
+                    variabelStatus: window.generateInitialVariabel()
                 });
-
-                localStorage.setItem('kopd_db', JSON.stringify(db));
                 alert("Akun " + name + " berhasil dibuat!");
-                toggleFormTambah(false);
-                renderTabel();
-            });
+                window.toggleFormTambah(false);
+                await window.renderTabel();
+            } catch (e) {
+                alert("Gagal membuat akun.");
+            } finally {
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            }
+        });
 
-            // Fungsi Render Tabel Akun (dengan filter pencarian)
-            window.renderTabel = function (filterText = '') {
-                db = JSON.parse(localStorage.getItem('kopd_db'));
-                const tbody = document.getElementById('tabel-akun');
-                tbody.innerHTML = '';
-                const keyword = filterText.toLowerCase().trim();
+        // Fungsi Kunci/Buka Akun
+        window.toggleLock = async function (docId, lockStatus) {
+            try {
+                await window.fbUpdateDoc(window.fbDoc(window.db, "opds", docId), { isLocked: lockStatus });
+                await window.renderTabel(document.getElementById('search-akun').value);
+            } catch (e) {
+                alert("Gagal mengubah status akun.");
+            }
+        };
 
-                const filtered = db.opds.filter(opd =>
-                    opd.name.toLowerCase().includes(keyword) ||
-                    opd.username.toLowerCase().includes(keyword)
-                );
-
-                if (filtered.length === 0) {
-                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Tidak ada hasil untuk "<strong>${filterText}</strong>"</td></tr>`;
-                    return;
+        // Fungsi Hapus Akun
+        window.hapusAkun = async function (docId, name) {
+            if (confirm("Apakah Anda yakin ingin menghapus akun '" + name + "' secara permanen? Seluruh riwayat pengisian data kematangannya akan ikut terhapus.")) {
+                try {
+                    await window.fbDeleteDoc(window.fbDoc(window.db, "opds", docId));
+                    await window.renderTabel(document.getElementById('search-akun').value);
+                } catch (e) {
+                    alert("Gagal menghapus akun.");
                 }
+            }
+        };
 
-                filtered.forEach(opd => {
-                    const statusBadge = opd.isLocked ? `<span class="badge-locked"><i class="fa-solid fa-lock"></i> Terkunci</span>` : `<span class="badge-active"><i class="fa-solid fa-check"></i> Aktif</span>`;
-                    const lockIcon = opd.isLocked ? 'fa-lock-open' : 'fa-lock';
-                    const lockTitle = opd.isLocked ? 'Buka Kunci' : 'Kunci Akun';
+        // Fungsi Reset Data Tahunan (hanya variabel, akun tetap aman)
+        window.resetDataTahunan = async function () {
+            const step1 = confirm("⚠️ PERINGATAN!\n\nAnda akan mereset SELURUH data variabel kematangan semua Perangkat Daerah.\n\nDaftar akun, username, dan password TIDAK akan terhapus.\n\nApakah Anda yakin ingin melanjutkan?");
+            if (!step1) return;
 
-                    tbody.innerHTML += `
-                        <tr>
-                            <td style="text-align:center; font-weight:bold;">${opd.id}</td>
-                            <td style="font-weight:500; color:#1f2937;">${opd.name}</td>
-                            <td><code>${opd.username}</code></td>
-                            <td><span style="font-family: monospace; background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:bold;">${opd.password}</span></td>
-                            <td>${statusBadge}</td>
-                            <td>
-                                <div style="display:flex; gap:6px;">
-                                    <button class="btn-sm btn-yellow" title="Edit Akun" onclick="bukaModalEdit(${opd.id})">
-                                        <i class="fa-solid fa-pen"></i>
-                                    </button>
-                                    <button class="btn-sm btn-blue" title="${lockTitle}" onclick="toggleLock(${opd.id}, ${!opd.isLocked})">
-                                        <i class="fa-solid ${lockIcon}"></i>
-                                    </button>
-                                    <button class="btn-sm btn-red" title="Hapus Akun" onclick="hapusAkun(${opd.id}, '${opd.name}')">
-                                        <i class="fa-solid fa-trash-can"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    `;
-                });
+            const konfirmasi = prompt("Untuk konfirmasi, ketik kata RESET (huruf kapital) lalu klik OK:");
+            if (konfirmasi !== 'RESET') {
+                alert("Reset dibatalkan. Kata konfirmasi tidak sesuai.");
+                return;
             }
 
-            renderTabel();
+            const btn = document.querySelector('.btn-red[onclick="window.resetDataTahunan()"]');
+            if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...'; btn.disabled = true; }
 
-            // Fungsi Kirim Broadcast
-            document.getElementById('form-broadcast').addEventListener('submit', (e) => {
-                e.preventDefault();
-                db.broadcastMessage = document.getElementById('input-broadcast').value;
-                localStorage.setItem('kopd_db', JSON.stringify(db));
-                alert("Pengumuman berhasil disiarkan!");
-            });
-
-            // Fungsi Kunci/Buka Akun
-            window.toggleLock = function (id, lockStatus) {
-                const opdIndex = db.opds.findIndex(o => o.id === id);
-                if (opdIndex > -1) {
-                    db.opds[opdIndex].isLocked = lockStatus;
-                    localStorage.setItem('kopd_db', JSON.stringify(db));
-                    renderTabel(document.getElementById('search-akun').value);
-                }
-            };
-
-            // Fungsi Hapus Akun
-            window.hapusAkun = function (id, name) {
-                if (confirm("Apakah Anda yakin ingin menghapus akun '" + name + "' secara permanen? Seluruh riwayat pengisian data kematangannya akan ikut terhapus.")) {
-                    db.opds = db.opds.filter(o => o.id !== id);
-                    localStorage.setItem('kopd_db', JSON.stringify(db));
-                    renderTabel(document.getElementById('search-akun').value);
-                }
-            };
-
-            // Fungsi Reset Data Tahunan (hanya variabel, akun tetap aman)
-            window.resetDataTahunan = function () {
-                const step1 = confirm("⚠️ PERINGATAN!\n\nAnda akan mereset SELURUH data variabel kematangan semua Perangkat Daerah.\n\nDaftar akun, username, dan password TIDAK akan terhapus.\n\nApakah Anda yakin ingin melanjutkan?");
-                if (!step1) return;
-
-                const konfirmasi = prompt("Untuk konfirmasi, ketik kata RESET (huruf kapital) lalu klik OK:");
-                if (konfirmasi !== 'RESET') {
-                    alert("Reset dibatalkan. Kata konfirmasi tidak sesuai.");
-                    return;
-                }
-
-                db = JSON.parse(localStorage.getItem('kopd_db'));
-                db.opds.forEach(opd => {
-                    opd.variabelStatus = generateInitialVariabel();
+            try {
+                // Batch write untuk menghapus / reset variabel banyak OPD sekaligus
+                const batch = window.fbWriteBatch(window.db);
+                opdsData.forEach(opd => {
+                    const docRef = window.fbDoc(window.db, "opds", opd.docId);
+                    batch.update(docRef, { variabelStatus: window.generateInitialVariabel() });
                 });
-                localStorage.setItem('kopd_db', JSON.stringify(db));
+                await batch.commit();
                 alert("✅ Data variabel kematangan seluruh Perangkat Daerah berhasil direset.\nDaftar akun tidak berubah.");
-                renderTabel();
-            };
+                await window.renderTabel();
+            } catch (e) {
+                alert("Gagal mereset data: " + e.message);
+            } finally {
+                if(btn) { btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Reset Data Pengisian KOPD ke Nol'; btn.disabled = false; }
+            }
+        };
 
-            // Fungsi Modal Edit Akun OPD
-            window.bukaModalEdit = function (id) {
-                db = JSON.parse(localStorage.getItem('kopd_db'));
-                const opd = db.opds.find(o => o.id === id);
-                if (!opd) return;
-                document.getElementById('edit-opd-id').value = opd.id;
-                document.getElementById('edit-name').value = opd.name;
-                document.getElementById('edit-username-display').value = opd.username;
-                document.getElementById('edit-password').value = '';
-                document.getElementById('modal-edit-opd').classList.add('aktif');
-            };
+        // Fungsi Modal Edit Akun OPD
+        window.bukaModalEdit = function (docId) {
+            const opd = opdsData.find(o => o.docId === docId);
+            if (!opd) return;
+            document.getElementById('edit-opd-id').value = opd.docId; // hidden input will store docId string
+            document.getElementById('edit-name').value = opd.name;
+            document.getElementById('edit-username-display').value = opd.username;
+            document.getElementById('edit-password').value = '';
+            document.getElementById('modal-edit-opd').classList.add('aktif');
+        };
 
-            window.tutupModalEdit = function () {
-                document.getElementById('modal-edit-opd').classList.remove('aktif');
-            };
+        window.tutupModalEdit = function () {
+            document.getElementById('modal-edit-opd').classList.remove('aktif');
+        };
 
-            window.simpanEditOpd = function () {
-                const id = parseInt(document.getElementById('edit-opd-id').value);
-                const namaBaru = document.getElementById('edit-name').value.trim();
-                const passwordBaru = document.getElementById('edit-password').value.trim();
+        window.simpanEditOpd = async function () {
+            const docId = document.getElementById('edit-opd-id').value;
+            const namaBaru = document.getElementById('edit-name').value.trim();
+            const passwordBaru = document.getElementById('edit-password').value.trim();
 
-                if (!namaBaru) {
-                    alert("Nama instansi tidak boleh kosong.");
-                    document.getElementById('edit-name').focus();
-                    return;
-                }
+            if (!namaBaru) {
+                alert("Nama instansi tidak boleh kosong.");
+                document.getElementById('edit-name').focus();
+                return;
+            }
 
-                db = JSON.parse(localStorage.getItem('kopd_db'));
-                const opdIndex = db.opds.findIndex(o => o.id === id);
-                if (opdIndex === -1) return;
+            const updateData = { name: namaBaru };
+            if (passwordBaru) updateData.password = passwordBaru;
 
-                db.opds[opdIndex].name = namaBaru;
-                if (passwordBaru) {
-                    db.opds[opdIndex].password = passwordBaru;
-                }
+            const btn = document.querySelector('.modal-actions .btn-green');
+            const oldText = btn.innerText;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
 
-                localStorage.setItem('kopd_db', JSON.stringify(db));
-                tutupModalEdit();
-                renderTabel(document.getElementById('search-akun').value);
+            try {
+                await window.fbUpdateDoc(window.fbDoc(window.db, "opds", docId), updateData);
+                window.tutupModalEdit();
+                await window.renderTabel(document.getElementById('search-akun').value);
                 alert(`Akun "${namaBaru}" berhasil diperbarui.`);
-            };
+            } catch (e) {
+                alert("Gagal memperbarui akun.");
+            } finally {
+                btn.innerHTML = oldText;
+                btn.disabled = false;
+            }
+        };
 
-            // Tutup modal saat klik di luar kotak
-            document.getElementById('modal-edit-opd').addEventListener('click', function (e) {
-                if (e.target === this) tutupModalEdit();
-            });
+        // Tutup modal saat klik di luar kotak
+        document.getElementById('modal-edit-opd').addEventListener('click', function (e) {
+            if (e.target === this) window.tutupModalEdit();
         });
     </script>
 </body>

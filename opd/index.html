@@ -141,124 +141,124 @@
         </main>
     </div>
 
-    <script src="../assets/js/state-manager.js"></script>
-    <script src="../assets/components/sidebar.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            if (!checkSession('opd', '../')) return;
-            renderSidebar('../', 'opd');
+    <script type="module" src="../assets/js/state-manager.js"></script>
+    <script type="module" src="../assets/components/sidebar.js"></script>
+    <script type="module">
+        if (!window.checkSession('opd', '../')) throw new Error("Unauthenticated");
+        await window.renderSidebar('../', 'opd');
 
-            const db = JSON.parse(localStorage.getItem('kopd_db'));
-            const opdData = getCurrentOpdData();
-            document.getElementById('nama-opd').innerText = opdData.name;
-            document.getElementById('tahun-opd-index').innerText = getTahunAktif();
+        const opdData = await window.getCurrentOpdData();
+        const settings = await window.getSettings(); // Untuk broadcast message
+        const tahunAktif = await window.getTahunAktif();
 
-            if (db.broadcastMessage && db.broadcastMessage.trim() !== "") {
-                document.getElementById('broadcast-container').style.display = 'block';
-                document.getElementById('broadcast-msg').innerText = db.broadcastMessage;
+        document.getElementById('nama-opd').innerText = opdData.name;
+        document.getElementById('tahun-opd-index').innerText = tahunAktif;
+
+        if (settings && settings.broadcastMessage && settings.broadcastMessage.trim() !== "") {
+            document.getElementById('broadcast-container').style.display = 'block';
+            document.getElementById('broadcast-msg').innerText = settings.broadcastMessage;
+        }
+
+        let terisi = 0;
+        let disetujui = 0;
+        let totalRevisi = 0;
+        const feedContainer = document.getElementById('notification-feed');
+        let feedHTML = '';
+
+        for (let i = 1; i <= 12; i++) {
+            const state = opdData.variabelStatus[`v${i}`];
+            if (!state) continue;
+
+            // Hitung progress hanya dari 11 variabel kematangan (bukan v12 drive link)
+            if (i <= 11) {
+                if (state.status > 0 || state.levelDisetujui > 0) terisi++;
+                if (state.status === 4) disetujui++;
             }
 
-            let terisi = 0;
-            let disetujui = 0;
-            let totalRevisi = 0;
-            const feedContainer = document.getElementById('notification-feed');
-            let feedHTML = '';
+            const varName = i === 12 ? 'XII. Tautan Google Drive Bukti Fisik' : `Variabel ${i}`;
 
-            for (let i = 1; i <= 12; i++) {
-                const state = opdData.variabelStatus[`v${i}`];
-                if (!state) continue;
-
-                // Hitung progress hanya dari 11 variabel kematangan (bukan v12 drive link)
-                if (i <= 11) {
-                    if (state.status > 0 || state.levelDisetujui > 0) terisi++;
-                    if (state.status === 4) disetujui++;
-                }
-
-                const varName = i === 12 ? 'XII. Tautan Google Drive Bukti Fisik' : `Variabel ${i}`;
-
-                // RENDER STRUKTUR HTML NOTIFIKASI BARU (KOMPAK & PADAT)
-                if (state.status === 2) {
-                    totalRevisi++;
-                    feedHTML += `
-                        <div class="notif-item">
-                            <div class="notif-icon"><i class="fa-solid fa-triangle-exclamation" style="color: var(--status-revisi);"></i></div>
-                            <div style="flex: 1;">
-                                <strong style="color: var(--status-revisi);">${varName}: Butuh Perbaikan</strong>
-                                <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
-                                    <strong>Catatan Admin:</strong> <i>"${state.catatanAdmin || 'Mohon perbaiki data.'}"</i>
-                                </div>
-                                <a href="detail.html?v=${i}" style="display:inline-block; margin-top:8px; font-size:0.75rem; color:var(--status-revisi); text-decoration:none; font-weight:bold; background:#fee2e2; padding:4px 10px; border-radius:4px; transition:0.2s;">Perbaiki Sekarang <i class="fa-solid fa-arrow-right"></i></a>
-                                <span class="notif-time">Menunggu tindak lanjut Anda</span>
+            // RENDER STRUKTUR HTML NOTIFIKASI BARU (KOMPAK & PADAT)
+            if (state.status === 2) {
+                totalRevisi++;
+                feedHTML += `
+                    <div class="notif-item">
+                        <div class="notif-icon"><i class="fa-solid fa-triangle-exclamation" style="color: var(--status-revisi);"></i></div>
+                        <div style="flex: 1;">
+                            <strong style="color: var(--status-revisi);">${varName}: Butuh Perbaikan</strong>
+                            <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
+                                <strong>Catatan Admin:</strong> <i>"${state.catatanAdmin || 'Mohon perbaiki data.'}"</i>
                             </div>
+                            <a href="detail.html?v=${i}" style="display:inline-block; margin-top:8px; font-size:0.75rem; color:var(--status-revisi); text-decoration:none; font-weight:bold; background:#fee2e2; padding:4px 10px; border-radius:4px; transition:0.2s;">Perbaiki Sekarang <i class="fa-solid fa-arrow-right"></i></a>
+                            <span class="notif-time">Menunggu tindak lanjut Anda</span>
                         </div>
-                    `;
-                } else if (state.status === 4) {
-                    feedHTML += `
-                        <div class="notif-item">
-                            <div class="notif-icon"><i class="fa-solid fa-circle-check" style="color: var(--status-selesai);"></i></div>
-                            <div style="flex: 1;">
-                                <strong style="color: var(--status-selesai);">${varName}: Disetujui</strong>
-                                <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
-                                    ${i === 12 ? 'Tautan berkas Google Drive telah diverifikasi oleh Evaluator.' : `Tingkat Kematangan: <strong>Level ${state.levelDisetujui}</strong> disetujui.`}
-                                </div>
-                                <span class="notif-time">Selesai diverifikasi</span>
+                    </div>
+                `;
+            } else if (state.status === 4) {
+                feedHTML += `
+                    <div class="notif-item">
+                        <div class="notif-icon"><i class="fa-solid fa-circle-check" style="color: var(--status-selesai);"></i></div>
+                        <div style="flex: 1;">
+                            <strong style="color: var(--status-selesai);">${varName}: Disetujui</strong>
+                            <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
+                                ${i === 12 ? 'Tautan berkas Google Drive telah diverifikasi oleh Evaluator.' : `Tingkat Kematangan: <strong>Level ${state.levelDisetujui}</strong> disetujui.`}
                             </div>
+                            <span class="notif-time">Selesai diverifikasi</span>
                         </div>
-                    `;
-                } else if (state.status === 1) {
-                    feedHTML += `
-                        <div class="notif-item">
-                            <div class="notif-icon"><i class="fa-solid fa-clock" style="color: var(--status-menunggu);"></i></div>
-                            <div style="flex: 1;">
-                                <strong style="color: var(--status-menunggu);">${varName}: Menunggu Verifikasi</strong>
-                                <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
-                                    Usulan data baru telah dikirim dan sedang dalam antrean evaluasi admin.
-                                </div>
-                                <span class="notif-time">Dalam antrean</span>
+                    </div>
+                `;
+            } else if (state.status === 1) {
+                feedHTML += `
+                    <div class="notif-item">
+                        <div class="notif-icon"><i class="fa-solid fa-clock" style="color: var(--status-menunggu);"></i></div>
+                        <div style="flex: 1;">
+                            <strong style="color: var(--status-menunggu);">${varName}: Menunggu Verifikasi</strong>
+                            <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
+                                Usulan data baru telah dikirim dan sedang dalam antrean evaluasi admin.
                             </div>
+                            <span class="notif-time">Dalam antrean</span>
                         </div>
-                    `;
-                } else if (state.status === 3) {
-                    feedHTML += `
-                        <div class="notif-item">
-                            <div class="notif-icon"><i class="fa-solid fa-clock-rotate-left" style="color: #3b82f6;"></i></div>
-                            <div style="flex: 1;">
-                                <strong style="color: #3b82f6;">${varName}: Verifikasi Ulang</strong>
-                                <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
-                                    Perbaikan data telah dikirim kembali ke evaluator.
-                                </div>
-                                <span class="notif-time">Sedang ditinjau ulang</span>
+                    </div>
+                `;
+            } else if (state.status === 3) {
+                feedHTML += `
+                    <div class="notif-item">
+                        <div class="notif-icon"><i class="fa-solid fa-clock-rotate-left" style="color: #3b82f6;"></i></div>
+                        <div style="flex: 1;">
+                            <strong style="color: #3b82f6;">${varName}: Verifikasi Ulang</strong>
+                            <div style="margin-top: 4px; font-size: 0.8rem; color:#475569;">
+                                Perbaikan data telah dikirim kembali ke evaluator.
                             </div>
+                            <span class="notif-time">Sedang ditinjau ulang</span>
                         </div>
-                    `;
-                }
+                    </div>
+                `;
             }
+        }
 
-            // Tampilkan feed atau empty state
-            if (feedHTML === '') {
-                feedContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px;"></i><br>Belum ada riwayat verifikasi dokumen.</div>`;
-            } else {
-                feedContainer.innerHTML = feedHTML;
-            }
+        // Tampilkan feed atau empty state
+        if (feedHTML === '') {
+            feedContainer.innerHTML = `<div style="text-align:center; padding:30px; color:#94a3b8;"><i class="fa-regular fa-bell-slash" style="font-size: 2rem; margin-bottom: 10px;"></i><br>Belum ada riwayat verifikasi dokumen.</div>`;
+        } else {
+            feedContainer.innerHTML = feedHTML;
+        }
 
-            // Update Badge Revisi
-            if (totalRevisi > 0) {
-                const badge = document.getElementById('badge-notif');
-                badge.style.display = 'inline-block';
-                badge.innerText = `${totalRevisi} Perbaikan`;
-            }
+        // Update Badge Revisi
+        if (totalRevisi > 0) {
+            const badge = document.getElementById('badge-notif');
+            badge.style.display = 'inline-block';
+            badge.innerText = `${totalRevisi} Perbaikan`;
+        }
 
-            // Animasi Tabung Air (hanya dari 11 variabel kematangan)
-            const tube = document.getElementById('progress-tube');
-            const progressText = document.getElementById('progress-text');
-            setTimeout(() => {
-                let percentage = Math.min((terisi / 11) * 100, 100);
-                tube.style.setProperty('--water-height', `${percentage}%`);
-                progressText.innerText = `${terisi} / 11 Variabel Terisi`;
-            }, 300);
+        // Animasi Tabung Air (hanya dari 11 variabel kematangan)
+        const tube = document.getElementById('progress-tube');
+        const progressText = document.getElementById('progress-text');
+        setTimeout(() => {
+            let percentage = Math.min((terisi / 11) * 100, 100);
+            tube.style.setProperty('--water-height', `${percentage}%`);
+            progressText.innerText = `${terisi} / 11 Variabel Terisi`;
+        }, 300);
 
-            document.getElementById('approved-text').innerText = `${disetujui} / 11 Disetujui`;
-        });
+        document.getElementById('approved-text').innerText = `${disetujui} / 11 Disetujui`;
     </script>
 </body>
 

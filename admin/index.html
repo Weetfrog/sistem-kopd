@@ -126,79 +126,81 @@
         </main>
     </div>
 
-    <script src="../assets/js/state-manager.js"></script>
-    <script src="../assets/components/sidebar.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            // 1. Rem Darurat Keamanan
-            if (!checkSession('admin', '../')) return;
-            renderSidebar('../', 'admin');
+    <script type="module" src="../assets/js/state-manager.js"></script>
+    <script type="module" src="../assets/components/sidebar.js"></script>
+    <script type="module">
+        // 1. Rem Darurat Keamanan
+        if (!window.checkSession('admin', '../')) throw new Error("Unauthenticated");
+        await window.renderSidebar('../', 'admin');
 
-            // Set Title Dinamis
-            document.title = `Dasbor Admin - KOPD Mabar ${getTahunAktif()}`;
+        // Set Title Dinamis
+        const tahunAktif = await window.getTahunAktif();
+        document.title = `Dasbor Admin - KOPD Mabar ${tahunAktif}`;
 
-            // 2. Ambil Pangkalan Data
-            const db = JSON.parse(localStorage.getItem('kopd_db'));
-            if (!db || !db.opds) return;
+        // 2. Ambil Pangkalan Data
+        const snapshot = await window.fbGetDocs(window.fbCollection(window.db, "opds"));
+        let opds = [];
+        snapshot.forEach(doc => {
+            opds.push(doc.data());
+        });
 
-            let totalAntreanBaru = 0;
-            let totalRevisiUlang = 0;
-            let tabelTugasHTML = '';
+        let totalAntreanBaru = 0;
+        let totalRevisiUlang = 0;
+        let tabelTugasHTML = '';
 
-            // 3. Mesin Penyapu (Scan seluruh OPD dan Variabelnya)
-            db.opds.forEach(opd => {
-                // Loop ke 12 Variabel dalam setiap OPD
-                for (let i = 1; i <= 12; i++) {
-                    let state = opd.variabelStatus[`v${i}`];
-                    const labelVar = i === 12 ? 'Tautan Google Drive' : `Variabel ${i}`;
+        // 3. Mesin Penyapu (Scan seluruh OPD dan Variabelnya)
+        opds.forEach(opd => {
+            // Loop ke 12 Variabel dalam setiap OPD
+            for (let i = 1; i <= 12; i++) {
+                let state = opd.variabelStatus[`v${i}`];
+                const labelVar = i === 12 ? 'Tautan Google Drive' : `Variabel ${i}`;
 
-                    // Jika Status 1 (Menunggu Verifikasi Baru)
-                    if (state && state.status === 1) {
-                        totalAntreanBaru++;
-                        tabelTugasHTML += `
-                            <tr>
-                                <td style="font-weight: 600; color:#334155;">${opd.name}</td>
-                                <td>${labelVar}</td>
-                                <td><span class="badge-tabel" style="background: var(--status-menunggu);">Usulan Baru</span></td>
-                                <td><a href="verifikasi.html?opd=${opd.id}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
-                            </tr>
-                        `;
-                    }
-                    // Jika Status 3 (Verifikasi Ulang dari Revisi)
-                    else if (state && state.status === 3) {
-                        totalRevisiUlang++;
-                        tabelTugasHTML += `
-                            <tr>
-                                <td style="font-weight: 600; color:#334155;">${opd.name}</td>
-                                <td>${labelVar}</td>
-                                <td><span class="badge-tabel" style="background: #3b82f6;">Verifikasi Ulang</span></td>
-                                <td><a href="verifikasi.html?opd=${opd.id}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
-                            </tr>
-                        `;
-                    }
+                // Jika Status 1 (Menunggu Verifikasi Baru)
+                if (state && state.status === 1) {
+                    totalAntreanBaru++;
+                    tabelTugasHTML += `
+                        <tr>
+                            <td style="font-weight: 600; color:#334155;">${opd.name}</td>
+                            <td>${labelVar}</td>
+                            <td><span class="badge-tabel" style="background: var(--status-menunggu);">Usulan Baru</span></td>
+                            <td><a href="verifikasi.html?opd=${opd.id}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
+                        </tr>
+                    `;
                 }
-            });
-
-            // 4. Suntikkan Angka ke Kartu Statistik Atas
-            document.getElementById('stat-antrean').innerText = `${totalAntreanBaru} Dokumen`;
-            document.getElementById('stat-ulang').innerText = `${totalRevisiUlang} Dokumen`;
-
-            // 5. Suntikkan Baris ke Tabel
-            const tbody = document.getElementById('tabel-opd');
-            if (tabelTugasHTML === '') {
-                // Tampilan jika pekerjaan Admin sudah selesai semua
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
-                            <i class="fa-solid fa-mug-hot" style="font-size: 2rem; margin-bottom:10px;"></i><br>
-                            Kerja bagus! Tidak ada dokumen dalam antrean saat ini.
-                        </td>
-                    </tr>
-                `;
-            } else {
-                tbody.innerHTML = tabelTugasHTML;
+                // Jika Status 3 (Verifikasi Ulang dari Revisi)
+                else if (state && state.status === 3) {
+                    totalRevisiUlang++;
+                    tabelTugasHTML += `
+                        <tr>
+                            <td style="font-weight: 600; color:#334155;">${opd.name}</td>
+                            <td>${labelVar}</td>
+                            <td><span class="badge-tabel" style="background: #3b82f6;">Verifikasi Ulang</span></td>
+                            <td><a href="verifikasi.html?opd=${opd.id}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
+                        </tr>
+                    `;
+                }
             }
         });
+
+        // 4. Suntikkan Angka ke Kartu Statistik Atas
+        document.getElementById('stat-antrean').innerText = `${totalAntreanBaru} Dokumen`;
+        document.getElementById('stat-ulang').innerText = `${totalRevisiUlang} Dokumen`;
+
+        // 5. Suntikkan Baris ke Tabel
+        const tbody = document.getElementById('tabel-opd');
+        if (tabelTugasHTML === '') {
+            // Tampilan jika pekerjaan Admin sudah selesai semua
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">
+                        <i class="fa-solid fa-mug-hot" style="font-size: 2rem; margin-bottom:10px;"></i><br>
+                        Kerja bagus! Tidak ada dokumen dalam antrean saat ini.
+                    </td>
+                </tr>
+            `;
+        } else {
+            tbody.innerHTML = tabelTugasHTML;
+        }
 
     </script>
 

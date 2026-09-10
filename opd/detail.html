@@ -285,209 +285,220 @@
         </main>
     </div>
 
-    <script src="../assets/js/data-variabel.js"></script>
-    <script src="../assets/js/state-manager.js"></script>
-    <script src="../assets/components/sidebar.js"></script>
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            checkSession('opd', '../');
-            renderSidebar('../', 'opd');
+    <script type="module" src="../assets/js/state-manager.js"></script>
+    <script type="module" src="../assets/components/sidebar.js"></script>
+    <script type="module">
+        if (!window.checkSession('opd', '../')) throw new Error("Unauthenticated");
+        await window.renderSidebar('../', 'opd');
 
-            const urlParams = new URLSearchParams(window.location.search);
-            const varId = parseInt(urlParams.get('v'));
-            if (!varId || varId < 1 || varId > 12) { window.location.href = "matriks.html"; return; }
+        const urlParams = new URLSearchParams(window.location.search);
+        const varId = parseInt(urlParams.get('v'));
+        if (!varId || varId < 1 || varId > 12) { window.location.href = "matriks.html"; throw new Error("Invalid variable ID"); }
 
-            const dataVariabel = dbVariabel.find(v => v.id === varId) || { 
-                id: varId, 
-                judul: `Variabel ${varId}`, 
-                levels: Array(5).fill("Tingkat: Deskripsi belum tersedia.") 
+        const dataVariabel = window.dbVariabel.find(v => v.id === varId) || { 
+            id: varId, 
+            judul: `Variabel ${varId}`, 
+            levels: Array(5).fill("Tingkat: Deskripsi belum tersedia.") 
+        };
+        document.getElementById('var-title').innerText = dataVariabel.judul;
+
+        const opdData = await window.getCurrentOpdData();
+        if (!opdData.variabelStatus[`v${varId}`]) {
+            opdData.variabelStatus[`v${varId}`] = {
+                status: 0,
+                levelPilihan: varId === 12 ? 1 : null,
+                levelDisetujui: 0,
+                deskripsi: "",
+                driveLink: "",
+                catatanAdmin: ""
             };
-            document.getElementById('var-title').innerText = dataVariabel.judul;
+        }
+        let currentState = opdData.variabelStatus[`v${varId}`];
 
-            const opdData = getCurrentOpdData();
-            if (!opdData.variabelStatus[`v${varId}`]) {
-                opdData.variabelStatus[`v${varId}`] = {
-                    status: 0,
-                    levelPilihan: varId === 12 ? 1 : null,
-                    levelDisetujui: 0,
-                    deskripsi: "",
-                    driveLink: "",
-                    catatanAdmin: ""
-                };
+        const formKematangan = document.getElementById('form-kematangan');
+        const formDrive = document.getElementById('form-drive');
+
+        // JIKA VARIABEL 12 (GOOGLE DRIVE LINK)
+        if (varId === 12) {
+            formKematangan.style.display = 'none';
+            formDrive.style.display = 'block';
+
+            const inputDrive = document.getElementById('input-drive-link');
+            const inputCatatan = document.getElementById('input-drive-catatan');
+            const boxPreview = document.getElementById('box-preview-drive');
+            const linkTest = document.getElementById('link-test-drive');
+
+            inputDrive.value = currentState.driveLink || '';
+            inputCatatan.value = currentState.deskripsi || '';
+
+            if (currentState.driveLink) {
+                boxPreview.style.display = 'block';
+                linkTest.href = currentState.driveLink;
             }
-            let currentState = opdData.variabelStatus[`v${varId}`];
 
-            const formKematangan = document.getElementById('form-kematangan');
-            const formDrive = document.getElementById('form-drive');
-
-            // JIKA VARIABEL 12 (GOOGLE DRIVE LINK)
-            if (varId === 12) {
-                formKematangan.style.display = 'none';
-                formDrive.style.display = 'block';
-
-                const inputDrive = document.getElementById('input-drive-link');
-                const inputCatatan = document.getElementById('input-drive-catatan');
-                const boxPreview = document.getElementById('box-preview-drive');
-                const linkTest = document.getElementById('link-test-drive');
-
-                inputDrive.value = currentState.driveLink || '';
-                inputCatatan.value = currentState.deskripsi || '';
-
-                if (currentState.driveLink) {
+            inputDrive.addEventListener('input', function () {
+                const url = this.value.trim();
+                if (url.startsWith('http')) {
                     boxPreview.style.display = 'block';
-                    linkTest.href = currentState.driveLink;
+                    linkTest.href = url;
+                } else {
+                    boxPreview.style.display = 'none';
+                }
+            });
+
+            formDrive.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const linkUrl = inputDrive.value.trim();
+                if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
+                    alert("Mohon masukkan tautan URL yang valid (dimulai dengan https://)");
+                    return;
                 }
 
-                inputDrive.addEventListener('input', function () {
-                    const url = this.value.trim();
-                    if (url.startsWith('http')) {
-                        boxPreview.style.display = 'block';
-                        linkTest.href = url;
-                    } else {
-                        boxPreview.style.display = 'none';
-                    }
+                const catatanDrive = inputCatatan.value.trim();
+                if (catatanDrive.length > 0 && catatanDrive.length < 5) {
+                    alert("Keterangan tambahan harus minimal 5 karakter (atau kosongkan jika tidak ada keterangan).");
+                    inputCatatan.focus();
+                    return;
+                }
+                
+                const btnSave = document.getElementById('btn-simpan-drive');
+                btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+                btnSave.disabled = true;
+
+                currentState.driveLink = linkUrl;
+                currentState.deskripsi = catatanDrive;
+                currentState.levelPilihan = 1; // Default 1
+                currentState.status = currentState.status === 2 ? 3 : 1;
+
+                await simpanStateSementara();
+                alert("Tautan Google Drive berhasil disimpan dan dikirim ke Admin!");
+                window.location.href = "matriks.html";
+            });
+
+        } else {
+            // VARIABEL 1 S/D 11 (INDIKATOR KEMATANGAN - BEBAS PILIH)
+            formKematangan.style.display = 'block';
+            formDrive.style.display = 'none';
+
+            const levelContainer = document.getElementById('level-container');
+            levelContainer.innerHTML = '';
+
+            dataVariabel.levels.forEach((teks, index) => {
+                const levelNum = index + 1;
+                const splitTeks = teks.split(':');
+                const lvlTitle = splitTeks[0];
+                const lvlDesc = splitTeks[1] ? splitTeks[1].trim() : teks;
+
+                levelContainer.innerHTML += `
+                    <label class="level-card" id="card-lvl-${levelNum}">
+                        <input type="radio" name="level" value="${levelNum}" required>
+                        <div style="flex: 1;">
+                            <div class="level-title">${lvlTitle}</div>
+                            <div class="level-desc">${lvlDesc}</div>
+                        </div>
+                    </label>
+                `;
+            });
+
+            if (currentState.levelPilihan) {
+                const radio = document.querySelector(`input[name="level"][value="${currentState.levelPilihan}"]`);
+                if (radio) {
+                    radio.checked = true;
+                    document.getElementById(`card-lvl-${currentState.levelPilihan}`).classList.add('selected');
+                }
+            }
+
+            document.querySelectorAll('input[name="level"]').forEach(r => {
+                r.addEventListener('change', function () {
+                    document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
+                    if (this.checked) document.getElementById(`card-lvl-${this.value}`).classList.add('selected');
                 });
+            });
 
-                formDrive.addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    const linkUrl = inputDrive.value.trim();
-                    if (!linkUrl.startsWith('http://') && !linkUrl.startsWith('https://')) {
-                        alert("Mohon masukkan tautan URL yang valid (dimulai dengan https://)");
-                        return;
-                    }
+            document.getElementById('input-penjelasan').value = currentState.deskripsi || '';
 
-                    const catatanDrive = inputCatatan.value.trim();
-                    if (catatanDrive.length > 0 && catatanDrive.length < 5) {
-                        alert("Keterangan tambahan harus minimal 5 karakter (atau kosongkan jika tidak ada keterangan).");
-                        inputCatatan.focus();
-                        return;
-                    }
+            formKematangan.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                const radioSelected = document.querySelector('input[name="level"]:checked');
+                if (!radioSelected) {
+                    alert("Silakan pilih salah satu Tingkat Kematangan terlebih dahulu!");
+                    return;
+                }
+                const selectedLevel = parseInt(radioSelected.value);
+                const penjelasan = document.getElementById('input-penjelasan').value.trim(); // FIX: trim whitespace
 
-                    currentState.driveLink = linkUrl;
-                    currentState.deskripsi = catatanDrive;
-                    currentState.levelPilihan = 1; // Default 1
-                    currentState.status = currentState.status === 2 ? 3 : 1;
-
-                    simpanStateSementara();
-                    alert("Tautan Google Drive berhasil disimpan dan dikirim ke Admin!");
-                    window.location.href = "matriks.html";
-                });
-
-            } else {
-                // VARIABEL 1 S/D 11 (INDIKATOR KEMATANGAN - BEBAS PILIH)
-                formKematangan.style.display = 'block';
-                formDrive.style.display = 'none';
-
-                const levelContainer = document.getElementById('level-container');
-                levelContainer.innerHTML = '';
-
-                dataVariabel.levels.forEach((teks, index) => {
-                    const levelNum = index + 1;
-                    const splitTeks = teks.split(':');
-                    const lvlTitle = splitTeks[0];
-                    const lvlDesc = splitTeks[1] ? splitTeks[1].trim() : teks;
-
-                    levelContainer.innerHTML += `
-                        <label class="level-card" id="card-lvl-${levelNum}">
-                            <input type="radio" name="level" value="${levelNum}" required>
-                            <div style="flex: 1;">
-                                <div class="level-title">${lvlTitle}</div>
-                                <div class="level-desc">${lvlDesc}</div>
-                            </div>
-                        </label>
-                    `;
-                });
-
-                if (currentState.levelPilihan) {
-                    const radio = document.querySelector(`input[name="level"][value="${currentState.levelPilihan}"]`);
-                    if (radio) {
-                        radio.checked = true;
-                        document.getElementById(`card-lvl-${currentState.levelPilihan}`).classList.add('selected');
-                    }
+                if (penjelasan.length < 5) {
+                    alert("Deskripsi penjelasan harus diisi minimal 5 karakter.");
+                    document.getElementById('input-penjelasan').focus();
+                    return;
                 }
 
-                document.querySelectorAll('input[name="level"]').forEach(r => {
-                    r.addEventListener('change', function () {
-                        document.querySelectorAll('.level-card').forEach(c => c.classList.remove('selected'));
-                        if (this.checked) document.getElementById(`card-lvl-${this.value}`).classList.add('selected');
-                    });
+                const btnSave = document.getElementById('btn-simpan');
+                btnSave.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Menyimpan...';
+                btnSave.disabled = true;
+
+                currentState.status = currentState.status === 2 ? 3 : 1;
+                currentState.levelPilihan = selectedLevel;
+                currentState.deskripsi = penjelasan;
+
+                await simpanStateSementara();
+                alert("Data berhasil dikirim ke Admin!");
+                window.location.href = "matriks.html";
+            });
+        }
+
+        // Tampilkan Notifikasi Revisi dari Admin
+        if (currentState.status === 2) {
+            document.getElementById('admin-feedback').style.display = 'block';
+            document.getElementById('pesan-revisi').innerText = currentState.catatanAdmin || 'Mohon perbaiki data.';
+        }
+
+        // Tampilkan Status Disetujui (Kunci Form Permanen)
+        if (currentState.status === 4) {
+            const btnSimpan = document.getElementById('btn-simpan');
+            const btnSimpanDrive = document.getElementById('btn-simpan-drive');
+            if (btnSimpan) btnSimpan.style.display = 'none';
+            if (btnSimpanDrive) btnSimpanDrive.style.display = 'none';
+
+            document.querySelectorAll('input, textarea').forEach(r => r.disabled = true);
+
+            document.getElementById('admin-feedback').style.display = 'block';
+            document.getElementById('admin-feedback').style.borderLeftColor = 'var(--status-selesai)';
+            document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-selesai)';
+            document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-circle-check"></i> Variabel Telah Disetujui';
+            document.getElementById('pesan-revisi').innerText = "Data Anda telah diverifikasi dan disetujui secara permanen.";
+            document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
+        } 
+        // Tampilkan Status Menunggu Verifikasi (Kunci Form Sementara)
+        else if (currentState.status === 1 || currentState.status === 3) {
+            const btnSimpan = document.getElementById('btn-simpan');
+            const btnSimpanDrive = document.getElementById('btn-simpan-drive');
+            if (btnSimpan) btnSimpan.style.display = 'none';
+            if (btnSimpanDrive) btnSimpanDrive.style.display = 'none';
+
+            document.querySelectorAll('input, textarea').forEach(r => r.disabled = true);
+
+            document.getElementById('admin-feedback').style.display = 'block';
+            document.getElementById('admin-feedback').style.borderLeftColor = 'var(--status-menunggu)';
+            document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-menunggu)';
+            document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-clock"></i> Sedang Dievaluasi';
+            document.getElementById('pesan-revisi').innerText = "Data Anda saat ini sedang dalam antrean evaluasi oleh Bagian Organisasi. Isian dikunci sementara.";
+            document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
+        }
+
+        // Simpan Data Sementara ke DB Firestore
+        async function simpanStateSementara() {
+            try {
+                const docRef = window.fbDoc(window.db, "opds", opdData.docId);
+                // Update specific field using dot notation for nested objects
+                await window.fbUpdateDoc(docRef, {
+                    [\`variabelStatus.v\${varId}\`]: currentState
                 });
-
-                document.getElementById('input-penjelasan').value = currentState.deskripsi || '';
-
-                formKematangan.addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    const radioSelected = document.querySelector('input[name="level"]:checked');
-                    if (!radioSelected) {
-                        alert("Silakan pilih salah satu Tingkat Kematangan terlebih dahulu!");
-                        return;
-                    }
-                    const selectedLevel = parseInt(radioSelected.value);
-                    const penjelasan = document.getElementById('input-penjelasan').value.trim(); // FIX: trim whitespace
-
-                    if (penjelasan.length < 5) {
-                        alert("Deskripsi penjelasan harus diisi minimal 5 karakter.");
-                        document.getElementById('input-penjelasan').focus();
-                        return;
-                    }
-
-                    currentState.status = currentState.status === 2 ? 3 : 1;
-                    currentState.levelPilihan = selectedLevel;
-                    currentState.deskripsi = penjelasan;
-
-                    simpanStateSementara();
-                    alert("Data berhasil dikirim ke Admin!");
-                    window.location.href = "matriks.html";
-                });
+            } catch (e) {
+                console.error("Error saving data:", e);
+                alert("Gagal menyimpan data ke server. Periksa koneksi internet.");
             }
-
-            // Tampilkan Notifikasi Revisi dari Admin
-            if (currentState.status === 2) {
-                document.getElementById('admin-feedback').style.display = 'block';
-                document.getElementById('pesan-revisi').innerText = currentState.catatanAdmin || 'Mohon perbaiki data.';
-            }
-
-            // Tampilkan Status Disetujui (Kunci Form Permanen)
-            if (currentState.status === 4) {
-                const btnSimpan = document.getElementById('btn-simpan');
-                const btnSimpanDrive = document.getElementById('btn-simpan-drive');
-                if (btnSimpan) btnSimpan.style.display = 'none';
-                if (btnSimpanDrive) btnSimpanDrive.style.display = 'none';
-
-                document.querySelectorAll('input, textarea').forEach(r => r.disabled = true);
-
-                document.getElementById('admin-feedback').style.display = 'block';
-                document.getElementById('admin-feedback').style.borderLeftColor = 'var(--status-selesai)';
-                document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-selesai)';
-                document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-circle-check"></i> Variabel Telah Disetujui';
-                document.getElementById('pesan-revisi').innerText = "Data Anda telah diverifikasi dan disetujui secara permanen.";
-                document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
-            } 
-            // Tampilkan Status Menunggu Verifikasi (Kunci Form Sementara)
-            else if (currentState.status === 1 || currentState.status === 3) {
-                const btnSimpan = document.getElementById('btn-simpan');
-                const btnSimpanDrive = document.getElementById('btn-simpan-drive');
-                if (btnSimpan) btnSimpan.style.display = 'none';
-                if (btnSimpanDrive) btnSimpanDrive.style.display = 'none';
-
-                document.querySelectorAll('input, textarea').forEach(r => r.disabled = true);
-
-                document.getElementById('admin-feedback').style.display = 'block';
-                document.getElementById('admin-feedback').style.borderLeftColor = 'var(--status-menunggu)';
-                document.getElementById('admin-feedback').querySelector('h4').style.color = 'var(--status-menunggu)';
-                document.getElementById('admin-feedback').querySelector('h4').innerHTML = '<i class="fa-solid fa-clock"></i> Sedang Dievaluasi';
-                document.getElementById('pesan-revisi').innerText = "Data Anda saat ini sedang dalam antrean evaluasi oleh Bagian Organisasi. Isian dikunci sementara.";
-                document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
-            }
-
-            // Simpan Data Sementara ke DB
-            function simpanStateSementara() {
-                const db = JSON.parse(localStorage.getItem('kopd_db'));
-                const opdIndex = db.opds.findIndex(o => o.id === opdData.id);
-                db.opds[opdIndex].variabelStatus[`v${varId}`] = currentState;
-                localStorage.setItem('kopd_db', JSON.stringify(db));
-            }
-        });
+        }
     </script>
 </body>
 

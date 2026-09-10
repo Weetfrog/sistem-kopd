@@ -1,9 +1,26 @@
 /**
- * STATE MANAGER V2 - Sistem KOPD Manggarai Barat
- * Mengelola Autentikasi, Multi-OPD, dan Keamanan Sesi
+ * STATE MANAGER V3 - Firebase Firestore Integration
+ * Mengelola Autentikasi, Multi-OPD, dan Keamanan Sesi di Cloud
  */
 
-// 1. Fungsi untuk membuat 12 variabel kosong (1-11 Indikator Kematangan, 12 Link Google Drive)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-app.js";
+import { getFirestore, collection, getDocs, getDoc, doc, setDoc, updateDoc, writeBatch, deleteDoc } from "https://www.gstatic.com/firebasejs/12.18.0/firebase-firestore.js";
+
+// Konfigurasi Firebase dari User
+const firebaseConfig = {
+    apiKey: "AIzaSyA7to6QJroKFZZVchsbkeWZ8RSF4u-mg4E",
+    authDomain: "sistem-kopd-359d7.firebaseapp.com",
+    projectId: "sistem-kopd-359d7",
+    storageBucket: "sistem-kopd-359d7.firebasestorage.app",
+    messagingSenderId: "992627198139",
+    appId: "1:992627198139:web:bd2923e4b737d1bdb5419e"
+};
+
+// Inisialisasi Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 1. Fungsi Cetak 12 Variabel Kosong
 function generateInitialVariabel() {
     let vars = {};
     for (let i = 1; i <= 12; i++) {
@@ -12,171 +29,180 @@ function generateInitialVariabel() {
             levelPilihan: i === 12 ? 1 : null,
             levelDisetujui: 0,
             deskripsi: "",
-            driveLink: "", // Khusus tautan Google Drive
-            uploads: {}, // Deprecated, tetap ada untuk kompatibilitas data lama
+            driveLink: "",
+            uploads: {},
             catatanAdmin: ""
         };
     }
     return vars;
 }
 
-// 2. Inisialisasi & Auto-Healing Database Lokal
-function initLocalDB() {
-    const raw = localStorage.getItem('kopd_db');
-    let shouldReset = false;
+// 2. Seeding Awal Database (Berjalan Otomatis jika kosong)
+async function initFirebaseSeed() {
+    try {
+        const settingsRef = doc(db, "settings", "main");
+        const snap = await getDoc(settingsRef);
+        
+        if (!snap.exists()) {
+            console.log("Sistem: Database Firestore kosong, melakukan seeding...");
+            await setDoc(settingsRef, {
+                broadcastMessage: "",
+                tahunAktif: new Date().getFullYear().toString(),
+                adminUsername: "admin",
+                adminPassword: "123",
+                adminName: "Super Admin Bagian Organisasi"
+            });
 
-    if (raw) {
-        try {
-            const db = JSON.parse(raw);
-            // CEK STRUKTUR: Jika tidak ada array 'opds' atau objek 'admin', reset!
-            if (!db || typeof db !== 'object' || !Array.isArray(db.opds) || !db.admin) {
-                shouldReset = true;
-            } else {
-                // Auto-healing & migrasi data: pastikan seluruh OPD memiliki variabel v1 sampai v12
-                let updated = false;
-                db.opds.forEach(opd => {
-                    if (!opd.variabelStatus) {
-                        opd.variabelStatus = generateInitialVariabel();
-                        updated = true;
-                    } else {
-                        for (let i = 1; i <= 12; i++) {
-                            if (!opd.variabelStatus[`v${i}`]) {
-                                opd.variabelStatus[`v${i}`] = {
-                                    status: 0,
-                                    levelPilihan: i === 12 ? 1 : null,
-                                    levelDisetujui: 0,
-                                    deskripsi: "",
-                                    driveLink: "",
-                                    uploads: {},
-                                    catatanAdmin: ""
-                                };
-                                updated = true;
-                            }
-                        }
-                    }
-                });
-                if (updated) {
-                    localStorage.setItem('kopd_db', JSON.stringify(db));
-                    console.log("Sistem: Database lokal berhasil dimigrasikan ke 12 variabel.");
-                }
+            // Seed 2 OPD bawaan
+            const opd1Ref = doc(collection(db, "opds"));
+            await setDoc(opd1Ref, {
+                id: 1, username: 'dinkes', password: '123', name: 'Dinas Kesehatan', isLocked: false, variabelStatus: generateInitialVariabel()
+            });
 
-                // Auto-healing: pastikan field tahunAktif ada
-                if (!db.tahunAktif) {
-                    db.tahunAktif = new Date().getFullYear().toString();
-                    localStorage.setItem('kopd_db', JSON.stringify(db));
-                    console.log("Sistem: Field tahunAktif ditambahkan.");
-                }
-            }
-        } catch (e) {
-            // Jika JSON korup/bukan JSON, reset!
-            shouldReset = true;
+            const opd2Ref = doc(collection(db, "opds"));
+            await setDoc(opd2Ref, {
+                id: 2, username: 'disdik', password: '123', name: 'Dinas Pendidikan, Kepemudaan dan Olahraga', isLocked: false, variabelStatus: generateInitialVariabel()
+            });
+            console.log("Sistem: Seeding selesai.");
         }
-    } else {
-        shouldReset = true; // Jika kosong, buat baru
-    }
-
-    if (shouldReset) {
-        const db = {
-            admin: { username: 'admin', password: '123', name: 'Super Admin Bagian Organisasi' },
-            opds: [
-                { id: 1, username: 'dinkes', password: '123', name: 'Dinas Kesehatan', isLocked: false, variabelStatus: generateInitialVariabel() },
-                { id: 2, username: 'disdik', password: '123', name: 'Dinas Pendidikan, Kepemudaan dan Olahraga', isLocked: false, variabelStatus: generateInitialVariabel() }
-            ],
-            broadcastMessage: "",
-            tahunAktif: new Date().getFullYear().toString(),
-            session: null
-        };
-        localStorage.setItem('kopd_db', JSON.stringify(db));
-        console.log("Sistem: Database direset ke struktur yang benar.");
+    } catch (e) {
+        console.error("Gagal inisialisasi Firestore:", e);
     }
 }
 
-// 3. Autentikasi Login
-function loginUser(username, password) {
-    const db = JSON.parse(localStorage.getItem('kopd_db'));
+// 3. Autentikasi Login (Async)
+async function loginUser(username, password) {
+    try {
+        // Cek Admin
+        const settingsSnap = await getDoc(doc(db, "settings", "main"));
+        if (settingsSnap.exists()) {
+            const data = settingsSnap.data();
+            if (username === data.adminUsername && password === data.adminPassword) {
+                sessionStorage.setItem('kopd_session', JSON.stringify({ role: 'admin', id: null, name: data.adminName }));
+                localStorage.setItem('kopd_last_user', username);
+                return { success: true, redirect: 'admin/index.html' };
+            }
+        }
 
-    // Cek Admin
-    if (username === db.admin.username && password === db.admin.password) {
-        db.session = { role: 'admin', id: null, name: db.admin.name };
-        localStorage.setItem('kopd_db', JSON.stringify(db));
-        localStorage.setItem('kopd_last_user', username);
-        return { success: true, redirect: 'admin/index.html' };
+        // Cek OPD
+        const querySnapshot = await getDocs(collection(db, "opds"));
+        let foundOpd = null;
+        querySnapshot.forEach((docSnap) => {
+            const o = docSnap.data();
+            if (o.username === username && o.password === password) {
+                foundOpd = { docId: docSnap.id, ...o };
+            }
+        });
+
+        if (foundOpd) {
+            if (foundOpd.isLocked) return { success: false, message: 'Akun Anda dikunci oleh Super Admin.' };
+            sessionStorage.setItem('kopd_session', JSON.stringify({ 
+                role: 'opd', 
+                id: foundOpd.id, // ID logis
+                docId: foundOpd.docId, // ID Firestore
+                name: foundOpd.name 
+            }));
+            localStorage.setItem('kopd_last_user', username);
+            return { success: true, redirect: 'opd/index.html' };
+        }
+
+        return { success: false, message: 'Username atau Password salah!' };
+    } catch (e) {
+        console.error("Login error", e);
+        return { success: false, message: 'Koneksi ke server gagal. Periksa koneksi internet.' };
     }
-
-    // Cek OPD
-    const opd = db.opds.find(o => o.username === username && o.password === password);
-    if (opd) {
-        if (opd.isLocked) return { success: false, message: 'Akun Anda dikunci oleh Super Admin.' };
-        db.session = { role: 'opd', id: opd.id, name: opd.name };
-        localStorage.setItem('kopd_db', JSON.stringify(db));
-        localStorage.setItem('kopd_last_user', username);
-        return { success: true, redirect: 'opd/index.html' };
-    }
-
-    return { success: false, message: 'Username atau Password salah!' };
 }
 
 // 4. Proses Logout
 function logoutUser() {
-    const raw = localStorage.getItem('kopd_db');
-    if (raw) {
-        try {
-            const db = JSON.parse(raw);
-            db.session = null;
-            localStorage.setItem('kopd_db', JSON.stringify(db));
-        } catch (e) { }
-    }
-    sessionStorage.clear();
+    sessionStorage.removeItem('kopd_session');
 }
 
-// 5. Pengecekan Sesi (Anti-Looping + Back-Button Protection)
+// 5. Pengecekan Sesi (Sinkron - baca sessionStorage saja)
 function checkSession(expectedRole, basePath = '../') {
-    // Cegah browser menampilkan halaman dari cache saat tombol Back ditekan
     window.addEventListener('pageshow', function (event) {
         if (event.persisted) { window.location.reload(); }
     });
 
-    const rawData = localStorage.getItem('kopd_db');
-
-    // Jika tidak ada data, tendang ke login dan hentikan eksekusi (return false)
+    const rawData = sessionStorage.getItem('kopd_session');
     if (!rawData) {
         window.location.replace(basePath + 'login.html');
         return false;
     }
 
     try {
-        const db = JSON.parse(rawData);
-
-        // Jika sesi kosong atau role salah, tendang ke login
-        if (!db.session || db.session.role !== expectedRole) {
+        const session = JSON.parse(rawData);
+        if (session.role !== expectedRole) {
             window.location.replace(basePath + 'login.html');
             return false;
         }
-
-        return db.session; // Lolos verifikasi
+        return session;
     } catch (e) {
-        // Jika JSON rusak, hapus dan paksa login
-        localStorage.removeItem('kopd_db');
+        sessionStorage.removeItem('kopd_session');
         window.location.replace(basePath + 'login.html');
         return false;
     }
 }
 
-// 6. Ambil Data Instansi Saat Ini
-function getCurrentOpdData() {
-    const db = JSON.parse(localStorage.getItem('kopd_db'));
-    return db.opds.find(o => o.id === db.session.id);
-}
+// 6. Ambil Data Instansi Saat Ini (Async)
+async function getCurrentOpdData() {
+    const raw = sessionStorage.getItem('kopd_session');
+    if (!raw) return null;
+    const session = JSON.parse(raw);
+    if (session.role !== 'opd' || !session.docId) return null;
 
-// 7. Ambil Tahun Aktif dari Database
-function getTahunAktif() {
     try {
-        const db = JSON.parse(localStorage.getItem('kopd_db'));
-        return db.tahunAktif || new Date().getFullYear().toString();
+        const snap = await getDoc(doc(db, "opds", session.docId));
+        return snap.exists() ? { docId: snap.id, ...snap.data() } : null;
     } catch (e) {
-        return new Date().getFullYear().toString();
+        console.error("Gagal memuat data OPD", e);
+        return null;
     }
 }
 
-// Jalankan otomatis saat fail dipanggil
-initLocalDB();
+// 7. Ambil Tahun Aktif (Async)
+async function getTahunAktif() {
+    try {
+        const snap = await getDoc(doc(db, "settings", "main"));
+        if (snap.exists() && snap.data().tahunAktif) {
+            return snap.data().tahunAktif;
+        }
+    } catch (e) {
+        console.error("Gagal mengambil tahun", e);
+    }
+    return new Date().getFullYear().toString();
+}
+
+// 8. Ambil Pengaturan Umum (Async)
+async function getSettings() {
+    try {
+        const snap = await getDoc(doc(db, "settings", "main"));
+        return snap.exists() ? snap.data() : null;
+    } catch (e) {
+        console.error("Gagal mengambil settings", e);
+        return null;
+    }
+}
+
+// --- Eksport API Global (Untuk Skrip HTML Lama) ---
+window.generateInitialVariabel = generateInitialVariabel;
+window.loginUser = loginUser;
+window.logoutUser = logoutUser;
+window.checkSession = checkSession;
+window.getCurrentOpdData = getCurrentOpdData;
+window.getTahunAktif = getTahunAktif;
+window.getSettings = getSettings;
+
+// Eksport Utility Firebase untuk Admin / Fungsi Khusus
+window.db = db;
+window.fbCollection = collection;
+window.fbGetDocs = getDocs;
+window.fbGetDoc = getDoc;
+window.fbDoc = doc;
+window.fbSetDoc = setDoc;
+window.fbUpdateDoc = updateDoc;
+window.fbDeleteDoc = deleteDoc;
+window.fbWriteBatch = writeBatch;
+
+// Jalankan Seeding Otomatis
+initFirebaseSeed();
