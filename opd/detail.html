@@ -356,8 +356,15 @@
                         return;
                     }
 
+                    const catatanDrive = inputCatatan.value.trim();
+                    if (catatanDrive.length > 0 && catatanDrive.length < 5) {
+                        alert("Keterangan tambahan harus minimal 5 karakter (atau kosongkan jika tidak ada keterangan).");
+                        inputCatatan.focus();
+                        return;
+                    }
+
                     currentState.driveLink = linkUrl;
-                    currentState.deskripsi = inputCatatan.value.trim();
+                    currentState.deskripsi = catatanDrive;
                     currentState.levelPilihan = 1; // Default 1
                     currentState.status = currentState.status === 2 ? 3 : 1;
 
@@ -416,7 +423,13 @@
                         return;
                     }
                     const selectedLevel = parseInt(radioSelected.value);
-                    const penjelasan = document.getElementById('input-penjelasan').value;
+                    const penjelasan = document.getElementById('input-penjelasan').value.trim(); // FIX: trim whitespace
+
+                    if (penjelasan.length < 5) {
+                        alert("Deskripsi penjelasan harus diisi minimal 5 karakter.");
+                        document.getElementById('input-penjelasan').focus();
+                        return;
+                    }
 
                     currentState.status = currentState.status === 2 ? 3 : 1;
                     currentState.levelPilihan = selectedLevel;

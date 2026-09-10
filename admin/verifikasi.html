@@ -567,11 +567,6 @@
                         Panduan Penilaian & Bukti Fisik</span>
                 </div>
 
-                <div id="dom-wrapper-files" class="file-list-admin"
-                    style="display: none; background:#1e293b; padding:16px;">
-                    <div id="dom-container-files"></div>
-                </div>
-
                 <div class="preview-scroll-area">
                     <div class="empty-state-view" id="preview-empty-state" style="color:#cbd5e1;">
                         <i class="fa-solid fa-list-check"
@@ -846,7 +841,6 @@
             window.kembaliKeDaftarOpd = function () { document.body.classList.remove('mobile-view-variables'); activeOpdId = null; initMasterOpdList(document.getElementById('search-opd-admin').value); };
 
             function resetPanelKananPreview() {
-                document.getElementById('dom-wrapper-files').style.display = 'none';
                 document.getElementById('modul-petunjuk-viewer').style.display = 'none';
                 document.getElementById('preview-empty-state').style.display = 'flex';
                 document.getElementById('preview-empty-state').innerHTML = `
