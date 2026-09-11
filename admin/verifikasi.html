@@ -672,7 +672,6 @@
             activeOpdId = opdId;
             activeVarId = null;
             initMasterOpdList(document.getElementById('search-opd-admin').value);
-            renderDaftarOpdKiri(document.getElementById('search-opd-admin').value);
             document.getElementById('dom-nama-opd-aktif').innerText = `📂 ${opdName.toUpperCase()}`;
             resetPanelKananPreview();
             if (window.innerWidth <= 992) document.body.classList.add('mobile-view-variables');
