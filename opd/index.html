@@ -151,6 +151,7 @@
         const opdData = await window.getCurrentOpdData();
         if (!opdData) {
             alert("Data OPD tidak ditemukan.");
+            window.logoutUser();
             window.location.replace('../login.html');
             throw new Error("No OPD data");
         }

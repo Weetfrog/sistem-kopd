@@ -33,7 +33,7 @@ async function renderSidebar(basePath = '../', role = 'opd') {
             "Perencanaan Pembangunan", "Monitoring & Pengendalian", "Penjaminan Mutu Layanan",
             "SOP Pelayanan", "Diklat Aparatur", "Analisis Kebijakan",
             "Manajemen Sumber Daya", "Manajemen Resiko", "Pengukuran Kinerja",
-            "Pengembangan Inovasi", "Budaya Organisasi", "📁 Tautan Google Drive"
+            "Pengembangan Inovasi", "Budaya Organisasi", "Tautan Google Drive"
         ];
 
         daftarNamaVar.forEach((nama, index) => {

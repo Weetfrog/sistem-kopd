@@ -128,7 +128,7 @@
                         </div>
                         <h3 class="var-title" style="${isDriveCard ? 'color:#1e3a8a;' : ''}">${dataVar.judul}</h3>
                         
-                        ${vState.status === 2 ? `<p style="font-size: 0.8rem; color: var(--status-revisi); margin-top: -10px; margin-bottom: 15px; font-weight: 600;">" ${vState.catatanAdmin} "</p>` : ''}
+                        ${vState.status === 2 ? `<p style="font-size: 0.8rem; color: var(--status-revisi); margin-top: -10px; margin-bottom: 15px; font-weight: 600;">" ${vState.catatanAdmin || 'Mohon perbaiki data sesuai ketentuan.'} "</p>` : ''}
                         ${isDriveCard && vState.driveLink ? `<p style="font-size:0.8rem; color:#2563eb; margin-top:-5px; margin-bottom:12px; word-break:break-all;"><i class="fa-solid fa-link"></i> ${vState.driveLink}</p>` : ''}
                     </div>
                     <a href="detail.html?v=${i}" class="btn-kerja" style="${isDriveCard ? 'background:#2563eb;' : ''}">

@@ -372,8 +372,8 @@
         }
 
         // Fungsi Render Tabel Akun
-        window.renderTabel = async function (filterText = '') {
-            await fetchOpds();
+        window.renderTabel = async function (filterText = '', forceRefresh = false) {
+            if (forceRefresh) await fetchOpds();
             const tbody = document.getElementById('tabel-akun');
             tbody.innerHTML = '';
             const keyword = filterText.toLowerCase().trim();
@@ -419,7 +419,7 @@
         };
 
         // Render perdana
-        await window.renderTabel();
+        await window.renderTabel('', true);
 
         // ===== FUNGSI PERBAIKAN DATA OPD =====
         // Melakukan MERGE: mengisi variabel yang hilang tanpa menghapus data yang ada
@@ -470,7 +470,7 @@
                 }
 
                 statusEl.innerText = `✅ Selesai! ${repaired} dokumen diperbaiki.`;
-                await window.renderTabel();
+                await window.renderTabel('', true);
                 setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
             } catch (e) {
                 console.error("Repair error:", e);
@@ -564,7 +564,7 @@
                 });
                 alert("Akun " + name + " berhasil dibuat!");
                 window.toggleFormTambah(false);
-                await window.renderTabel();
+                await window.renderTabel('', true);
             } catch (e) {
                 alert("Gagal membuat akun.");
             } finally {
@@ -577,7 +577,7 @@
         window.toggleLock = async function (docId, lockStatus) {
             try {
                 await window.fbUpdateDoc(window.fbDoc(window.db, "opds", docId), { isLocked: lockStatus });
-                await window.renderTabel(document.getElementById('search-akun').value);
+                await window.renderTabel(document.getElementById('search-akun').value, true);
             } catch (e) {
                 alert("Gagal mengubah status akun.");
             }
@@ -588,7 +588,7 @@
             if (confirm("Apakah Anda yakin ingin menghapus akun '" + name + "' secara permanen? Seluruh riwayat pengisian data kematangannya akan ikut terhapus.")) {
                 try {
                     await window.fbDeleteDoc(window.fbDoc(window.db, "opds", docId));
-                    await window.renderTabel(document.getElementById('search-akun').value);
+                    await window.renderTabel(document.getElementById('search-akun').value, true);
                 } catch (e) {
                     alert("Gagal menghapus akun.");
                 }
@@ -618,7 +618,7 @@
                 });
                 await batch.commit();
                 alert("✅ Data variabel kematangan seluruh Perangkat Daerah berhasil direset.\nDaftar akun tidak berubah.");
-                await window.renderTabel();
+                await window.renderTabel('', true);
             } catch (e) {
                 alert("Gagal mereset data: " + e.message);
             } finally {
@@ -663,7 +663,7 @@
             try {
                 await window.fbUpdateDoc(window.fbDoc(window.db, "opds", docId), updateData);
                 window.tutupModalEdit();
-                await window.renderTabel(document.getElementById('search-akun').value);
+                await window.renderTabel(document.getElementById('search-akun').value, true);
                 alert(`Akun "${namaBaru}" berhasil diperbarui.`);
             } catch (e) {
                 alert("Gagal memperbarui akun.");

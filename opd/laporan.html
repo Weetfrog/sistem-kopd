@@ -243,7 +243,7 @@
                     <div>
                         <p style="color: #1f2937; margin-bottom: 70px;">
                             <u><input type="text" class="input-cetak" id="input-tanggal"
-                                    placeholder="Tempat, Tanggal Bulan Tahun" style="width: 360px;">
+                                    placeholder="Tempat, Tanggal Bulan Tahun" style="width: 360px;"></u>
                         </p>
                         <p style="font-weight: bold; color: #1f2937;">
                             <u><input type="text" class="input-cetak" id="input-nama"
@@ -270,6 +270,7 @@
         const opdData = await window.getCurrentOpdData();
         if (!opdData) {
             alert("Data OPD tidak ditemukan.");
+            window.logoutUser();
             window.location.replace('../login.html');
             throw new Error("No OPD data");
         }
@@ -367,7 +368,7 @@
             else if (totalSkorKematangan <= 28.0) kategoriTeks = "Rendah";
             else if (totalSkorKematangan <= 37.0) kategoriTeks = "Sedang";
             else if (totalSkorKematangan <= 46.0) kategoriTeks = "Tinggi";
-            else if (totalSkorKematangan <= 55.0) kategoriTeks = "Sangat Tinggi";
+            else kategoriTeks = "Sangat Tinggi";
         }
         document.getElementById('text-kategori-akhir').innerText = kategoriTeks;
 
@@ -380,12 +381,14 @@
             `;
         }
 
-        // Autosave Tanda Tangan ke Storage lokal
+        // Autosave Tanda Tangan ke Storage lokal (dipisah per OPD agar tidak tercampur)
+        const opdPrefix = `ttd_${opdData.id}_`;
         const inputs = ['input-tanggal', 'input-nama', 'input-nip'];
         inputs.forEach(id => {
             const el = document.getElementById(id);
-            if (localStorage.getItem(`ttd_${id}`)) el.value = localStorage.getItem(`ttd_${id}`);
-            el.addEventListener('input', () => localStorage.setItem(`ttd_${id}`, el.value));
+            const storageKey = `${opdPrefix}${id}`;
+            if (localStorage.getItem(storageKey)) el.value = localStorage.getItem(storageKey);
+            el.addEventListener('input', () => localStorage.setItem(storageKey, el.value));
         });
     </script>
 </body>
