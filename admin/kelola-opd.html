@@ -299,7 +299,7 @@
                     <input type="number" id="input-tahun-aktif" min="2020" max="2099" 
                         style="width: 120px; padding: 9px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1.1rem; font-weight: bold; text-align: center; outline: none;"
                         onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
-                    <button onclick="simpanTahunAktif()" 
+                    <button id="btn-simpan-tahun" onclick="simpanTahunAktif()" 
                         style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
                         <i class="fa-solid fa-floppy-disk"></i> Simpan Tahun
                     </button>
@@ -341,7 +341,7 @@
             </div>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
                 <button class="btn-sm btn-red" onclick="tutupModalEdit()"><i class="fa-solid fa-xmark"></i> Batal</button>
-                <button class="btn-sm btn-yellow" onclick="simpanEditOpd()"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
+                <button id="btn-simpan-edit" class="btn-sm btn-yellow" onclick="simpanEditOpd()"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
             </div>
         </div>
     </div>
@@ -655,8 +655,8 @@
             const updateData = { name: namaBaru };
             if (passwordBaru) updateData.password = passwordBaru;
 
-            const btn = document.querySelector('.modal-actions .btn-green');
-            const oldText = btn.innerText;
+            const btn = document.getElementById('btn-simpan-edit');
+            const oldText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             btn.disabled = true;
 

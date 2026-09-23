@@ -138,7 +138,7 @@
                 <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 24px;">
                     <div>
                         <h1 style="color: var(--primary-green); margin: 0 0 8px 0;">Laporan Keseluruhan KOPD</h1>
-                        <p style="color: #4b5563; margin: 0;">Rekapitulasi nilai indeks sementara dan final tingkat
+                        <p style="color: #4b5563; margin: 0;">Rekapitulasi nilai indeks dan final tingkat
                             Kabupaten Manggarai Barat <span id="tahun-laporan-global"></span>.</p>
                     </div>
 
@@ -171,8 +171,7 @@
                 <div class="table-container">
                     <!-- Filter Pencarian (tidak tercetak ke PDF) -->
                     <div data-html2canvas-ignore="true" style="margin-bottom: 16px;">
-                        <input type="text" id="search-laporan"
-                            placeholder="🔍  Cari nama Perangkat Daerah..."
+                        <input type="text" id="search-laporan" placeholder="🔍  Cari nama Perangkat Daerah..."
                             oninput="filterTabelLaporan(this.value)"
                             style="width: 100%; max-width: 400px; padding: 9px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 0.9rem; outline: none; transition: border-color 0.2s;"
                             onfocus="this.style.borderColor='var(--primary-green)'"
@@ -373,9 +372,9 @@
 
                 try {
                     XLSX.utils.book_append_sheet(wb, wsOpd, sheetName);
-                } catch(e) {
+                } catch (e) {
                     // Jika nama sheet duplikat, tambahkan ID
-                    XLSX.utils.book_append_sheet(wb, wsOpd, `${sheetName}_${opd.id}`.substring(0,31));
+                    XLSX.utils.book_append_sheet(wb, wsOpd, `${sheetName}_${opd.id}`.substring(0, 31));
                 }
             });
 

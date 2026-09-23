@@ -384,9 +384,14 @@
                 currentState.levelPilihan = 1; // Default 1
                 currentState.status = currentState.status === 2 ? 3 : 1;
 
-                await simpanStateSementara();
-                alert("Tautan Google Drive berhasil disimpan dan dikirim ke Admin!");
-                window.location.href = "matriks.html";
+                const berhasil = await simpanStateSementara();
+                if (berhasil) {
+                    alert("Tautan Google Drive berhasil disimpan dan dikirim ke Admin!");
+                    window.location.href = "matriks.html";
+                } else {
+                    btnSave.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan & Kirim';
+                    btnSave.disabled = false;
+                }
             });
 
         } else {
@@ -455,9 +460,14 @@
                 currentState.levelPilihan = selectedLevel;
                 currentState.deskripsi = penjelasan;
 
-                await simpanStateSementara();
-                alert("Data berhasil dikirim ke Admin!");
-                window.location.href = "matriks.html";
+                const berhasil = await simpanStateSementara();
+                if (berhasil) {
+                    alert("Data berhasil dikirim ke Admin!");
+                    window.location.href = "matriks.html";
+                } else {
+                    btnSave.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Kirim ke Admin';
+                    btnSave.disabled = false;
+                }
             });
         }
 
@@ -500,17 +510,18 @@
             document.getElementById('admin-feedback').querySelector('p:last-child').style.display = 'none';
         }
 
-        // Simpan Data Sementara ke DB Firestore
+        // Simpan Data ke DB Firestore — returns true jika berhasil, false jika gagal
         async function simpanStateSementara() {
             try {
                 const docRef = window.fbDoc(window.db, "opds", opdData.docId);
-                // Update specific field using dot notation for nested objects
                 let updates = {};
                 updates[`variabelStatus.v${varId}`] = currentState;
                 await window.fbUpdateDoc(docRef, updates);
+                return true;
             } catch (e) {
                 console.error("Error saving data:", e);
-                alert("Gagal menyimpan data ke server. Periksa koneksi internet.");
+                alert("Gagal menyimpan data ke server. Periksa koneksi internet Anda dan coba lagi.");
+                return false;
             }
         }
     </script>
