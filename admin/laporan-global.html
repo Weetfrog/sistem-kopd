@@ -224,7 +224,7 @@
             let varSelesai = 0; // Jumlah variabel yang sudah DISETUJUI admin (status === 4)
 
             for (let i = 1; i <= 11; i++) {
-                const state = opd.variabelStatus[`v${i}`];
+                const state = opd.variabelStatus?.[`v${i}`];
                 if (state) {
                     let levelSah = parseInt(state.levelDisetujui || 0);
                     if (state.status === 4) skor += levelSah; // FIX: hanya hitung skor jika sudah disetujui
@@ -327,7 +327,7 @@
 
                 let totalSkorOpd = 0;
                 for (let i = 1; i <= 11; i++) {
-                    const state = opd.variabelStatus[`v${i}`];
+                    const state = opd.variabelStatus?.[`v${i}`];
                     if (state) {
                         let statusText = "Belum Diisi";
                         if (state.status === 1) statusText = "Menunggu Verifikasi";

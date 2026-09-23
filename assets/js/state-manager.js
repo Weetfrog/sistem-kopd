@@ -154,7 +154,14 @@ function checkSession(expectedRole, basePath = '../') {
 async function getCurrentOpdData() {
     const raw = sessionStorage.getItem('kopd_session');
     if (!raw) return null;
-    const session = JSON.parse(raw);
+    let session;
+    try {
+        session = JSON.parse(raw);
+    } catch (e) {
+        console.error("Sesi korup, membersihkan...", e);
+        sessionStorage.removeItem('kopd_session');
+        return null;
+    }
     if (session.role !== 'opd' || !session.docId) return null;
 
     try {

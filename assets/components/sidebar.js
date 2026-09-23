@@ -16,7 +16,7 @@ async function renderSidebar(basePath = '../', role = 'opd') {
         if (currentOpd) {
             for (let i = 1; i <= 12; i++) {
                 // Jika status = 2 (Butuh Revisi/Merah), nyalakan alert titik merah
-                if (currentOpd.variabelStatus[`v${i}`] && currentOpd.variabelStatus[`v${i}`].status === 2) {
+                if (currentOpd.variabelStatus?.[`v${i}`] && currentOpd.variabelStatus[`v${i}`].status === 2) {
                     varAlerts[i] = true;
                     globalHasAlert = true; // Trigger titik merah di menu utama Papan Matriks
                 }

@@ -293,7 +293,7 @@
         // Jalankan perulangan baris tabel 1 sampai 11
         for (let i = 1; i <= 11; i++) {
             const dataVar = dbVariabel.find(v => v.id === i) || { id: i, judul: `Variabel ${i}` };
-            const state = opdData.variabelStatus[`v${i}`];
+            const state = opdData.variabelStatus?.[`v${i}`] || { status: 0, levelDisetujui: 0 };
 
             let teksStatus = "Belum Diisi";
             let warnaStatus = "#6b7280";
@@ -302,8 +302,8 @@
             if (state.status === 4) {
                 teksStatus = "Terverifikasi";
                 warnaStatus = "var(--primary-green)";
-                teksLevel = `Tingkat ${state.levelDisetujui}`; // FIX: gunakan levelDisetujui (keputusan admin)
-                totalSkorKematangan += parseInt(state.levelDisetujui); // FIX: skor dari level yang disetujui
+                teksLevel = `Tingkat ${state.levelDisetujui}`;
+                totalSkorKematangan += parseInt(state.levelDisetujui) || 0; // guard NaN
             } else if (state.status === 2) {
                 teksStatus = "Butuh Revisi";
                 warnaStatus = "var(--status-revisi)";

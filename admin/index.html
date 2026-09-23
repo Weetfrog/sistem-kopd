@@ -153,7 +153,7 @@
         opds.forEach(opd => {
             // Loop ke 12 Variabel dalam setiap OPD
             for (let i = 1; i <= 12; i++) {
-                let state = opd.variabelStatus[`v${i}`];
+                let state = opd.variabelStatus?.[`v${i}`];
                 const labelVar = i === 12 ? 'Tautan Google Drive' : `Variabel ${i}`;
 
                 // Jika Status 1 (Menunggu Verifikasi Baru)

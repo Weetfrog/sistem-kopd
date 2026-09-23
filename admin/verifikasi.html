@@ -818,9 +818,10 @@
             }
 
             const opdActive = opdsData.find(o => o.id === activeOpdId);
+            if (!opdActive) { alert("Error: OPD tidak ditemukan. Silakan pilih ulang instansi."); return; }
             const updateField = `variabelStatus.v${vId}`;
             
-            const stateCurrent = opdActive.variabelStatus[`v${vId}`];
+            const stateCurrent = opdActive.variabelStatus?.[`v${vId}`] || {};
             let levelSah = 0;
 
             if (statusBaru === 4 && vId !== 12) {
@@ -851,6 +852,7 @@
         window.batalkanPersetujuan = async function (vId) {
             if (!confirm(`Yakin ingin membatalkan persetujuan Variabel ${vId}?\n\nStatus akan dikembalikan ke "Butuh Revisi" dan skor level disetujui akan dihapus.`)) return;
             const opdActive = opdsData.find(o => o.id === activeOpdId);
+            if (!opdActive) { alert("Error: OPD tidak ditemukan. Silakan pilih ulang instansi."); return; }
             const updateField = `variabelStatus.v${vId}`;
 
             const updateData = {
