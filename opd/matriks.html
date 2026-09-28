@@ -87,11 +87,6 @@
             throw new Error("No OPD data");
         }
 
-        // Self-healing jika variabelStatus hilang dari database (corrupted data)
-        if (!opdData.variabelStatus) {
-            opdData.variabelStatus = window.generateInitialVariabel();
-            await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdData.docId), { variabelStatus: opdData.variabelStatus });
-        }
 
         // Konfigurasi Label, Ikon, dan Warna untuk 5 Status
         const statusConfig = {

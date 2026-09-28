@@ -1,7 +1,10 @@
 /**
  * SIDEBAR MODULAR COMPONENT V2 - KOPD Mabar 2026
- * Fitur: Collapsible (Hamburger), Dropdown Pintasan 11 Var, & Live Red-Dot Notification
+ * Fitur: Collapsible (Hamburger), Dropdown Pintasan 12 Var, & Live Red-Dot Notification
+ * Sumber nama variabel: assets/js/data-variabel.js (sumber tunggal, tidak hardcode)
  */
+
+import { dbVariabel } from '../assets/js/data-variabel.js';
 
 async function renderSidebar(basePath = '../', role = 'opd') {
     const container = document.getElementById('sidebar-container');
@@ -27,24 +30,23 @@ async function renderSidebar(basePath = '../', role = 'opd') {
     // 2. Generate Item Menu sesuai Role
     let menuHTML = '';
     if (role === 'opd') {
-        // Generate list pintasan 12 variabel untuk dropdown
+        // Generate list pintasan 12 variabel dari data-variabel.js (sumber tunggal)
         let dropdownItems = '';
-        const daftarNamaVar = [
-            "Perencanaan Pembangunan", "Monitoring & Pengendalian", "Penjaminan Mutu Layanan",
-            "SOP Pelayanan", "Diklat Aparatur", "Analisis Kebijakan",
-            "Manajemen Sumber Daya", "Manajemen Resiko", "Pengukuran Kinerja",
-            "Pengembangan Inovasi", "Budaya Organisasi", "Tautan Google Drive"
-        ];
 
-        daftarNamaVar.forEach((nama, index) => {
-            const vId = index + 1;
-            // Cek apakah variabel ini punya alert revisi
+        // Buat daftar nama dari dbVariabel (11 var) + tambahkan Variabel 12 (Drive) secara manual
+        const varDrive = { id: 12, judul: 'XII. Tautan (Link) Google Drive Bukti Fisik & Dokumen Pendukung' };
+        const semuaVar = [...dbVariabel, varDrive];
+
+        semuaVar.forEach((varData) => {
+            const vId = varData.id;
+            // Buat nama ringkas: buang nomor Romawi di depan (format "I. Nama Panjang" -> "Nama Panjang")
+            const namaRingkas = varData.judul.replace(/^[IVXLCDM]+\.\s*/i, '');
             const redDot = varAlerts[vId] ? '<span class="nav-red-dot"></span>' : '';
             const customIcon = vId === 12 ? '<i class="fa-brands fa-google-drive" style="color:var(--water-yellow); margin-right:4px;"></i>' : '';
             dropdownItems += `
                 <li>
                     <a href="${basePath}opd/detail.html?v=${vId}">
-                        <span class="var-num">${vId}</span> ${customIcon}${nama} ${redDot}
+                        <span class="var-num">${vId}</span> ${customIcon}${namaRingkas} ${redDot}
                     </a>
                 </li>
             `;
@@ -67,7 +69,6 @@ async function renderSidebar(basePath = '../', role = 'opd') {
             </li>
             <li><a href="${basePath}opd/laporan.html"><i class="fa-solid fa-print"></i> <span>Laporan Akhir</span></a></li>
         `;
-        //blok if (role === 'admin')
     } else if (role === 'admin') {
         menuHTML = `
             <li><a href="${basePath}admin/index.html"><i class="fa-solid fa-chart-pie"></i> <span>Dasbor Global</span></a></li>
