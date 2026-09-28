@@ -312,16 +312,23 @@
             throw new Error("No OPD data");
         }
 
+        // Self-healing jika variabelStatus hilang dari database
+        if (!opdData.variabelStatus) {
+            opdData.variabelStatus = window.generateInitialVariabel();
+            await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdData.docId), { variabelStatus: opdData.variabelStatus });
+        }
 
-        // Ambil state variabel dengan fallback aman jika belum ada
-        let currentState = opdData.variabelStatus?.[`v${varId}`] || {
-            status: 0,
-            levelPilihan: varId === 12 ? 1 : null,
-            levelDisetujui: 0,
-            deskripsi: "",
-            driveLink: "",
-            catatanAdmin: ""
-        };
+        if (!opdData.variabelStatus[`v${varId}`]) {
+            opdData.variabelStatus[`v${varId}`] = {
+                status: 0,
+                levelPilihan: varId === 12 ? 1 : null,
+                levelDisetujui: 0,
+                deskripsi: "",
+                driveLink: "",
+                catatanAdmin: ""
+            };
+        }
+        let currentState = opdData.variabelStatus[`v${varId}`];
 
         const formKematangan = document.getElementById('form-kematangan');
         const formDrive = document.getElementById('form-drive');

@@ -210,14 +210,12 @@ window.getSettings = getSettings;
 window.db = db;
 window.fbCollection = collection;
 window.fbGetDocs = getDocs;
+window.fbGetDoc = getDoc;
 window.fbDoc = doc;
 window.fbSetDoc = setDoc;
 window.fbUpdateDoc = updateDoc;
 window.fbDeleteDoc = deleteDoc;
 window.fbWriteBatch = writeBatch;
 
-// Jalankan Seeding Otomatis — hanya jika belum ada sesi aktif
-// (mencegah pembacaan Firestore sia-sia di setiap halaman OPD/Admin)
-if (!sessionStorage.getItem('kopd_session')) {
-    initFirebaseSeed();
-}
+// Jalankan Seeding Otomatis
+initFirebaseSeed();

@@ -275,6 +275,11 @@
             throw new Error("No OPD data");
         }
 
+        // Self-healing jika variabelStatus hilang dari database
+        if (!opdData.variabelStatus) {
+            opdData.variabelStatus = window.generateInitialVariabel();
+            await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdData.docId), { variabelStatus: opdData.variabelStatus });
+        }
 
         document.getElementById('nama-instansi-cetak').innerText = opdData.name.toUpperCase();
 

@@ -156,6 +156,12 @@
             throw new Error("No OPD data");
         }
 
+        // Self-healing jika variabelStatus hilang dari database
+        if (!opdData.variabelStatus) {
+            opdData.variabelStatus = window.generateInitialVariabel();
+            await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdData.docId), { variabelStatus: opdData.variabelStatus });
+        }
+
         const settings = await window.getSettings(); // Untuk broadcast message
         const tahunAktif = await window.getTahunAktif();
 

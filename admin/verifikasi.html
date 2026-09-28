@@ -345,6 +345,63 @@
             color: var(--primary-green);
         }
 
+        .admin-file-wrapper {
+            background: #1e293b;
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .admin-file-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .btn-file-select {
+            flex: 1;
+            background: #334155;
+            border: 1px solid #475569;
+            color: #e2e8f0;
+            padding: 10px 12px;
+            text-align: left;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            transition: 0.2s;
+        }
+
+        .btn-file-select:hover,
+        .btn-file-select.active-file {
+            background: var(--primary-green);
+            border-color: var(--water-yellow);
+            color: white;
+        }
+
+        .btn-admin-delete {
+            background: #fee2e2;
+            color: #991b1b;
+            border: none;
+            width: 36px;
+            height: 36px;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: 0.2s;
+            flex-shrink: 0;
+        }
+
+        .btn-admin-delete:hover {
+            background: #fca5a5;
+            color: white;
+        }
+
         .pdf-sheet-mockup {
             background: white;
             border-radius: 4px;
@@ -534,7 +591,7 @@
     </div>
 
     <button class="floating-mobile-doc-btn" onclick="bukaModalPdfMobile()">
-        <i class="fa-solid fa-clipboard-list"></i> <span>Lihat Panduan Penilaian</span>
+        <i class="fa-solid fa-file-pdf"></i> <span>Lihat Berkas (<span id="mobile-file-count">0</span>)</span>
     </button>
 
     <script type="module">
@@ -841,7 +898,7 @@
                 <i class="fa-solid fa-list-check" style="font-size: 3.5rem; margin-bottom: 12px; color:#64748b;"></i>
                 <p>Pilih variabel di panel tengah untuk melihat instruksi dan panduan penilaian.</p>
             `;
-
+            document.getElementById('mobile-file-count').innerText = "0";
         }
     </script>
 </body>
