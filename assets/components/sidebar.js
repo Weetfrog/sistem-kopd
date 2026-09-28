@@ -4,7 +4,7 @@
  * Sumber nama variabel: assets/js/data-variabel.js (sumber tunggal, tidak hardcode)
  */
 
-import { dbVariabel } from '../js/data-variabel.js';
+import { dbVariabel } from '../assets/js/data-variabel.js';
 
 async function renderSidebar(basePath = '../', role = 'opd') {
     const container = document.getElementById('sidebar-container');
