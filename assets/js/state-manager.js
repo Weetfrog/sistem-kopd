@@ -95,12 +95,22 @@ async function loginUser(username, password) {
         });
 
         if (foundOpd) {
+            // Blokir login untuk akun bertipe 'parent' (wadah) — hanya bisa diisi sub-unitnya
+            if (foundOpd.type === 'parent') {
+                return {
+                    success: false,
+                    message: 'Akun ini adalah OPD Induk dan tidak dapat login langsung. Silakan login menggunakan akun sub-unit yang sesuai.'
+                };
+            }
             if (foundOpd.isLocked) return { success: false, message: 'Akun Anda dikunci oleh Super Admin.' };
-            sessionStorage.setItem('kopd_session', JSON.stringify({ 
-                role: 'opd', 
-                id: foundOpd.id, // ID logis
-                docId: foundOpd.docId, // ID Firestore
-                name: foundOpd.name 
+            sessionStorage.setItem('kopd_session', JSON.stringify({
+                role: 'opd',
+                id: foundOpd.id,                        // ID logis
+                docId: foundOpd.docId,                  // ID Firestore
+                name: foundOpd.name,
+                type: foundOpd.type || 'regular',       // 'regular' atau 'sub'
+                parentId: foundOpd.parentId || null,    // docId parent jika sub-unit
+                parentName: foundOpd.parentName || null // nama parent jika sub-unit
             }));
             localStorage.setItem('kopd_last_user', username);
             return { success: true, redirect: 'opd/index.html' };
@@ -166,7 +176,16 @@ async function getCurrentOpdData() {
 
     try {
         const snap = await getDoc(doc(db, "opds", session.docId));
-        return snap.exists() ? { docId: snap.id, ...snap.data() } : null;
+        if (!snap.exists()) return null;
+        const data = snap.data();
+        // Sertakan field sub-user: type, parentId, parentName dari Firestore
+        return {
+            docId: snap.id,
+            ...data,
+            type: data.type || 'regular',
+            parentId: data.parentId || null,
+            parentName: data.parentName || null
+        };
     } catch (e) {
         console.error("Gagal memuat data OPD", e);
         return null;
@@ -197,6 +216,38 @@ async function getSettings() {
     }
 }
 
+// 9. Ambil Semua Sub-Unit dari Satu Parent (Async)
+// Dipakai di: admin/laporan-global.html, admin/kelola-opd.html
+async function getSubUsers(parentDocId) {
+    try {
+        const snap = await getDocs(collection(db, "opds"));
+        const subs = [];
+        snap.forEach(docSnap => {
+            const data = docSnap.data();
+            if (data.type === 'sub' && data.parentId === parentDocId) {
+                subs.push({ docId: docSnap.id, ...data });
+            }
+        });
+        return subs;
+    } catch (e) {
+        console.error("Gagal memuat sub-unit:", e);
+        return [];
+    }
+}
+
+// 10. Ambil Data Parent dari Sub-Unit yang Sedang Login (Async)
+// Dipakai di: opd/index.html, opd/matriks.html (untuk tampilkan badge afiliasi)
+async function getParentOpdData(parentDocId) {
+    if (!parentDocId) return null;
+    try {
+        const snap = await getDoc(doc(db, "opds", parentDocId));
+        return snap.exists() ? { docId: snap.id, ...snap.data() } : null;
+    } catch (e) {
+        console.error("Gagal memuat data parent OPD:", e);
+        return null;
+    }
+}
+
 // --- Eksport API Global (Untuk Skrip HTML Lama) ---
 window.generateInitialVariabel = generateInitialVariabel;
 window.loginUser = loginUser;
@@ -205,6 +256,8 @@ window.checkSession = checkSession;
 window.getCurrentOpdData = getCurrentOpdData;
 window.getTahunAktif = getTahunAktif;
 window.getSettings = getSettings;
+window.getSubUsers = getSubUsers;           // BARU: untuk fitur sub-unit
+window.getParentOpdData = getParentOpdData; // BARU: untuk fitur sub-unit
 
 // Eksport Utility Firebase untuk Admin / Fungsi Khusus
 window.db = db;
@@ -218,4 +271,4 @@ window.fbDeleteDoc = deleteDoc;
 window.fbWriteBatch = writeBatch;
 
 // Jalankan Seeding Otomatis
-initFirebaseSeed();
+initFirebaseSeed();
