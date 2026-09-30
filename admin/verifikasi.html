@@ -611,7 +611,11 @@
             snap.forEach(doc => {
                 opdsData.push({ docId: doc.id, ...doc.data() });
             });
-            opdsData.sort((a, b) => a.id - b.id);
+            // Regular & parent diurutkan by id ASC; sub-unit tidak punya id numerik
+            opdsData.sort((a, b) => {
+                if (a.type === 'sub' && b.type === 'sub') return a.name.localeCompare(b.name);
+                return (a.id || 9999) - (b.id || 9999);
+            });
         }
         await fetchOpds();
 
@@ -626,24 +630,78 @@
         function initMasterOpdList(searchFilter = '') {
             const listContainer = document.getElementById('dom-list-opd');
             listContainer.innerHTML = '';
+            const kw = (searchFilter || '').toLowerCase();
 
-            opdsData.forEach(opd => {
-                if (opd.name.toLowerCase().includes(searchFilter.toLowerCase())) {
-                    let usulanBaruCount = 0;
-                    for (let i = 1; i <= 12; i++) {
-                        const s = opd.variabelStatus[`v${i}`]?.status || 0;
-                        if (s === 1 || s === 3) usulanBaruCount++;
-                    }
-                    const badgeHtml = usulanBaruCount > 0 ? `<span class="badge-count">${usulanBaruCount}</span>` : '';
-                    const activeClass = activeOpdId === opd.id ? 'active-opd' : '';
+            const regulars = opdsData.filter(o => !o.type || o.type === 'regular');
+            const parents  = opdsData.filter(o => o.type === 'parent');
+            const subs     = opdsData.filter(o => o.type === 'sub');
 
-                    listContainer.innerHTML += `
-                        <li class="opd-list-item ${activeClass}" onclick="window.pilihOpdKeMejaKerja(${opd.id}, '${opd.name}')">
-                            <span>${opd.name}</span> ${badgeHtml}
-                        </li>
-                    `;
+            // Helper: hitung usulan pending untuk satu OPD
+            function hitungUsulan(variabelStatus) {
+                let count = 0;
+                for (let i = 1; i <= 12; i++) {
+                    const s = variabelStatus?.[`v${i}`]?.status || 0;
+                    if (s === 1 || s === 3) count++;
                 }
+                return count;
+            }
+
+            // Tampilkan OPD Regular (flat, sama seperti dulu)
+            regulars.forEach(opd => {
+                if (kw && !opd.name.toLowerCase().includes(kw)) return;
+                const usulan = hitungUsulan(opd.variabelStatus);
+                const badgeHtml = usulan > 0 ? `<span class="badge-count">${usulan}</span>` : '';
+                const activeClass = activeOpdId === opd.docId ? 'active-opd' : '';
+                listContainer.innerHTML += `
+                    <li class="opd-list-item ${activeClass}"
+                        onclick="window.pilihOpdKeMejaKerja('${opd.docId}', '${opd.name.replace(/'/g,"\\'")}', null)">
+                        <span>${opd.name}</span> ${badgeHtml}
+                    </li>`;
             });
+
+            // Tampilkan Parent (Wadah) beserta sub-unitnya
+            parents.forEach(parent => {
+                const subList = subs.filter(s => s.parentId === parent.docId);
+                const parentMatch = kw && parent.name.toLowerCase().includes(kw);
+                const anySubMatch = subList.some(s => s.name.toLowerCase().includes(kw));
+
+                if (kw && !parentMatch && !anySubMatch) return;
+
+                // Hitung total usulan dari semua sub-unit
+                const totalUsulan = subList.reduce((acc, s) => acc + hitungUsulan(s.variabelStatus), 0);
+                const badgeTotal  = totalUsulan > 0 ? `<span class="badge-count">${totalUsulan}</span>` : '';
+
+                // Baris parent — tidak bisa diklik, hanya header visual
+                listContainer.innerHTML += `
+                    <li style="padding:10px 14px; border-radius:6px; margin-bottom:2px; background:#fffbeb;
+                        border:1px solid #fde68a; font-size:0.82rem; font-weight:700; color:#92400e;
+                        display:flex; justify-content:space-between; align-items:center; cursor:default;"
+                        title="Akun Wadah — tidak bisa login. Pilih sub-unitnya untuk verifikasi.">
+                        <span><i class="fa-solid fa-sitemap" style="margin-right:5px;"></i>${parent.name}</span>
+                        ${badgeTotal}
+                    </li>`;
+
+                // Baris sub-unit (bisa diklik)
+                subList.forEach(sub => {
+                    if (kw && !sub.name.toLowerCase().includes(kw) && !parentMatch) return;
+                    const usulan = hitungUsulan(sub.variabelStatus);
+                    const badgeHtml = usulan > 0 ? `<span class="badge-count">${usulan}</span>` : '';
+                    const activeClass = activeOpdId === sub.docId ? 'active-opd' : '';
+                    listContainer.innerHTML += `
+                        <li class="opd-list-item ${activeClass}"
+                            style="padding-left:26px; font-size:0.82rem; border-radius:6px;
+                                   background:${activeOpdId === sub.docId ? '' : '#f0f9ff'};
+                                   ${activeOpdId === sub.docId ? '' : 'border-color: #e0f2fe;'}"
+                            onclick="window.pilihOpdKeMejaKerja('${sub.docId}', '${sub.name.replace(/'/g,"\\'")}', '${parent.name.replace(/'/g,"\\'")}')">
+                            <span><i class="fa-solid fa-arrow-turn-down-right" style="color:#94a3b8; margin-right:4px; font-size:0.7rem;"></i>${sub.name}</span>
+                            ${badgeHtml}
+                        </li>`;
+                });
+            });
+
+            if (listContainer.innerHTML === '') {
+                listContainer.innerHTML = `<li style="padding:16px; text-align:center; color:#94a3b8; font-size:0.85rem;">Tidak ada hasil ditemukan.</li>`;
+            }
         }
 
         document.getElementById('search-opd-admin').addEventListener('input', (e) => {
@@ -651,16 +709,15 @@
         });
         initMasterOpdList();
 
-        // AUTO-PILIH dari deep-link: verifikasi.html?opd=X&v=Y
+        // AUTO-PILIH dari deep-link: verifikasi.html?opd=X&v=Y (backward compat: X=numeric id)
         const urlParams = new URLSearchParams(window.location.search);
         const paramOpd = parseInt(urlParams.get('opd'));
         const paramV   = parseInt(urlParams.get('v'));
         if (paramOpd) {
             const targetOpd = opdsData.find(o => o.id === paramOpd);
             if (targetOpd) {
-                // Tunggu sebentar agar DOM panel tengah siap, lalu pilih OPD dan variabelnya
                 setTimeout(() => {
-                    window.pilihOpdKeMejaKerja(paramOpd, targetOpd.name);
+                    window.pilihOpdKeMejaKerja(targetOpd.docId, targetOpd.name, targetOpd.parentName || null);
                     if (paramV && paramV >= 1 && paramV <= 12) {
                         setTimeout(() => window.seleksiVariabelSpesifik(paramV), 150);
                     }
@@ -668,11 +725,17 @@
             }
         }
 
-        window.pilihOpdKeMejaKerja = function (opdId, opdName) {
-            activeOpdId = opdId;
+        window.pilihOpdKeMejaKerja = function (opdDocId, opdName, parentName) {
+            activeOpdId = opdDocId; // sekarang menyimpan docId (string)
             activeVarId = null;
             initMasterOpdList(document.getElementById('search-opd-admin').value);
-            document.getElementById('dom-nama-opd-aktif').innerText = `📂 ${opdName.toUpperCase()}`;
+
+            // Tampilkan nama + badge afiliasi jika ini sub-unit
+            const parentBadge = parentName
+                ? `<span style="background:#e0f2fe; color:#0369a1; padding:2px 8px; border-radius:4px; font-size:0.75rem; font-weight:600; margin-left:8px;"><i class="fa-solid fa-sitemap" style="margin-right:3px;"></i>${parentName}</span>`
+                : '';
+            document.getElementById('dom-nama-opd-aktif').innerHTML = `📂 ${opdName.toUpperCase()}${parentBadge}`;
+
             resetPanelKananPreview();
             if (window.innerWidth <= 992) document.body.classList.add('mobile-view-variables');
             renderDaftarVariabelTengah();
@@ -682,7 +745,7 @@
         function renderDaftarVariabelTengah() {
             const boxVariabel = document.getElementById('dom-box-variabel');
             boxVariabel.innerHTML = '';
-            const opdDataActive = opdsData.find(o => o.id === activeOpdId);
+            const opdDataActive = opdsData.find(o => o.docId === activeOpdId);
             if (!opdDataActive) return;
 
             const statusLabels = { 0: "Belum Diisi", 1: "Menunggu Verifikasi", 2: "Butuh Revisi", 3: "Verifikasi Ulang", 4: "Selesai (Disetujui)" };
@@ -746,7 +809,7 @@
         }
 
         function tampilkanPetunjukDiPanelKanan(vId) {
-            const opdDataActive = opdsData.find(o => o.id === activeOpdId);
+            const opdDataActive = opdsData.find(o => o.docId === activeOpdId);
             if (!opdDataActive) return;
             
             const previewEmpty = document.getElementById('preview-empty-state');
@@ -817,7 +880,7 @@
                 return; 
             }
 
-            const opdActive = opdsData.find(o => o.id === activeOpdId);
+            const opdActive = opdsData.find(o => o.docId === activeOpdId);
             if (!opdActive) { alert("Error: OPD tidak ditemukan. Silakan pilih ulang instansi."); return; }
             const updateField = `variabelStatus.v${vId}`;
             
@@ -841,9 +904,8 @@
                 await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdActive.docId), updateData);
                 alert(statusBaru === 4 ? "Disetujui!" : "Dikembalikan untuk Revisi.");
                 
-                // Refresh local data then re-render
                 await fetchOpds();
-                window.pilihOpdKeMejaKerja(activeOpdId, opdActive.name);
+                window.pilihOpdKeMejaKerja(activeOpdId, opdActive.name, opdActive.parentName || null);
             } catch (e) {
                 alert("Gagal menyimpan keputusan verifikasi.");
             }
@@ -851,7 +913,7 @@
 
         window.batalkanPersetujuan = async function (vId) {
             if (!confirm(`Yakin ingin membatalkan persetujuan Variabel ${vId}?\n\nStatus akan dikembalikan ke "Butuh Revisi" dan skor level disetujui akan dihapus.`)) return;
-            const opdActive = opdsData.find(o => o.id === activeOpdId);
+            const opdActive = opdsData.find(o => o.docId === activeOpdId);
             if (!opdActive) { alert("Error: OPD tidak ditemukan. Silakan pilih ulang instansi."); return; }
             const updateField = `variabelStatus.v${vId}`;
 
@@ -865,9 +927,8 @@
                 await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdActive.docId), updateData);
                 alert("Persetujuan berhasil dibatalkan.");
                 
-                // Refresh local data then re-render
                 await fetchOpds();
-                window.pilihOpdKeMejaKerja(activeOpdId, opdActive.name);
+                window.pilihOpdKeMejaKerja(activeOpdId, opdActive.name, opdActive.parentName || null);
             } catch (e) {
                 alert("Gagal membatalkan persetujuan.");
             }
