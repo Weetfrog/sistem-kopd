@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -227,13 +227,15 @@
             return { skor, varSelesai };
         }
 
+        // Helper kategori — sesuai Kategori Resmi KOPD:
+        // Sangat Rendah (10–19) | Rendah (19,1–28) | Sedang (28,1–37) | Tinggi (37,1–46) | Sangat Tinggi (46,1–55)
         function getKategori(skor) {
-            if (skor <= 0) return "-";
-            if (skor <= 19) return "Sangat Rendah";
-            if (skor <= 28) return "Rendah";
-            if (skor <= 37) return "Sedang";
-            if (skor <= 46) return "Tinggi";
-            return "Sangat Tinggi";
+            if (skor <= 0)  return "-";
+            if (skor <= 19) return "Sangat Rendah";  // 10 – 19
+            if (skor <= 28) return "Rendah";          // 19,1 – 28
+            if (skor <= 37) return "Sedang";          // 28,1 – 37
+            if (skor <= 46) return "Tinggi";          // 37,1 – 46
+            return "Sangat Tinggi";                   // 46,1 – 55
         }
 
         // ─── Pisahkan berdasarkan type ───────────────────────────────────

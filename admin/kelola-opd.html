@@ -466,7 +466,7 @@
         }
 
         // Helper render baris OPD regular
-        function renderRowRegular(opd) {
+        function renderRowRegular(opd, nomor) {
             const statusBadge = opd.isLocked
                 ? `<span class="badge-locked"><i class="fa-solid fa-lock"></i> Terkunci</span>`
                 : `<span class="badge-active"><i class="fa-solid fa-check"></i> Aktif</span>`;
@@ -474,7 +474,7 @@
             const lockTitle = opd.isLocked ? 'Buka Kunci'  : 'Kunci Akun';
             return `
                 <tr>
-                    <td style="text-align:center; font-weight:bold;">${opd.id || '—'}</td>
+                    <td style="text-align:center; font-weight:bold;">${nomor}</td>
                     <td style="font-weight:500; color:#1f2937;">${opd.name}</td>
                     <td><code>${opd.username || '—'}</code></td>
                     <td><span style="font-family:monospace; background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:bold;">${opd.password || '—'}</span></td>
@@ -490,10 +490,10 @@
         }
 
         // Helper render baris OPD parent (wadah)
-        function renderRowParent(opd) {
+        function renderRowParent(opd, nomor) {
             return `
                 <tr class="row-parent">
-                    <td style="text-align:center; font-weight:bold;">${opd.id || '—'}</td>
+                    <td style="text-align:center; font-weight:bold;">${nomor}</td>
                     <td style="font-weight:700; color:#92400e;">
                         <i class="fa-solid fa-sitemap" style="margin-right:6px;"></i>${opd.name}
                         <span class="badge-parent" style="margin-left:6px;"><i class="fa-solid fa-layer-group"></i> Wadah</span>
@@ -551,7 +551,7 @@
             const parents  = opdsData.filter(o => o.type === 'parent');
             const subs     = opdsData.filter(o => o.type === 'sub');
 
-            // Saat filter aktif: tampilkan flat hasil pencarian tanpa hierarki
+            // Saat filter aktif: tampilkan flat hasil pencarian (nomor urut dari hasil filter)
             if (keyword) {
                 const allMatched = opdsData.filter(o =>
                     (o.name || '').toLowerCase().includes(keyword) ||
@@ -561,23 +561,26 @@
                     tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Tidak ada hasil untuk "<strong>${filterText}</strong>"</td></tr>`;
                     return;
                 }
+                let nomor = 0;
                 allMatched.forEach(opd => {
-                    if (!opd.type || opd.type === 'regular') tbody.innerHTML += renderRowRegular(opd);
-                    else if (opd.type === 'parent') tbody.innerHTML += renderRowParent(opd);
-                    else if (opd.type === 'sub') tbody.innerHTML += renderRowSub(opd);
+                    if (!opd.type || opd.type === 'regular') { nomor++; tbody.innerHTML += renderRowRegular(opd, nomor); }
+                    else if (opd.type === 'parent')          { nomor++; tbody.innerHTML += renderRowParent(opd, nomor); }
+                    else if (opd.type === 'sub')             { tbody.innerHTML += renderRowSub(opd); }
                 });
                 return;
             }
 
-            // Tanpa filter: tampilkan hierarki penuh
+            // Tanpa filter: tampilkan hierarki penuh dengan nomor urut sequential
             if (regulars.length === 0 && parents.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Belum ada akun terdaftar.</td></tr>`;
                 return;
             }
 
-            regulars.forEach(opd => { tbody.innerHTML += renderRowRegular(opd); });
+            let nomor = 0;
+            regulars.forEach(opd => { nomor++; tbody.innerHTML += renderRowRegular(opd, nomor); });
             parents.forEach(parent => {
-                tbody.innerHTML += renderRowParent(parent);
+                nomor++;
+                tbody.innerHTML += renderRowParent(parent, nomor);
                 const subList = subs.filter(s => s.parentId === parent.docId);
                 subList.forEach(sub => { tbody.innerHTML += renderRowSub(sub); });
                 // Tombol tambah sub-unit di akhir grup parent

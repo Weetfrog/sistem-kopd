@@ -361,14 +361,15 @@
         // TAMPILKAN HASIL LOGIKA INDEKS OTOMATIS
         document.getElementById('text-indeks-akhir').innerText = totalSkorKematangan.toFixed(2);
 
-        // LOGIKA PEMBAGIAN KATEGORI MENURUT RENTANG NOMINAL
+        // LOGIKA PEMBAGIAN KATEGORI — sesuai Kategori Resmi KOPD:
+        // Sangat Rendah (10–19) | Rendah (19,1–28) | Sedang (28,1–37) | Tinggi (37,1–46) | Sangat Tinggi (46,1–55)
         let kategoriTeks = "-";
         if (totalSkorKematangan > 0) {
-            if (totalSkorKematangan <= 19.0) kategoriTeks = "Sangat Rendah";
-            else if (totalSkorKematangan <= 28.0) kategoriTeks = "Rendah";
-            else if (totalSkorKematangan <= 37.0) kategoriTeks = "Sedang";
-            else if (totalSkorKematangan <= 46.0) kategoriTeks = "Tinggi";
-            else kategoriTeks = "Sangat Tinggi";
+            if      (totalSkorKematangan <= 19) kategoriTeks = "Sangat Rendah";  // 10 – 19
+            else if (totalSkorKematangan <= 28) kategoriTeks = "Rendah";         // 19,1 – 28
+            else if (totalSkorKematangan <= 37) kategoriTeks = "Sedang";         // 28,1 – 37
+            else if (totalSkorKematangan <= 46) kategoriTeks = "Tinggi";         // 37,1 – 46
+            else                               kategoriTeks = "Sangat Tinggi";  // 46,1 – 55
         }
         document.getElementById('text-kategori-akhir').innerText = kategoriTeks;
 
