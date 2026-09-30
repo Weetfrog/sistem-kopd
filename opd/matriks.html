@@ -93,7 +93,23 @@
             await window.fbUpdateDoc(window.fbDoc(window.db, "opds", opdData.docId), { variabelStatus: opdData.variabelStatus });
         }
 
-        // Konfigurasi Label, Ikon, dan Warna untuk 5 Status
+        // Tampilkan info OPD dan badge afiliasi sub-unit di header
+        document.title = `Matriks - ${opdData.name} | KOPD Mabar ${tahunAktif}`;
+        const headerMatriks = document.querySelector('.header-matriks');
+        if (headerMatriks) {
+            // Tambahkan nama OPD ke subtitle
+            headerMatriks.querySelector('p').innerHTML =
+                `Papan variabel untuk: <strong>${opdData.name}</strong>. Pilih variabel di bawah ini untuk mengisi tingkat kematangan dan mengunggah data dukung.`;
+
+            // Badge sub-unit
+            if (opdData.type === 'sub' && opdData.parentName) {
+                const badge = document.createElement('div');
+                badge.style.cssText = 'display:inline-flex; align-items:center; gap:8px; background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600; margin-bottom:16px;';
+                badge.innerHTML = `<i class="fa-solid fa-sitemap"></i> Sub Unit dari: <strong>${opdData.parentName}</strong>`;
+                headerMatriks.insertBefore(badge, headerMatriks.querySelector('p'));
+            }
+        }
+
         const statusConfig = {
             0: { class: 'proses', label: '<i class="fa-solid fa-hourglass-start"></i> Belum Diisi', btnText: 'Buka Ruang Kerja', btnIcon: 'fa-pen-to-square' },
             1: { class: 'menunggu', label: '<i class="fa-solid fa-clock-rotate-left"></i> Menunggu Verifikasi', btnText: 'Lihat Isian', btnIcon: 'fa-eye' },

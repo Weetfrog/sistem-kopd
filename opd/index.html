@@ -168,6 +168,15 @@
         document.getElementById('nama-opd').innerText = opdData.name;
         document.getElementById('tahun-opd-index').innerText = tahunAktif;
 
+        // Tampilkan badge afiliasi jika ini sub-unit
+        if (opdData.type === 'sub' && opdData.parentName) {
+            const headerEl = document.querySelector('.header');
+            const badge = document.createElement('div');
+            badge.style.cssText = 'display:inline-flex; align-items:center; gap:8px; background:#e0f2fe; color:#0369a1; padding:6px 14px; border-radius:20px; font-size:0.85rem; font-weight:600; margin-bottom:16px; margin-top:-4px;';
+            badge.innerHTML = `<i class="fa-solid fa-sitemap"></i> Sub Unit dari: <strong>${opdData.parentName}</strong>`;
+            headerEl.insertBefore(badge, headerEl.querySelector('p'));
+        }
+
         if (settings && settings.broadcastMessage && settings.broadcastMessage.trim() !== "") {
             document.getElementById('broadcast-container').style.display = 'block';
             document.getElementById('broadcast-msg').innerText = settings.broadcastMessage;
