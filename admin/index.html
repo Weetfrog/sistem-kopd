@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="id">
 
 <head>
@@ -138,20 +138,32 @@
         const tahunAktif = await window.getTahunAktif();
         document.title = `Dasbor Admin - KOPD Mabar ${tahunAktif}`;
 
-        // 2. Ambil Pangkalan Data
+        // 2. Ambil Pangkalan Data (sertakan docId untuk deep-link sub-unit)
         const snapshot = await window.fbGetDocs(window.fbCollection(window.db, "opds"));
         let opds = [];
         snapshot.forEach(doc => {
-            opds.push(doc.data());
+            opds.push({ docId: doc.id, ...doc.data() });
         });
 
         let totalAntreanBaru = 0;
         let totalRevisiUlang = 0;
         let tabelTugasHTML = '';
 
-        // 3. Mesin Penyapu (Scan seluruh OPD dan Variabelnya)
+        // 3. Mesin Penyapu — skip OPD Wadah (type==='parent') karena tidak punya variabelStatus
         opds.forEach(opd => {
-            // Loop ke 12 Variabel dalam setiap OPD
+            if (opd.type === 'parent') return; // wadah tidak bisa diverifikasi langsung
+
+            // Label instansi: untuk sub-unit tampilkan nama parent sebagai konteks
+            const labelInstansi = opd.type === 'sub' && opd.parentName
+                ? `<span style="color:#0369a1; font-weight:700;">${opd.name}</span>
+                   <span style="display:block; font-size:0.75rem; color:#64748b; font-weight:400;">
+                     <i class="fa-solid fa-sitemap" style="margin-right:3px;"></i>${opd.parentName}
+                   </span>`
+                : `<span style="font-weight:600; color:#334155;">${opd.name}</span>`;
+
+            // Link verifikasi: OPD regular pakai id numerik, sub-unit pakai docId
+            const opdLinkKey = (opd.type === 'sub') ? opd.docId : (opd.id || opd.docId);
+
             for (let i = 1; i <= 12; i++) {
                 let state = opd.variabelStatus?.[`v${i}`];
                 const labelVar = i === 12 ? 'Tautan Google Drive' : `Variabel ${i}`;
@@ -161,10 +173,10 @@
                     totalAntreanBaru++;
                     tabelTugasHTML += `
                         <tr>
-                            <td style="font-weight: 600; color:#334155;">${opd.name}</td>
+                            <td>${labelInstansi}</td>
                             <td>${labelVar}</td>
                             <td><span class="badge-tabel" style="background: var(--status-menunggu);">Usulan Baru</span></td>
-                            <td><a href="verifikasi.html?opd=${opd.id}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
+                            <td><a href="verifikasi.html?opd=${opdLinkKey}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
                         </tr>
                     `;
                 }
@@ -173,10 +185,10 @@
                     totalRevisiUlang++;
                     tabelTugasHTML += `
                         <tr>
-                            <td style="font-weight: 600; color:#334155;">${opd.name}</td>
+                            <td>${labelInstansi}</td>
                             <td>${labelVar}</td>
                             <td><span class="badge-tabel" style="background: #3b82f6;">Verifikasi Ulang</span></td>
-                            <td><a href="verifikasi.html?opd=${opd.id}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
+                            <td><a href="verifikasi.html?opd=${opdLinkKey}&v=${i}" class="btn-aksi">Tinjau ➔</a></td>
                         </tr>
                     `;
                 }
@@ -190,7 +202,6 @@
         // 5. Suntikkan Baris ke Tabel
         const tbody = document.getElementById('tabel-opd');
         if (tabelTugasHTML === '') {
-            // Tampilan jika pekerjaan Admin sudah selesai semua
             tbody.innerHTML = `
                 <tr>
                     <td colspan="4" style="text-align: center; padding: 40px; color: #94a3b8;">

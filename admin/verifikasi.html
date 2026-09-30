@@ -709,12 +709,16 @@
         });
         initMasterOpdList();
 
-        // AUTO-PILIH dari deep-link: verifikasi.html?opd=X&v=Y (backward compat: X=numeric id)
+        // AUTO-PILIH dari deep-link: verifikasi.html?opd=X&v=Y
+        // X bisa berupa: angka numerik (id OPD regular) ATAU docId string (sub-unit / OPD baru)
         const urlParams = new URLSearchParams(window.location.search);
-        const paramOpd = parseInt(urlParams.get('opd'));
+        const paramOpd = urlParams.get('opd');
         const paramV   = parseInt(urlParams.get('v'));
         if (paramOpd) {
-            const targetOpd = opdsData.find(o => o.id === paramOpd);
+            const paramOpdNum = parseInt(paramOpd);
+            const targetOpd = !isNaN(paramOpdNum) && String(paramOpdNum) === paramOpd
+                ? opdsData.find(o => o.id === paramOpdNum)          // numerik → cari by id
+                : opdsData.find(o => o.docId === paramOpd);          // string → cari by docId
             if (targetOpd) {
                 setTimeout(() => {
                     window.pilihOpdKeMejaKerja(targetOpd.docId, targetOpd.name, targetOpd.parentName || null);
