@@ -172,6 +172,50 @@
             background: #b45309;
         }
 
+        /* Badge Tipe Akun */
+        .badge-parent {
+            background: #fef3c7;
+            color: #92400e;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .badge-sub {
+            background: #e0f2fe;
+            color: #0369a1;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-size: 0.72rem;
+            font-weight: bold;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Baris Tabel Hierarki */
+        .row-parent td { background: #fffbeb; }
+        .row-parent td:first-child { border-left: 4px solid #d97706; }
+        .row-sub td { background: #f0f9ff; }
+        .row-sub td:first-child {
+            border-left: 4px solid #0ea5e9;
+            padding-left: 28px;
+        }
+
+        /* Pilihan Tipe Akun di Form */
+        .tipe-toggle { display: flex; gap: 12px; margin-bottom: 16px; }
+        .tipe-btn {
+            flex: 1; padding: 12px; border: 2px solid #e5e7eb;
+            border-radius: 8px; cursor: pointer; text-align: center;
+            font-weight: 600; font-size: 0.9rem; transition: 0.2s;
+            background: white; color: #374151;
+        }
+        .tipe-btn.aktif-user { border-color: var(--primary-green); background: #f0fdf4; color: var(--primary-green); }
+        .tipe-btn.aktif-wadah { border-color: #d97706; background: #fffbeb; color: #92400e; }
+
         /* Modal Edit OPD */
         .modal-overlay {
             display: none;
@@ -215,28 +259,45 @@
             <div class="panel-form" id="panel-tambah-opd">
                 <h3 style="color: var(--primary-green); margin-bottom: 16px;"><i class="fa-solid fa-user-plus"></i>
                     Daftarkan Akun Instansi / OPD Baru</h3>
+
+                <!-- Pilih Tipe Akun -->
+                <div class="tipe-toggle">
+                    <button type="button" class="tipe-btn aktif-user" id="btn-tipe-user" onclick="setTipeAkun('regular')">
+                        <i class="fa-solid fa-building"></i> User (OPD)<br>
+                        <small style="font-weight:400; color:inherit;">Login & isi variabel sendiri</small>
+                    </button>
+                    <button type="button" class="tipe-btn" id="btn-tipe-wadah" onclick="setTipeAkun('parent')">
+                        <i class="fa-solid fa-sitemap"></i> Wadah (OPD Induk)<br>
+                        <small style="font-weight:400; color:inherit;">Nilai dari sub-unit, tidak bisa login</small>
+                    </button>
+                </div>
+                <input type="hidden" id="add-type" value="regular">
+
                 <form id="form-tambah-opd">
                     <div class="form-row">
                         <div class="form-group-input">
                             <label>Nama Lengkap Instansi</label>
-                            <input type="text" id="add-name" placeholder="Contoh: Dinas Kesehatan" required
+                            <input type="text" id="add-name" placeholder="Contoh: Sekretariat Daerah" required
                                 autocomplete="off">
                         </div>
-                        <div class="form-group-input">
+                        <div class="form-group-input" id="field-username-wrap">
                             <label>Username Login</label>
-                            <input type="text" id="add-username" placeholder="Contoh: dinkes" required
-                                autocomplete="off">
+                            <input type="text" id="add-username" placeholder="Contoh: sekda" autocomplete="off">
                         </div>
-                        <div class="form-group-input">
+                        <div class="form-group-input" id="field-password-wrap">
                             <label>Kata Sandi (Password)</label>
-                            <input type="text" id="add-password" placeholder="Ketik sandi akun" required
-                                autocomplete="off">
+                            <input type="text" id="add-password" placeholder="Ketik sandi akun" autocomplete="off">
                         </div>
+                    </div>
+                    <!-- Info khusus untuk tipe Wadah -->
+                    <div id="info-wadah" style="display:none; background:#fffbeb; border:1px solid #fcd34d; border-radius:8px; padding:12px; margin-bottom:12px; font-size:0.88rem; color:#92400e;">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <strong>Akun Wadah</strong> tidak dapat login langsung. Nilainya merupakan rata-rata dari semua sub-unit di bawahnya.
+                        Setelah akun wadah dibuat, tambahkan sub-unit melalui tombol <strong>[+ Sub Unit]</strong> di tabel.
                     </div>
                     <div style="display: flex; gap: 10px; justify-content: flex-end;">
                         <button type="button" class="btn-sm btn-red" onclick="toggleFormTambah(false)">Batal</button>
-                        <button type="submit" class="btn-sm btn-green"><i class="fa-solid fa-floppy-disk"></i> Simpan
-                            Akun</button>
+                        <button type="submit" class="btn-sm btn-green"><i class="fa-solid fa-floppy-disk"></i> Simpan Akun</button>
                     </div>
                 </form>
             </div>
@@ -330,18 +391,48 @@
                 <label>Nama Lengkap Instansi</label>
                 <input type="text" id="edit-name" placeholder="Nama instansi" autocomplete="off">
             </div>
-            <div class="form-group-input" style="margin-bottom: 6px;">
+            <div class="form-group-input" id="edit-username-wrap" style="margin-bottom: 6px;">
                 <label>Username Login <span style="color:#9ca3af; font-weight:400; font-size:0.8rem;">(tidak dapat diubah)</span></label>
                 <input type="text" id="edit-username-display" disabled
                     style="background:#f1f5f9; color:#6b7280; cursor:not-allowed;">
             </div>
-            <div class="form-group-input" style="margin-bottom: 20px;">
+            <div class="form-group-input" id="edit-password-wrap" style="margin-bottom: 20px;">
                 <label>Kata Sandi Baru <span style="color:#9ca3af; font-weight:400; font-size:0.8rem;">(kosongkan jika tidak ingin mengubah)</span></label>
                 <input type="text" id="edit-password" placeholder="Ketik sandi baru..." autocomplete="off">
             </div>
             <div style="display:flex; gap:10px; justify-content:flex-end;">
                 <button class="btn-sm btn-red" onclick="tutupModalEdit()"><i class="fa-solid fa-xmark"></i> Batal</button>
                 <button id="btn-simpan-edit" class="btn-sm btn-yellow" onclick="simpanEditOpd()"><i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL TAMBAH SUB-UNIT -->
+    <div class="modal-overlay" id="modal-tambah-sub">
+        <div class="modal-box" style="border-top-color: #0ea5e9;">
+            <h3 style="color: #0369a1;"><i class="fa-solid fa-plus"></i> Tambah Sub Unit</h3>
+            <p style="font-size:0.88rem; color:#64748b; margin: -10px 0 18px 0;">
+                Sub unit dari: <strong id="label-parent-sub"></strong>
+            </p>
+            <input type="hidden" id="sub-parent-id">
+            <input type="hidden" id="sub-parent-name">
+            <div class="form-group-input" style="margin-bottom: 14px;">
+                <label>Nama Bagian / Sub Unit</label>
+                <input type="text" id="sub-name" placeholder="Contoh: Bagian Organisasi" autocomplete="off">
+            </div>
+            <div class="form-group-input" style="margin-bottom: 14px;">
+                <label>Username Login</label>
+                <input type="text" id="sub-username" placeholder="Contoh: sekda.bagorg" autocomplete="off">
+            </div>
+            <div class="form-group-input" style="margin-bottom: 20px;">
+                <label>Kata Sandi</label>
+                <input type="text" id="sub-password" placeholder="Ketik sandi akun" autocomplete="off">
+            </div>
+            <div style="display:flex; gap:10px; justify-content:flex-end;">
+                <button class="btn-sm btn-red" onclick="tutupModalSub()"><i class="fa-solid fa-xmark"></i> Batal</button>
+                <button class="btn-sm" style="background:#0ea5e9; color:white;" onclick="simpanSubUnit()">
+                    <i class="fa-solid fa-floppy-disk"></i> Buat Sub Unit
+                </button>
             </div>
         </div>
     </div>
@@ -367,54 +458,138 @@
             snap.forEach(doc => {
                 opdsData.push({ docId: doc.id, ...doc.data() });
             });
-            // Urutkan berdasarkan id ASC
-            opdsData.sort((a, b) => a.id - b.id);
+            // Regular & parent diurutkan by id ASC; sub-unit diurutkan by name
+            opdsData.sort((a, b) => {
+                if (a.type === 'sub' && b.type === 'sub') return a.name.localeCompare(b.name);
+                return (a.id || 9999) - (b.id || 9999);
+            });
         }
 
-        // Fungsi Render Tabel Akun
+        // Helper render baris OPD regular
+        function renderRowRegular(opd) {
+            const statusBadge = opd.isLocked
+                ? `<span class="badge-locked"><i class="fa-solid fa-lock"></i> Terkunci</span>`
+                : `<span class="badge-active"><i class="fa-solid fa-check"></i> Aktif</span>`;
+            const lockIcon  = opd.isLocked ? 'fa-lock-open' : 'fa-lock';
+            const lockTitle = opd.isLocked ? 'Buka Kunci'  : 'Kunci Akun';
+            return `
+                <tr>
+                    <td style="text-align:center; font-weight:bold;">${opd.id || '—'}</td>
+                    <td style="font-weight:500; color:#1f2937;">${opd.name}</td>
+                    <td><code>${opd.username || '—'}</code></td>
+                    <td><span style="font-family:monospace; background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:bold;">${opd.password || '—'}</span></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-sm btn-yellow" title="Edit Akun" onclick="window.bukaModalEdit('${opd.docId}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-sm btn-blue" title="${lockTitle}" onclick="window.toggleLock('${opd.docId}', ${!opd.isLocked})"><i class="fa-solid ${lockIcon}"></i></button>
+                            <button class="btn-sm btn-red" title="Hapus Akun" onclick="window.hapusAkun('${opd.docId}', '${opd.name}', 'regular')"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+        }
+
+        // Helper render baris OPD parent (wadah)
+        function renderRowParent(opd) {
+            return `
+                <tr class="row-parent">
+                    <td style="text-align:center; font-weight:bold;">${opd.id || '—'}</td>
+                    <td style="font-weight:700; color:#92400e;">
+                        <i class="fa-solid fa-sitemap" style="margin-right:6px;"></i>${opd.name}
+                        <span class="badge-parent" style="margin-left:6px;"><i class="fa-solid fa-layer-group"></i> Wadah</span>
+                    </td>
+                    <td><span style="color:#9ca3af; font-size:0.8rem;">tidak bisa login</span></td>
+                    <td><span style="color:#9ca3af; font-size:0.8rem;">—</span></td>
+                    <td><span style="color:#9ca3af; font-size:0.8rem;">—</span></td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-sm btn-yellow" title="Edit Nama" onclick="window.bukaModalEdit('${opd.docId}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-sm" style="background:#0ea5e9; color:white;" title="Tambah Sub Unit" onclick="window.bukaModalSub('${opd.docId}', '${opd.name.replace(/'/g,"\\'")}')">
+                                <i class="fa-solid fa-plus"></i> Sub Unit
+                            </button>
+                            <button class="btn-sm btn-red" title="Hapus Wadah" onclick="window.hapusAkun('${opd.docId}', '${opd.name}', 'parent')"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+        }
+
+        // Helper render baris sub-unit
+        function renderRowSub(opd) {
+            const statusBadge = opd.isLocked
+                ? `<span class="badge-locked"><i class="fa-solid fa-lock"></i> Terkunci</span>`
+                : `<span class="badge-active"><i class="fa-solid fa-check"></i> Aktif</span>`;
+            const lockIcon  = opd.isLocked ? 'fa-lock-open' : 'fa-lock';
+            const lockTitle = opd.isLocked ? 'Buka Kunci'  : 'Kunci Akun';
+            return `
+                <tr class="row-sub">
+                    <td style="text-align:center; color:#9ca3af;">└</td>
+                    <td style="font-weight:500; color:#0369a1;">
+                        ${opd.name}
+                        <span class="badge-sub"><i class="fa-solid fa-arrow-turn-down-right"></i> Sub Unit</span>
+                    </td>
+                    <td><code>${opd.username || '—'}</code></td>
+                    <td><span style="font-family:monospace; background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:bold;">${opd.password || '—'}</span></td>
+                    <td>${statusBadge}</td>
+                    <td>
+                        <div style="display:flex; gap:6px;">
+                            <button class="btn-sm btn-yellow" title="Edit Akun" onclick="window.bukaModalEdit('${opd.docId}')"><i class="fa-solid fa-pen"></i></button>
+                            <button class="btn-sm btn-blue" title="${lockTitle}" onclick="window.toggleLock('${opd.docId}', ${!opd.isLocked})"><i class="fa-solid ${lockIcon}"></i></button>
+                            <button class="btn-sm btn-red" title="Hapus Sub Unit" onclick="window.hapusAkun('${opd.docId}', '${opd.name}', 'sub')"><i class="fa-solid fa-trash-can"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+        }
+
+        // Fungsi Render Tabel Akun (Hierarki)
         window.renderTabel = async function (filterText = '', forceRefresh = false) {
             if (forceRefresh) await fetchOpds();
             const tbody = document.getElementById('tabel-akun');
             tbody.innerHTML = '';
             const keyword = filterText.toLowerCase().trim();
 
-            const filtered = opdsData.filter(opd =>
-                opd.name.toLowerCase().includes(keyword) ||
-                opd.username.toLowerCase().includes(keyword)
-            );
+            const regulars = opdsData.filter(o => !o.type || o.type === 'regular');
+            const parents  = opdsData.filter(o => o.type === 'parent');
+            const subs     = opdsData.filter(o => o.type === 'sub');
 
-            if (filtered.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Tidak ada hasil untuk "<strong>${filterText}</strong>"</td></tr>`;
+            // Saat filter aktif: tampilkan flat hasil pencarian tanpa hierarki
+            if (keyword) {
+                const allMatched = opdsData.filter(o =>
+                    (o.name || '').toLowerCase().includes(keyword) ||
+                    (o.username || '').toLowerCase().includes(keyword)
+                );
+                if (allMatched.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Tidak ada hasil untuk "<strong>${filterText}</strong>"</td></tr>`;
+                    return;
+                }
+                allMatched.forEach(opd => {
+                    if (!opd.type || opd.type === 'regular') tbody.innerHTML += renderRowRegular(opd);
+                    else if (opd.type === 'parent') tbody.innerHTML += renderRowParent(opd);
+                    else if (opd.type === 'sub') tbody.innerHTML += renderRowSub(opd);
+                });
                 return;
             }
 
-            filtered.forEach(opd => {
-                const statusBadge = opd.isLocked ? `<span class="badge-locked"><i class="fa-solid fa-lock"></i> Terkunci</span>` : `<span class="badge-active"><i class="fa-solid fa-check"></i> Aktif</span>`;
-                const lockIcon = opd.isLocked ? 'fa-lock-open' : 'fa-lock';
-                const lockTitle = opd.isLocked ? 'Buka Kunci' : 'Kunci Akun';
+            // Tanpa filter: tampilkan hierarki penuh
+            if (regulars.length === 0 && parents.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" style="text-align:center; color:#94a3b8; padding:30px;">Belum ada akun terdaftar.</td></tr>`;
+                return;
+            }
 
+            regulars.forEach(opd => { tbody.innerHTML += renderRowRegular(opd); });
+            parents.forEach(parent => {
+                tbody.innerHTML += renderRowParent(parent);
+                const subList = subs.filter(s => s.parentId === parent.docId);
+                subList.forEach(sub => { tbody.innerHTML += renderRowSub(sub); });
+                // Tombol tambah sub-unit di akhir grup parent
                 tbody.innerHTML += `
                     <tr>
-                        <td style="text-align:center; font-weight:bold;">${opd.id}</td>
-                        <td style="font-weight:500; color:#1f2937;">${opd.name}</td>
-                        <td><code>${opd.username}</code></td>
-                        <td><span style="font-family: monospace; background:#f1f5f9; padding:4px 8px; border-radius:4px; font-weight:bold;">${opd.password}</span></td>
-                        <td>${statusBadge}</td>
-                        <td>
-                            <div style="display:flex; gap:6px;">
-                                <button class="btn-sm btn-yellow" title="Edit Akun" onclick="window.bukaModalEdit('${opd.docId}')">
-                                    <i class="fa-solid fa-pen"></i>
-                                </button>
-                                <button class="btn-sm btn-blue" title="${lockTitle}" onclick="window.toggleLock('${opd.docId}', ${!opd.isLocked})">
-                                    <i class="fa-solid ${lockIcon}"></i>
-                                </button>
-                                <button class="btn-sm btn-red" title="Hapus Akun" onclick="window.hapusAkun('${opd.docId}', '${opd.name}')">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </button>
-                            </div>
+                        <td colspan="6" style="background:#f0f9ff; padding:8px 14px 8px 42px;">
+                            <button class="btn-sm" style="background:#e0f2fe; color:#0369a1; border:1px dashed #0ea5e9; font-size:0.8rem;"
+                                onclick="window.bukaModalSub('${parent.docId}', '${parent.name.replace(/'/g,"\\'")}')">
+                                <i class="fa-solid fa-plus"></i> Tambah Sub Unit baru di bawah ${parent.name}
+                            </button>
                         </td>
-                    </tr>
-                `;
+                    </tr>`;
             });
         };
 
@@ -422,9 +597,9 @@
         await window.renderTabel('', true);
 
         // ===== FUNGSI PERBAIKAN DATA OPD =====
-        // Melakukan MERGE: mengisi variabel yang hilang tanpa menghapus data yang ada
+        // Melakukan MERGE: mengisi variabel yang hilang + tambah field type/parentId untuk OPD lama
         window.repairAllOpdData = async function () {
-            if (!confirm("Yakin ingin menjalankan perbaikan data? Proses ini akan mengisi variabel yang hilang pada semua OPD.")) return;
+            if (!confirm("Yakin ingin menjalankan perbaikan data? Proses ini akan mengisi variabel yang hilang dan menambahkan field tipe akun pada semua OPD.")) return;
 
             const statusEl = document.getElementById('repair-status');
             statusEl.style.display = 'inline';
@@ -449,17 +624,24 @@
                     let needsUpdate = false;
                     let updates = {};
 
-                    // Cek setiap variabel v1 sampai v12
-                    for (let i = 1; i <= 12; i++) {
-                        const key = `variabelStatus.v${i}`;
-                        const existingVar = opd.variabelStatus ? opd.variabelStatus[`v${i}`] : null;
+                    // Migrasi: tambah field type dan parentId jika belum ada
+                    if (!opd.type) {
+                        updates.type = 'regular';
+                        updates.parentId = null;
+                        needsUpdate = true;
+                    }
 
-                        if (!existingVar) {
-                            // Variabel ini hilang, tambahkan dengan nilai default
-                            const def = { ...defaultVar };
-                            if (i === 12) def.levelPilihan = 1; // v12 Drive Link default level 1
-                            updates[key] = def;
-                            needsUpdate = true;
+                    // Hanya repair variabel untuk OPD yang bukan parent (wadah)
+                    if (opd.type !== 'parent') {
+                        for (let i = 1; i <= 12; i++) {
+                            const key = `variabelStatus.v${i}`;
+                            const existingVar = opd.variabelStatus ? opd.variabelStatus[`v${i}`] : null;
+                            if (!existingVar) {
+                                const def = { ...defaultVar };
+                                if (i === 12) def.levelPilihan = 1;
+                                updates[key] = def;
+                                needsUpdate = true;
+                            }
                         }
                     }
 
@@ -524,49 +706,96 @@
             }
         });
 
+        // Fungsi Toggle Tipe Akun di Form Tambah
+        window.setTipeAkun = function (tipe) {
+            document.getElementById('add-type').value = tipe;
+            const usernameWrap = document.getElementById('field-username-wrap');
+            const passwordWrap = document.getElementById('field-password-wrap');
+            const infoWadah    = document.getElementById('info-wadah');
+            const btnUser      = document.getElementById('btn-tipe-user');
+            const btnWadah     = document.getElementById('btn-tipe-wadah');
+
+            if (tipe === 'parent') {
+                usernameWrap.style.display = 'none';
+                passwordWrap.style.display = 'none';
+                infoWadah.style.display    = 'block';
+                btnUser.className   = 'tipe-btn';
+                btnWadah.className  = 'tipe-btn aktif-wadah';
+                document.getElementById('add-username').removeAttribute('required');
+                document.getElementById('add-password').removeAttribute('required');
+            } else {
+                usernameWrap.style.display = '';
+                passwordWrap.style.display = '';
+                infoWadah.style.display    = 'none';
+                btnUser.className   = 'tipe-btn aktif-user';
+                btnWadah.className  = 'tipe-btn';
+                document.getElementById('add-username').setAttribute('required', '');
+                document.getElementById('add-password').setAttribute('required', '');
+            }
+        };
+
         // Fungsi Buka Tutup Form Tambah OPD
         window.toggleFormTambah = function (show) {
             document.getElementById('panel-tambah-opd').style.display = show ? 'block' : 'none';
-            if (!show) document.getElementById('form-tambah-opd').reset();
-        }
+            if (!show) {
+                document.getElementById('form-tambah-opd').reset();
+                window.setTipeAkun('regular'); // reset tipe ke User
+            }
+        };
 
-        // Fungsi Pembuatan Akun Baru
+        // Fungsi Pembuatan Akun Baru (User atau Wadah)
         document.getElementById('form-tambah-opd').addEventListener('submit', async function (e) {
             e.preventDefault();
-            
+            const tipe = document.getElementById('add-type').value;
             const name = document.getElementById('add-name').value.trim();
-            const username = document.getElementById('add-username').value.trim().toLowerCase();
-            const password = document.getElementById('add-password').value;
 
-            // Validasi duplikasi username
-            if (opdsData.some(o => o.username === username)) {
-                alert("Username sudah digunakan oleh instansi lain!");
-                return;
-            }
+            if (!name) { alert('Nama instansi tidak boleh kosong.'); return; }
 
             const btn = e.target.querySelector('button[type="submit"]');
-            const oldText = btn.innerText;
+            const oldText = btn.innerHTML;
             btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
             btn.disabled = true;
 
-            // Kalkulasi ID otomatis berikutnya
-            const nextId = opdsData.length > 0 ? Math.max(...opdsData.map(o => o.id)) + 1 : 1;
-
             try {
-                const newDocRef = window.fbDoc(window.fbCollection(window.db, "opds"));
-                await window.fbSetDoc(newDocRef, {
-                    id: nextId,
-                    username: username,
-                    password: password,
-                    name: name,
-                    isLocked: false,
-                    variabelStatus: window.generateInitialVariabel()
-                });
-                alert("Akun " + name + " berhasil dibuat!");
+                if (tipe === 'parent') {
+                    // Buat akun Wadah — tanpa username/password, tanpa variabel
+                    const nonSubs = opdsData.filter(o => !o.type || o.type !== 'sub');
+                    const nextId = nonSubs.length > 0 ? Math.max(...nonSubs.map(o => o.id || 0)) + 1 : 1;
+                    const newDocRef = window.fbDoc(window.fbCollection(window.db, "opds"));
+                    await window.fbSetDoc(newDocRef, {
+                        id: nextId,
+                        name: name,
+                        type: 'parent',
+                        parentId: null,
+                        isLocked: false,
+                        variabelStatus: null
+                    });
+                    alert(`Akun Wadah "${name}" berhasil dibuat! Sekarang tambahkan sub-unit melalui tombol [+ Sub Unit] di tabel.`);
+                } else {
+                    // Buat akun User biasa
+                    const username = document.getElementById('add-username').value.trim().toLowerCase();
+                    const password = document.getElementById('add-password').value;
+                    if (!username || !password) { alert('Username dan password wajib diisi.'); btn.innerHTML = oldText; btn.disabled = false; return; }
+                    if (opdsData.some(o => o.username === username)) { alert('Username sudah digunakan!'); btn.innerHTML = oldText; btn.disabled = false; return; }
+                    const nonSubs = opdsData.filter(o => !o.type || o.type !== 'sub');
+                    const nextId = nonSubs.length > 0 ? Math.max(...nonSubs.map(o => o.id || 0)) + 1 : 1;
+                    const newDocRef = window.fbDoc(window.fbCollection(window.db, "opds"));
+                    await window.fbSetDoc(newDocRef, {
+                        id: nextId,
+                        username: username,
+                        password: password,
+                        name: name,
+                        type: 'regular',
+                        parentId: null,
+                        isLocked: false,
+                        variabelStatus: window.generateInitialVariabel()
+                    });
+                    alert(`Akun "${name}" berhasil dibuat!`);
+                }
                 window.toggleFormTambah(false);
                 await window.renderTabel('', true);
-            } catch (e) {
-                alert("Gagal membuat akun.");
+            } catch (err) {
+                alert('Gagal membuat akun: ' + err.message);
             } finally {
                 btn.innerHTML = oldText;
                 btn.disabled = false;
@@ -583,9 +812,22 @@
             }
         };
 
-        // Fungsi Hapus Akun
-        window.hapusAkun = async function (docId, name) {
-            if (confirm("Apakah Anda yakin ingin menghapus akun '" + name + "' secara permanen? Seluruh riwayat pengisian data kematangannya akan ikut terhapus.")) {
+        // Fungsi Hapus Akun (dengan peringatan khusus untuk parent)
+        window.hapusAkun = async function (docId, name, tipe) {
+            let pesan = `Apakah Anda yakin ingin menghapus akun "${name}" secara permanen?`;
+            if (tipe === 'parent') {
+                const subCount = opdsData.filter(o => o.parentId === docId).length;
+                if (subCount > 0) {
+                    pesan = `⚠️ "${name}" adalah OPD Induk (Wadah) dengan ${subCount} sub-unit.\n\nMenghapus Wadah ini TIDAK menghapus sub-unitnya — sub-unit akan menjadi yatim (orphan).\n\nLanjutkan menghapus hanya akun Wadah ini?`;
+                } else {
+                    pesan = `Hapus akun Wadah "${name}"? Akun ini belum memiliki sub-unit.`;
+                }
+            } else if (tipe === 'sub') {
+                pesan = `Hapus sub-unit "${name}" secara permanen? Seluruh data variabel kematangannya akan ikut terhapus.`;
+            } else {
+                pesan += ` Seluruh riwayat pengisian data kematangannya akan ikut terhapus.`;
+            }
+            if (confirm(pesan)) {
                 try {
                     await window.fbDeleteDoc(window.fbDoc(window.db, "opds", docId));
                     await window.renderTabel(document.getElementById('search-akun').value, true);
@@ -595,45 +837,86 @@
             }
         };
 
-        // Fungsi Reset Data Tahunan (hanya variabel, akun tetap aman)
-        window.resetDataTahunan = async function () {
-            const step1 = confirm("⚠️ PERINGATAN!\n\nAnda akan mereset SELURUH data variabel kematangan semua Perangkat Daerah.\n\nDaftar akun, username, dan password TIDAK akan terhapus.\n\nApakah Anda yakin ingin melanjutkan?");
-            if (!step1) return;
+        // Modal Tambah Sub-Unit
+        window.bukaModalSub = function (parentDocId, parentName) {
+            document.getElementById('sub-parent-id').value = parentDocId;
+            document.getElementById('sub-parent-name').value = parentName;
+            document.getElementById('label-parent-sub').innerText = parentName;
+            document.getElementById('sub-name').value = '';
+            document.getElementById('sub-username').value = '';
+            document.getElementById('sub-password').value = '';
+            document.getElementById('modal-tambah-sub').classList.add('aktif');
+        };
 
-            const konfirmasi = prompt("Untuk konfirmasi, ketik kata RESET (huruf kapital) lalu klik OK:");
-            if (konfirmasi !== 'RESET') {
-                alert("Reset dibatalkan. Kata konfirmasi tidak sesuai.");
-                return;
+        window.tutupModalSub = function () {
+            document.getElementById('modal-tambah-sub').classList.remove('aktif');
+        };
+
+        window.simpanSubUnit = async function () {
+            const parentDocId  = document.getElementById('sub-parent-id').value;
+            const parentName   = document.getElementById('sub-parent-name').value;
+            const name         = document.getElementById('sub-name').value.trim();
+            const username     = document.getElementById('sub-username').value.trim().toLowerCase();
+            const password     = document.getElementById('sub-password').value;
+
+            if (!name || !username || !password) {
+                alert('Nama, username, dan password wajib diisi.'); return;
+            }
+            if (opdsData.some(o => o.username === username)) {
+                alert('Username sudah digunakan oleh akun lain!'); return;
             }
 
-            const btn = document.querySelector('.btn-red[onclick="window.resetDataTahunan()"]');
-            if(btn) { btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Memproses...'; btn.disabled = true; }
+            const btn = document.querySelector('#modal-tambah-sub button:last-child');
+            const oldText = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
 
             try {
-                // Batch write untuk menghapus / reset variabel banyak OPD sekaligus
-                const batch = window.fbWriteBatch(window.db);
-                opdsData.forEach(opd => {
-                    const docRef = window.fbDoc(window.db, "opds", opd.docId);
-                    batch.update(docRef, { variabelStatus: window.generateInitialVariabel() });
+                const newDocRef = window.fbDoc(window.fbCollection(window.db, "opds"));
+                await window.fbSetDoc(newDocRef, {
+                    name: name,
+                    username: username,
+                    password: password,
+                    type: 'sub',
+                    parentId: parentDocId,
+                    parentName: parentName,
+                    isLocked: false,
+                    variabelStatus: window.generateInitialVariabel()
                 });
-                await batch.commit();
-                alert("✅ Data variabel kematangan seluruh Perangkat Daerah berhasil direset.\nDaftar akun tidak berubah.");
+                window.tutupModalSub();
                 await window.renderTabel('', true);
-            } catch (e) {
-                alert("Gagal mereset data: " + e.message);
+                alert(`Sub unit "${name}" berhasil ditambahkan di bawah ${parentName}.`);
+            } catch (err) {
+                alert('Gagal membuat sub unit: ' + err.message);
             } finally {
-                if(btn) { btn.innerHTML = '<i class="fa-solid fa-rotate"></i> Reset Data Pengisian KOPD ke Nol'; btn.disabled = false; }
+                btn.innerHTML = oldText;
+                btn.disabled = false;
             }
         };
 
-        // Fungsi Modal Edit Akun OPD
+        // Tutup modal sub saat klik di luar
+        document.getElementById('modal-tambah-sub').addEventListener('click', function (e) {
+            if (e.target === this) window.tutupModalSub();
+        });
+
+        // Fungsi Modal Edit Akun OPD (mendukung parent dan sub)
         window.bukaModalEdit = function (docId) {
             const opd = opdsData.find(o => o.docId === docId);
             if (!opd) return;
-            document.getElementById('edit-opd-id').value = opd.docId; // hidden input will store docId string
+            document.getElementById('edit-opd-id').value = opd.docId;
             document.getElementById('edit-name').value = opd.name;
-            document.getElementById('edit-username-display').value = opd.username;
-            document.getElementById('edit-password').value = '';
+            // Parent (wadah) tidak punya username/password — sembunyikan field tersebut
+            const usernameWrap = document.getElementById('edit-username-wrap');
+            const passwordWrap = document.getElementById('edit-password-wrap');
+            if (opd.type === 'parent') {
+                usernameWrap.style.display = 'none';
+                passwordWrap.style.display = 'none';
+            } else {
+                usernameWrap.style.display = '';
+                passwordWrap.style.display = '';
+                document.getElementById('edit-username-display').value = opd.username || '';
+                document.getElementById('edit-password').value = '';
+            }
             document.getElementById('modal-edit-opd').classList.add('aktif');
         };
 
@@ -673,7 +956,7 @@
             }
         };
 
-        // Tutup modal saat klik di luar kotak
+        // Tutup modal edit saat klik di luar kotak
         document.getElementById('modal-edit-opd').addEventListener('click', function (e) {
             if (e.target === this) window.tutupModalEdit();
         });
