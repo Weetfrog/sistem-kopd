@@ -161,6 +161,7 @@
                         <h3>Rata-Rata Indeks Kabupaten</h3>
                         <div class="value" id="stat-avg-score" style="color: var(--status-menunggu);">0.00 <span
                                 style="font-size:1rem; color:#9ca3af;">/ 55</span></div>
+                        <div id="stat-avg-kategori" style="margin-top:8px; font-size:0.85rem; font-weight:700; color:#64748b; letter-spacing:0.3px; text-transform:uppercase;">—</div>
                     </div>
                     <div class="card-global" style="border-top-color: var(--status-selesai);">
                         <h3>Perangkat Daerah Selesai 100%</h3>
@@ -369,8 +370,19 @@
         document.getElementById('stat-total-opd').innerText = totalOpd;
         document.getElementById('stat-selesai').innerText = totalPDSelesai;
         if (totalOpd > 0) {
+            const avgKab = totalKabupatenScore / totalOpd;
+            const kategoriKab = getKategori(avgKab);
             document.getElementById('stat-avg-score').innerHTML =
-                `${(totalKabupatenScore / totalOpd).toFixed(2)} <span style="font-size:1rem; color:#9ca3af;">/ 55</span>`;
+                `${avgKab.toFixed(2)} <span style="font-size:1rem; color:#9ca3af;">/ 55</span>`;
+
+            // Warna kategori
+            const kategoriWarna = {
+                'Sangat Tinggi': '#166534', 'Tinggi': '#15803d',
+                'Sedang': '#854d0e', 'Rendah': '#9a3412', 'Sangat Rendah': '#991b1b', '-': '#64748b'
+            };
+            const elKat = document.getElementById('stat-avg-kategori');
+            elKat.innerText = `🏅 ${kategoriKab}`;
+            elKat.style.color = kategoriWarna[kategoriKab] || '#64748b';
         }
 
         // ─── Filter Pencarian ────────────────────────────────────────────
@@ -418,6 +430,15 @@
                 }
             });
             const wsGlobal = XLSX.utils.aoa_to_sheet(globalData);
+            // Tambah baris ringkasan rata-rata kabupaten di akhir sheet
+            if (totalOpd > 0) {
+                const avgKabExcel = totalKabupatenScore / totalOpd;
+                wsGlobal['!rows'] = wsGlobal['!rows'] || [];
+                const emptyRow   = new Array(6).fill('');
+                const summaryRow1 = ['', 'RATA-RATA INDEKS KABUPATEN', '', parseFloat(avgKabExcel.toFixed(2)), '', ''];
+                const summaryRow2 = ['', 'KATEGORI KEMATANGAN KABUPATEN', '', getKategori(avgKabExcel), '', ''];
+                XLSX.utils.sheet_add_aoa(wsGlobal, [emptyRow, summaryRow1, summaryRow2], { origin: -1 });
+            }
             XLSX.utils.book_append_sheet(wb, wsGlobal, "Laporan Keseluruhan");
 
             // 2. Sheet per OPD Regular
