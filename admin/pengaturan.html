@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan - KOPD Mabar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="../assets/css/global.css">
+    <style>
+        .layout-wrapper { display: flex; width: 100%; min-height: 100vh; }
+        .main-content { flex: 1; padding: 40px; background: var(--sage-bg); transition: all 0.3s ease; }
+        body.sidebar-collapsed .main-content { padding-left: 60px; }
+
+        .page-header { margin-bottom: 28px; }
+        .page-header h1 { color: var(--primary-green); font-size: 1.8rem; margin-bottom: 4px; }
+        .page-header p { color: #6b7280; font-size: 0.9rem; }
+
+        .panel-setting {
+            background: white;
+            border-radius: 12px;
+            padding: 24px 28px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            border-left: 4px solid #2563eb;
+        }
+        .panel-setting h3 { margin: 0 0 8px 0; font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+        .panel-setting p { color: #6b7280; font-size: 0.88rem; margin: 0 0 16px 0; line-height: 1.6; }
+
+        .section-label {
+            font-size: 0.75rem; font-weight: 700; color: #9ca3af;
+            text-transform: uppercase; letter-spacing: 0.8px; margin: 32px 0 12px 4px;
+        }
+
+        .form-control {
+            width: 100%; padding: 10px 14px; border: 2px solid #e5e7eb;
+            border-radius: 8px; font-size: 0.9rem; font-family: inherit;
+            outline: none; transition: border-color 0.2s; box-sizing: border-box;
+            resize: vertical; min-height: 80px; margin-bottom: 12px;
+        }
+        .form-control:focus { border-color: var(--primary-green); }
+
+        .btn-setting {
+            border: none; padding: 10px 20px; border-radius: 6px; font-weight: 600;
+            font-size: 0.9rem; cursor: pointer; display: inline-flex; align-items: center;
+            gap: 8px; transition: opacity 0.2s; font-family: inherit;
+        }
+        .btn-setting:hover { opacity: 0.88; }
+        .btn-setting:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-blue   { background: #2563eb; color: white; }
+        .btn-orange { background: #ea580c; color: white; }
+        .btn-red    { background: #dc2626; color: white; }
+        .btn-danger { background: #ef4444; color: white; }
+
+        .status-text { display: none; margin-left: 12px; font-size: 0.85rem; font-weight: 600; vertical-align: middle; }
+
+        .input-tahun {
+            width: 120px; padding: 9px 14px; border: 2px solid #e5e7eb;
+            border-radius: 8px; font-size: 1.1rem; font-weight: bold;
+            text-align: center; outline: none; transition: border-color 0.2s;
+        }
+        .input-tahun:focus { border-color: #2563eb; }
+
+        .row-inline { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+        .danger-notice {
+            background: #fff1f2; border: 1px solid #fecdd3; border-radius: 8px;
+            padding: 12px 16px; margin-bottom: 16px; font-size: 0.85rem;
+            color: #9f1239; line-height: 1.6;
+        }
+        .danger-notice strong { color: #be123c; }
+    </style>
+</head>
+
+<body>
+    <div class="layout-wrapper">
+        <div id="sidebar-container"></div>
+
+        <main class="main-content">
+            <div class="page-header">
+                <h1><i class="fa-solid fa-gear"></i> Pengaturan Sistem</h1>
+                <p>Konfigurasi umum aplikasi, pemeliharaan data, dan pengaturan siklus tahunan KOPD.</p>
+            </div>
+
+            <!-- PENGUMUMAN -->
+            <div class="section-label"><i class="fa-solid fa-bullhorn"></i> &nbsp;Pengumuman</div>
+
+            <div class="panel-setting" style="border-left-color: #1d4ed8;">
+                <h3 style="color:#1e3a8a;"><i class="fa-solid fa-bullhorn"></i> Siarkan Pengumuman (Broadcast)</h3>
+                <p>Pesan yang diisi di sini akan muncul sebagai notifikasi di halaman dashboard semua OPD. Kosongkan untuk menghapus pengumuman.</p>
+                <form id="form-broadcast">
+                    <textarea id="input-broadcast" class="form-control"
+                        placeholder="Ketik pengumuman di sini... (Kosongkan untuk menghapus pengumuman)"></textarea>
+                    <button type="submit" class="btn-setting btn-blue">
+                        <i class="fa-solid fa-paper-plane"></i> Kirim Siaran
+                    </button>
+                    <span id="status-broadcast" class="status-text" style="color:#166534;"></span>
+                </form>
+            </div>
+
+            <!-- TAHUN KEGIATAN -->
+            <div class="section-label"><i class="fa-solid fa-calendar"></i> &nbsp;Tahun Kegiatan</div>
+
+            <div class="panel-setting" style="border-left-color: #2563eb;">
+                <h3 style="color:#1e40af;"><i class="fa-solid fa-calendar-days"></i> Atur Tahun Kegiatan KOPD</h3>
+                <p>Tahun yang diatur di sini akan ditampilkan di <strong>seluruh halaman aplikasi</strong> (sidebar, laporan, ekspor file, dll).</p>
+                <div class="row-inline">
+                    <input type="number" id="input-tahun-aktif" class="input-tahun" min="2020" max="2099"
+                        onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
+                    <button id="btn-simpan-tahun" class="btn-setting btn-blue" onclick="simpanTahunAktif()">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Tahun
+                    </button>
+                    <span id="status-tahun" class="status-text" style="color:#166534;">
+                        <i class="fa-solid fa-circle-check"></i> Tersimpan!
+                    </span>
+                </div>
+            </div>
+
+            <!-- PEMELIHARAAN DATA -->
+            <div class="section-label"><i class="fa-solid fa-wrench"></i> &nbsp;Pemeliharaan Data</div>
+
+            <div class="panel-setting" style="border-left-color: #ea580c;">
+                <h3 style="color:#9a3412;"><i class="fa-solid fa-wrench"></i> Perbaiki Data Variabel OPD</h3>
+                <p>Jalankan ini jika data variabel OPD terlihat hilang atau rusak. Fungsi ini akan mengisi variabel yang hilang dan menambahkan field tipe akun pada OPD lama — <strong>tanpa menghapus data yang sudah ada</strong>.</p>
+                <button class="btn-setting btn-orange" onclick="repairAllOpdData()">
+                    <i class="fa-solid fa-rotate"></i> Jalankan Perbaikan Data Sekarang
+                </button>
+                <span id="repair-status" class="status-text"></span>
+            </div>
+
+            <div class="panel-setting" style="border-left-color: #dc2626;">
+                <h3 style="color:#991b1b;"><i class="fa-solid fa-triangle-exclamation"></i> Hapus Sub-Unit Orphan</h3>
+                <p>Sub-unit orphan adalah akun sub-unit yang wadah induknya sudah dihapus — mereka masih bisa login tetapi tidak terdata di mana pun. Klik tombol berikut untuk menemukan dan menghapusnya.</p>
+                <button class="btn-setting btn-red" onclick="hapusOrphanSubUnit()">
+                    <i class="fa-solid fa-trash-can"></i> Cari &amp; Hapus Sub-Unit Orphan
+                </button>
+                <span id="orphan-status" class="status-text"></span>
+            </div>
+
+            <!-- DANGER ZONE -->
+            <div class="section-label" style="color:#dc2626;"><i class="fa-solid fa-skull-crossbones"></i> &nbsp;Danger Zone</div>
+
+            <div class="panel-setting" style="border-left-color: #ef4444;">
+                <h3 style="color:#991b1b;"><i class="fa-solid fa-rotate-left"></i> Reset Data Tahunan KOPD</h3>
+                <div class="danger-notice">
+                    <strong>⚠ Peringatan:</strong> Fungsi ini dirancang untuk memulai siklus KOPD baru setiap tahun.
+                    Seluruh <strong>isian variabel kematangan</strong> (status, skor, deskripsi, tautan Google Drive) pada
+                    semua akun Perangkat Daerah akan <strong>dihapus dan dikosongkan</strong> kembali ke kondisi awal.<br>
+                    <strong>Daftar akun, username, dan password tidak akan terpengaruh.</strong>
+                </div>
+                <button class="btn-setting btn-danger" onclick="resetDataTahunan()">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Reset Seluruh Data Variabel Kematangan
+                </button>
+                <span id="reset-status" class="status-text"></span>
+            </div>
+
+        </main>
+    </div>
+
+    <script type="module">
+        import '../assets/js/state-manager.js';
+        import '../assets/components/sidebar.js';
+
+        if (!window.checkSession('admin', '../')) throw new Error("Unauthenticated");
+        await window.renderSidebar('../', 'admin');
+
+        // Load settings
+        const settings = await window.getSettings() || {};
+        document.getElementById('input-broadcast').value = settings.broadcastMessage || '';
+        document.getElementById('input-tahun-aktif').value = settings.tahunAktif || new Date().getFullYear();
+
+        // Broadcast
+        document.getElementById('form-broadcast').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const oldHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            const msg = document.getElementById('input-broadcast').value;
+            const statusEl = document.getElementById('status-broadcast');
+            try {
+                await window.fbUpdateDoc(window.fbDoc(window.db, 'settings', 'main'), { broadcastMessage: msg });
+                statusEl.style.color = '#166534';
+                statusEl.innerText = '✅ Pengumuman berhasil disiarkan!';
+                statusEl.style.display = 'inline';
+                setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+            } catch (e) {
+                alert('Gagal menyimpan pengumuman.');
+            } finally {
+                btn.innerHTML = oldHTML;
+                btn.disabled = false;
+            }
+        });
+
+        // Simpan Tahun
+        window.simpanTahunAktif = async function () {
+            const btn = document.getElementById('btn-simpan-tahun');
+            const tahunBaru = document.getElementById('input-tahun-aktif').value.trim();
+            if (!tahunBaru || tahunBaru < 2020 || tahunBaru > 2099) {
+                alert('Tahun harus antara 2020 dan 2099.');
+                return;
+            }
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
+            btn.disabled = true;
+            try {
+                await window.fbUpdateDoc(window.fbDoc(window.db, 'settings', 'main'), { tahunAktif: tahunBaru });
+                const statusEl = document.getElementById('status-tahun');
+                statusEl.style.display = 'inline';
+                setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
+            } catch (e) {
+                alert('Gagal menyimpan tahun.');
+            } finally {
+                btn.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Simpan Tahun';
+                btn.disabled = false;
+            }
+        };
+
+        // Perbaiki Data OPD
+        window.repairAllOpdData = async function () {
+            if (!confirm('Yakin ingin menjalankan perbaikan data? Proses ini akan mengisi variabel yang hilang dan menambahkan field tipe akun pada semua OPD.')) return;
+            const statusEl = document.getElementById('repair-status');
+            statusEl.style.color = '#78350f';
+            statusEl.style.display = 'inline';
+            statusEl.innerText = '⏳ Sedang memperbaiki...';
+            const defaultVar = { status: 0, levelPilihan: null, levelDisetujui: 0, deskripsi: '', driveLink: '', uploads: {}, catatanAdmin: '' };
+            try {
+                const snap = await window.fbGetDocs(window.fbCollection(window.db, 'opds'));
+                let repaired = 0;
+                for (const docSnap of snap.docs) {
+                    const opd = docSnap.data();
+                    let needsUpdate = false;
+                    let updates = {};
+                    if (!opd.type) { updates.type = 'regular'; updates.parentId = null; needsUpdate = true; }
+                    if (opd.type !== 'parent') {
+                        for (let i = 1; i <= 12; i++) {
+                            const existingVar = opd.variabelStatus ? opd.variabelStatus[`v${i}`] : null;
+                            if (!existingVar) {
+                                const def = { ...defaultVar };
+                                if (i === 12) def.levelPilihan = 1;
+                                updates[`variabelStatus.v${i}`] = def;
+                                needsUpdate = true;
+                            }
+                        }
+                    }
+                    if (needsUpdate) { await window.fbUpdateDoc(window.fbDoc(window.db, 'opds', docSnap.id), updates); repaired++; }
+                }
+                statusEl.style.color = '#166534';
+                statusEl.innerText = `✅ Selesai! ${repaired} dokumen diperbaiki.`;
+                setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+            } catch (e) {
+                console.error('Repair error:', e);
+                statusEl.style.color = '#991b1b';
+                statusEl.innerText = '❌ Gagal. Periksa konsol.';
+            }
+        };
+
+        // Hapus Sub-Unit Orphan
+        window.hapusOrphanSubUnit = async function () {
+            const statusEl = document.getElementById('orphan-status');
+            statusEl.style.color = '#78350f';
+            statusEl.style.display = 'inline';
+            statusEl.innerText = '⏳ Mencari orphan...';
+            try {
+                const snap = await window.fbGetDocs(window.fbCollection(window.db, 'opds'));
+                const allDocs = [];
+                snap.forEach(d => allDocs.push({ docId: d.id, ...d.data() }));
+                const validParentIds = new Set(allDocs.filter(o => o.type === 'parent').map(o => o.docId));
+                const orphans = allDocs.filter(o => o.type === 'sub' && !validParentIds.has(o.parentId));
+                if (orphans.length === 0) {
+                    statusEl.style.color = '#166534';
+                    statusEl.innerText = '✅ Tidak ada sub-unit orphan ditemukan.';
+                    setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
+                    return;
+                }
+                const namaOrphan = orphans.map(o => `• ${o.name} (${o.username || 'no username'})`).join('\n');
+                if (!confirm(`Ditemukan ${orphans.length} sub-unit orphan:\n${namaOrphan}\n\nHapus semua?`)) {
+                    statusEl.style.display = 'none';
+                    return;
+                }
+                for (const o of orphans) {
+                    await window.fbDeleteDoc(window.fbDoc(window.db, 'opds', o.docId));
+                }
+                statusEl.style.color = '#166534';
+                statusEl.innerText = `✅ ${orphans.length} orphan berhasil dihapus.`;
+                setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
+            } catch (e) {
+                console.error('Orphan cleanup error:', e);
+                statusEl.style.color = '#991b1b';
+                statusEl.innerText = '❌ Gagal. Periksa konsol.';
+            }
+        };
+
+        // Reset Data Tahunan — double confirmation
+        window.resetDataTahunan = async function () {
+            if (!confirm('⚠️ PERINGATAN KERAS!\n\nSeluruh data variabel kematangan dari SEMUA OPD akan dikosongkan.\nTindakan ini TIDAK DAPAT DIBATALKAN.\n\nLanjutkan ke konfirmasi berikutnya?')) return;
+            const konfirmasi = prompt('Ketik  RESET  (huruf kapital semua) untuk melanjutkan:');
+            if (konfirmasi !== 'RESET') {
+                alert('Reset dibatalkan. Teks konfirmasi tidak sesuai.');
+                return;
+            }
+            const statusEl = document.getElementById('reset-status');
+            statusEl.style.color = '#9a3412';
+            statusEl.style.display = 'inline';
+            statusEl.innerText = '⏳ Memproses reset...';
+            try {
+                const snap = await window.fbGetDocs(window.fbCollection(window.db, 'opds'));
+                const initialVar = window.generateInitialVariabel();
+                let count = 0;
+                for (const docSnap of snap.docs) {
+                    const opd = docSnap.data();
+                    if (opd.type === 'parent') continue;
+                    await window.fbUpdateDoc(window.fbDoc(window.db, 'opds', docSnap.id), { variabelStatus: initialVar });
+                    count++;
+                }
+                statusEl.style.color = '#166534';
+                statusEl.innerText = `✅ Reset selesai! ${count} OPD telah dikosongkan.`;
+                setTimeout(() => { statusEl.style.display = 'none'; }, 6000);
+            } catch (e) {
+                console.error('Reset error:', e);
+                statusEl.style.color = '#991b1b';
+                statusEl.innerText = '❌ Gagal. Periksa konsol.';
+            }
+        };
+    </script>
+</body>
+
+</html>

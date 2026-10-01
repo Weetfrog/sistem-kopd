@@ -74,6 +74,7 @@ async function renderSidebar(basePath = '../', role = 'opd') {
             <li><a href="${basePath}admin/verifikasi.html"><i class="fa-solid fa-clipboard-check"></i> <span>Meja Verifikasi</span></a></li>
             <li><a href="${basePath}admin/kelola-opd.html"><i class="fa-solid fa-users-gear"></i> <span>Kelola Akun OPD</span></a></li>
             <li><a href="${basePath}admin/laporan-global.html"><i class="fa-solid fa-globe"></i> <span>Laporan Keseluruhan</span></a></li>
+            <li><a href="${basePath}admin/pengaturan.html"><i class="fa-solid fa-gear"></i> <span>Pengaturan</span></a></li>
         `;
     }
 

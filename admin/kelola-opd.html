@@ -302,30 +302,6 @@
                 </form>
             </div>
 
-            <div class="panel-broadcast">
-                <h3 style="color: #1e3a8a;"><i class="fa-solid fa-bullhorn"></i> Siarkan Pengumuman (Broadcast)</h3>
-                <form id="form-broadcast">
-                    <textarea id="input-broadcast" class="form-control"
-                        placeholder="Ketik pengumuman di sini... (Kosongkan untuk menghapus pengumuman)"></textarea>
-                    <button type="submit" class="btn-sm btn-blue"><i class="fa-solid fa-paper-plane"></i> Kirim
-                        Siaran</button>
-                </form>
-            </div>
-
-            <div class="panel-broadcast" style="border-left-color: #ea580c;">
-                <h3 style="color: #9a3412;"><i class="fa-solid fa-wrench"></i> Perbaiki Data Variabel OPD</h3>
-                <p style="font-size:0.85rem; color:#78350f; margin:0 0 12px 0;">Jalankan ini jika data variabel OPD terlihat hilang atau rusak. Fungsi ini akan mengisi variabel yang hilang tanpa menghapus data yang sudah ada.</p>
-                <button class="btn-sm" onclick="window.repairAllOpdData()" style="background:#ea580c; color:white;"><i class="fa-solid fa-rotate"></i> Jalankan Perbaikan Data Sekarang</button>
-                <span id="repair-status" style="display:none; margin-left:10px; font-size:0.85rem; font-weight:bold; color:#166534;"></span>
-            </div>
-
-            <div class="panel-broadcast" style="border-left-color: #dc2626;">
-                <h3 style="color: #991b1b;"><i class="fa-solid fa-triangle-exclamation"></i> Hapus Sub-Unit Orphan</h3>
-                <p style="font-size:0.85rem; color:#7f1d1d; margin:0 0 12px 0;">Sub-unit orphan adalah akun sub-unit yang wadah induknya sudah dihapus — mereka masih bisa login tetapi tidak terdata di mana pun. Klik tombol berikut untuk menemukan dan menghapusnya.</p>
-                <button class="btn-sm" onclick="window.hapusOrphanSubUnit()" style="background:#dc2626; color:white;"><i class="fa-solid fa-trash-can"></i> Cari &amp; Hapus Sub-Unit Orphan</button>
-                <span id="orphan-status" style="display:none; margin-left:10px; font-size:0.85rem; font-weight:bold;"></span>
-            </div>
-
             <div class="table-container">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
                     <h3 style="color: var(--primary-green);"><i class="fa-solid fa-users"></i> Daftar Akun Pengguna</h3>
@@ -354,36 +330,6 @@
                     <tbody id="tabel-akun">
                     </tbody>
                 </table>
-            </div>
-
-            <!-- PANEL RESET DATA TAHUNAN -->
-            <!-- Panel Atur Tahun Kegiatan -->
-            <div style="margin-top: 30px; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 4px solid #2563eb;">
-                <h3 style="color: #1e40af; margin: 0 0 8px 0;"><i class="fa-solid fa-calendar-days"></i> Atur Tahun Kegiatan KOPD</h3>
-                <p style="color: #6b7280; font-size: 0.9rem; margin: 0 0 16px 0;">
-                    Tahun yang diatur di sini akan ditampilkan di <strong>seluruh halaman aplikasi</strong> (sidebar, laporan, ekspor file, dll).
-                </p>
-                <div style="display: flex; align-items: center; gap: 12px;">
-                    <input type="number" id="input-tahun-aktif" min="2020" max="2099" 
-                        style="width: 120px; padding: 9px 14px; border: 2px solid #e5e7eb; border-radius: 8px; font-size: 1.1rem; font-weight: bold; text-align: center; outline: none;"
-                        onfocus="this.style.borderColor='#2563eb'" onblur="this.style.borderColor='#e5e7eb'">
-                    <button id="btn-simpan-tahun" onclick="simpanTahunAktif()" 
-                        style="background: #2563eb; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                        <i class="fa-solid fa-floppy-disk"></i> Simpan Tahun
-                    </button>
-                    <span id="status-tahun" style="font-size: 0.85rem; font-weight: 600; color: #16a34a; display: none;"><i class="fa-solid fa-circle-check"></i> Tersimpan!</span>
-                </div>
-            </div>
-
-            <div style="margin-top: 30px; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border-left: 4px solid #ef4444;">
-                <h3 style="color: #991b1b; margin: 0 0 8px 0;"><i class="fa-solid fa-rotate-left"></i> Reset Data Tahunan KOPD</h3>
-                <p style="color: #6b7280; font-size: 0.9rem; margin: 0 0 16px 0;">
-                    Fungsi ini dirancang untuk memulai siklus KOPD baru setiap tahun. Seluruh <strong>isian variabel kematangan</strong> (status, skor, deskripsi, tautan Google Drive) pada semua akun Perangkat Daerah akan dihapus dan dikosongkan kembali ke kondisi awal. <br>
-                    <span style="color:#ef4444; font-weight:bold;">⚠ Daftar akun, username, dan password tidak akan terpengaruh.</span>
-                </p>
-                <button onclick="resetDataTahunan()" style="background: #ef4444; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; font-size: 0.9rem; cursor: pointer; display: flex; align-items: center; gap: 8px;">
-                    <i class="fa-solid fa-triangle-exclamation"></i> Reset Seluruh Data Variabel Kematangan
-                </button>
             </div>
 
         </main>
@@ -452,11 +398,6 @@
         await window.renderSidebar('../', 'admin');
 
         let opdsData = [];
-
-        // Inisialisasi awal (Ambil Settings)
-        const settings = await window.getSettings() || {};
-        document.getElementById('input-broadcast').value = settings.broadcastMessage || "";
-        document.getElementById('input-tahun-aktif').value = settings.tahunAktif || new Date().getFullYear();
 
         // Helper untuk memuat ulang daftar OPD dari Firestore
         async function fetchOpds() {
@@ -605,168 +546,6 @@
 
         // Render perdana
         await window.renderTabel('', true);
-
-        // ===== FUNGSI PERBAIKAN DATA OPD =====
-        // Melakukan MERGE: mengisi variabel yang hilang + tambah field type/parentId untuk OPD lama
-        window.repairAllOpdData = async function () {
-            if (!confirm("Yakin ingin menjalankan perbaikan data? Proses ini akan mengisi variabel yang hilang dan menambahkan field tipe akun pada semua OPD.")) return;
-
-            const statusEl = document.getElementById('repair-status');
-            statusEl.style.display = 'inline';
-            statusEl.innerText = 'Sedang memperbaiki...';
-
-            const defaultVar = {
-                status: 0,
-                levelPilihan: null,
-                levelDisetujui: 0,
-                deskripsi: "",
-                driveLink: "",
-                uploads: {},
-                catatanAdmin: ""
-            };
-
-            try {
-                const snap = await window.fbGetDocs(window.fbCollection(window.db, "opds"));
-                let repaired = 0;
-
-                for (const docSnap of snap.docs) {
-                    const opd = docSnap.data();
-                    let needsUpdate = false;
-                    let updates = {};
-
-                    // Migrasi: tambah field type dan parentId jika belum ada
-                    if (!opd.type) {
-                        updates.type = 'regular';
-                        updates.parentId = null;
-                        needsUpdate = true;
-                    }
-
-                    // Hanya repair variabel untuk OPD yang bukan parent (wadah)
-                    if (opd.type !== 'parent') {
-                        for (let i = 1; i <= 12; i++) {
-                            const key = `variabelStatus.v${i}`;
-                            const existingVar = opd.variabelStatus ? opd.variabelStatus[`v${i}`] : null;
-                            if (!existingVar) {
-                                const def = { ...defaultVar };
-                                if (i === 12) def.levelPilihan = 1;
-                                updates[key] = def;
-                                needsUpdate = true;
-                            }
-                        }
-                    }
-
-                    if (needsUpdate) {
-                        await window.fbUpdateDoc(window.fbDoc(window.db, "opds", docSnap.id), updates);
-                        repaired++;
-                    }
-                }
-
-                statusEl.innerText = `✅ Selesai! ${repaired} dokumen diperbaiki.`;
-                await window.renderTabel('', true);
-                setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
-            } catch (e) {
-                console.error("Repair error:", e);
-                statusEl.innerText = '❌ Gagal. Periksa konsol.';
-                statusEl.style.color = '#991b1b';
-            }
-        };
-
-        // Fungsi Hapus Sub-Unit Orphan (parentId tidak ditemukan di database)
-        window.hapusOrphanSubUnit = async function () {
-            const statusEl = document.getElementById('orphan-status');
-            statusEl.style.display = 'inline';
-            statusEl.style.color = '#78350f';
-            statusEl.innerText = '⏳ Mencari orphan...';
-
-            try {
-                // Ambil data terbaru dari Firestore
-                const snap = await window.fbGetDocs(window.fbCollection(window.db, "opds"));
-                const allDocs = [];
-                snap.forEach(d => allDocs.push({ docId: d.id, ...d.data() }));
-
-                // Set semua docId yang bertipe parent (masih valid)
-                const validParentIds = new Set(
-                    allDocs.filter(o => o.type === 'parent').map(o => o.docId)
-                );
-
-                // Cari sub-unit yang parentId-nya tidak ada di validParentIds
-                const orphans = allDocs.filter(o =>
-                    o.type === 'sub' && !validParentIds.has(o.parentId)
-                );
-
-                if (orphans.length === 0) {
-                    statusEl.style.color = '#166534';
-                    statusEl.innerText = '✅ Tidak ada sub-unit orphan ditemukan.';
-                    setTimeout(() => { statusEl.style.display = 'none'; }, 4000);
-                    return;
-                }
-
-                const namaOrphan = orphans.map(o => `• ${o.name} (${o.username || 'no username'})`).join('\n');
-                if (!confirm(`Ditemukan ${orphans.length} sub-unit orphan:\n${namaOrphan}\n\nHapus semua?`)) {
-                    statusEl.style.display = 'none';
-                    return;
-                }
-
-                for (const o of orphans) {
-                    await window.fbDeleteDoc(window.fbDoc(window.db, "opds", o.docId));
-                }
-
-                statusEl.style.color = '#166534';
-                statusEl.innerText = `✅ ${orphans.length} orphan berhasil dihapus.`;
-                await window.renderTabel('', true);
-                setTimeout(() => { statusEl.style.display = 'none'; }, 5000);
-
-            } catch (e) {
-                console.error("Orphan cleanup error:", e);
-                statusEl.style.color = '#991b1b';
-                statusEl.innerText = '❌ Gagal. Periksa konsol.';
-            }
-        };
-
-        // Fungsi Simpan Tahun Aktif
-        window.simpanTahunAktif = async function () {
-            const btn = document.getElementById('btn-simpan-tahun');
-            const tahunBaru = document.getElementById('input-tahun-aktif').value.trim();
-            if (!tahunBaru || tahunBaru < 2020 || tahunBaru > 2099) {
-                alert("Tahun harus antara 2020 dan 2099.");
-                return;
-            }
-            
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-
-            try {
-                await window.fbUpdateDoc(window.fbDoc(window.db, "settings", "main"), { tahunAktif: tahunBaru });
-                const statusEl = document.getElementById('status-tahun');
-                statusEl.style.display = 'inline';
-                setTimeout(() => { statusEl.style.display = 'none'; }, 3000);
-            } catch (e) {
-                alert("Gagal menyimpan tahun.");
-            } finally {
-                btn.innerHTML = 'Simpan';
-                btn.disabled = false;
-            }
-        };
-
-        // Fungsi Kirim Broadcast
-        document.getElementById('form-broadcast').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btn = e.target.querySelector('button[type="submit"]');
-            const oldText = btn.innerText;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i>';
-            btn.disabled = true;
-
-            const msg = document.getElementById('input-broadcast').value;
-            try {
-                await window.fbUpdateDoc(window.fbDoc(window.db, "settings", "main"), { broadcastMessage: msg });
-                alert("Pengumuman berhasil disiarkan!");
-            } catch (e) {
-                alert("Gagal menyimpan pengumuman.");
-            } finally {
-                btn.innerHTML = oldText;
-                btn.disabled = false;
-            }
-        });
 
         // Fungsi Toggle Tipe Akun di Form Tambah
         window.setTipeAkun = function (tipe) {
