@@ -817,26 +817,37 @@
 
         // Fungsi Hapus Akun (dengan peringatan khusus untuk parent)
         window.hapusAkun = async function (docId, name, tipe) {
-            let pesan = `Apakah Anda yakin ingin menghapus akun "${name}" secara permanen?`;
+            let pesan = '';
+
             if (tipe === 'parent') {
-                const subCount = opdsData.filter(o => o.parentId === docId).length;
-                if (subCount > 0) {
-                    pesan = `⚠️ "${name}" adalah OPD Induk (Wadah) dengan ${subCount} sub-unit.\n\nMenghapus Wadah ini TIDAK menghapus sub-unitnya — sub-unit akan menjadi yatim (orphan).\n\nLanjutkan menghapus hanya akun Wadah ini?`;
+                const subList = opdsData.filter(o => o.parentId === docId);
+                if (subList.length > 0) {
+                    const namaSubUnit = subList.map(s => `• ${s.name}`).join('\n');
+                    pesan = `⚠️ PERINGATAN: Hapus Wadah "${name}"\n\nWadah ini memiliki ${subList.length} sub-unit yang akan IKUT TERHAPUS:\n${namaSubUnit}\n\nSeluruh data kematangan sub-unit di atas akan hilang permanen.\n\nLanjutkan?`;
                 } else {
                     pesan = `Hapus akun Wadah "${name}"? Akun ini belum memiliki sub-unit.`;
                 }
             } else if (tipe === 'sub') {
                 pesan = `Hapus sub-unit "${name}" secara permanen? Seluruh data variabel kematangannya akan ikut terhapus.`;
             } else {
-                pesan += ` Seluruh riwayat pengisian data kematangannya akan ikut terhapus.`;
+                pesan = `Hapus akun "${name}" secara permanen? Seluruh riwayat pengisian data kematangannya akan ikut terhapus.`;
             }
-            if (confirm(pesan)) {
-                try {
-                    await window.fbDeleteDoc(window.fbDoc(window.db, "opds", docId));
-                    await window.renderTabel(document.getElementById('search-akun').value, true);
-                } catch (e) {
-                    alert("Gagal menghapus akun.");
+
+            if (!confirm(pesan)) return;
+
+            try {
+                // Jika parent: cascade hapus semua sub-unitnya terlebih dahulu
+                if (tipe === 'parent') {
+                    const subList = opdsData.filter(o => o.parentId === docId);
+                    for (const sub of subList) {
+                        await window.fbDeleteDoc(window.fbDoc(window.db, "opds", sub.docId));
+                    }
                 }
+                // Hapus dokumen utama (parent / regular / sub)
+                await window.fbDeleteDoc(window.fbDoc(window.db, "opds", docId));
+                await window.renderTabel(document.getElementById('search-akun').value, true);
+            } catch (e) {
+                alert("Gagal menghapus akun. Silakan coba lagi.");
             }
         };
 
